@@ -1,0 +1,50 @@
+COMO LEVANTAR EL BACKEND (Laravel)
+=================================
+
+REQUISITOS PREVIOS (una sola vez por maquina)
+---------------------------------------------
+- PHP 8.3 o superior y Composer.
+- Extensiones de PHP que Laravel necesita. En Ubuntu/Debian:
+
+    sudo apt install php8.3-xml php8.3-sqlite3 php8.3-mbstring php8.3-curl php8.3-zip
+
+
+PASOS
+-----
+1. Clonar y entrar a backend/:
+
+    git clone https://github.com/mseibelcastello/convenios_unlpam.git
+    cd convenios_unlpam/backend
+
+2. Instalar las dependencias. Esto crea vendor/, que no se sube a git:
+
+    composer install
+
+3. Crear el archivo de configuracion local. El .env tampoco se sube,
+   porque guarda claves de cada maquina:
+
+    cp .env.example .env
+
+4. Generar la clave de la aplicacion:
+
+    php artisan key:generate
+
+5. Crear la base de datos SQLite y sus tablas:
+
+    touch database/database.sqlite
+    php artisan migrate
+
+6. Levantar el servidor:
+
+    php artisan serve
+
+7. Abrir http://127.0.0.1:8000
+   Si aparece la pagina de Laravel, esta todo bien.
+
+
+ERRORES COMUNES
+---------------
+- "vendor/autoload.php: No such file": falta el paso 2.
+- Composer se queja de ext-xml u otra extension: instalar el paquete
+  php8.3-... que nombra y repetir "composer install".
+- Error 500 en el navegador: falto el paso 4 o el 5.
