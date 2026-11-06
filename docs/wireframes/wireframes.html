@@ -1,0 +1,335 @@
+<title>Wireframes Convenios UNLPam</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Caveat:wght@500;700&display=swap">
+<style>
+/* Layout: encabezado fijo con anclas; secciones Web (4 pantallas x 4 estados), Móvil (5 pantallas) y Diferencias. Dibujo en grises, anotaciones en azul tinta. */
+:root{
+  --bg:#f3f2ee; --paper:#fbfbf9; --line:#b9b8b1; --line-soft:#dcdbd4; --ink:#26261f; --muted:#6d6c63;
+  --fill:#e4e3dc; --fill-2:#d3d2c9; --note:#2b4fa8; --bad:#b3382c; --bad-bg:#f6e3df; --ok:#3d7a4a; --warn-bg:#f4ead0;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace; --hand:'Caveat','Segoe Print',cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17171a; --paper:#212125; --line:#55555c; --line-soft:#36363c; --ink:#e9e8e2; --muted:#9d9ca3;
+  --fill:#33333a; --fill-2:#45454e; --note:#8fb0ff; --bad:#ef8b7e; --bad-bg:#3d2623; --ok:#7ec48b; --warn-bg:#3b3422; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17171a; --paper:#212125; --line:#55555c; --line-soft:#36363c; --ink:#e9e8e2; --muted:#9d9ca3;
+  --fill:#33333a; --fill-2:#45454e; --note:#8fb0ff; --bad:#ef8b7e; --bad-bg:#3d2623; --ok:#7ec48b; --warn-bg:#3b3422; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  padding-block:0 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto}
+header.top{padding-block:28px 12px}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);max-width:68ch;margin:0}
+nav.anchors{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:8px;flex-wrap:wrap;padding-block:10px;border-bottom:1px solid var(--line-soft);margin-bottom:8px}
+nav.anchors a{font-family:var(--mono);font-size:12px;color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:4px 10px;border-radius:3px;background:var(--paper)}
+nav.anchors a:hover,nav.anchors a:focus-visible{outline:2px solid var(--note);outline-offset:1px}
+h2{font-size:24px;margin:44px 0 4px}
+h3{font-size:18px;margin:34px 0 4px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+h3 small{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted)}
+.brief{color:var(--muted);margin:0 0 14px;max-width:80ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,540px),1fr));gap:20px}
+fig{display:block}
+.cell{min-width:0}
+.cap{font-family:var(--mono);font-size:12px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.cap b{font-weight:500;background:var(--ink);color:var(--bg);padding:1px 7px;border-radius:2px}
+.cap span{color:var(--note);font-family:var(--hand);font-size:17px;line-height:1.1}
+.scroll{overflow-x:auto;padding-bottom:4px}
+
+/* --- marco web --- */
+.wf{background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;min-width:520px;height:372px;display:flex;overflow:hidden;font-size:11px;position:relative}
+.side{width:104px;flex:none;border-right:1.5px solid var(--ink);padding:10px 8px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
+.side .logo{height:26px;border:1.5px solid var(--ink);display:grid;place-items:center;font-family:var(--mono);font-weight:500;margin-bottom:8px}
+.side .it{padding:5px 6px;border-radius:2px;color:var(--muted)}
+.side .it.on{background:var(--fill-2);color:var(--ink);font-weight:600}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.bar{height:30px;border-bottom:1.5px solid var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 10px;flex:none}
+.bar .u{display:flex;gap:8px;align-items:center}
+.body{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow:hidden}
+.full{flex:1;display:grid;place-items:center;padding:16px}
+
+/* --- primitivas --- */
+.bx{border:1.5px solid var(--ink);border-radius:2px;padding:6px 8px;background:var(--paper)}
+.bx.dash{border-style:dashed;border-color:var(--line)}
+.row{display:flex;gap:8px;align-items:stretch}
+.row>*{min-width:0}
+.col{display:flex;flex-direction:column;gap:6px}
+.fx1{flex:1}
+.ln{display:block;height:7px;background:var(--fill-2);border-radius:2px}
+.ln.s{height:5px;background:var(--fill)}
+.mut{color:var(--muted)}
+.big{font-size:20px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.btn{display:inline-block;border:1.5px solid var(--ink);border-radius:2px;padding:4px 10px;font-weight:500;background:var(--paper);white-space:nowrap}
+.btn.p{background:var(--ink);color:var(--bg)}
+.btn.off{border-color:var(--line);color:var(--muted);background:var(--fill)}
+.inp{border:1.5px solid var(--ink);border-radius:2px;padding:5px 8px;background:var(--paper);color:var(--muted);min-height:26px}
+.inp.err{border-color:var(--bad)}
+.inp.dis{background:var(--fill);border-color:var(--line)}
+.lbl{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:2px;display:block}
+.errtx{color:var(--bad);font-size:10px;margin-top:2px;display:block}
+.pill{display:inline-block;border:1.2px solid var(--ink);border-radius:9px;padding:0 7px;font-size:10px;white-space:nowrap}
+.pill.ok{border-color:var(--ok);color:var(--ok)}
+.pill.bad{border-color:var(--bad);color:var(--bad)}
+.pill.fill{background:var(--fill-2)}
+.banner{border:1.5px solid var(--bad);background:var(--bad-bg);color:var(--bad);border-radius:2px;padding:6px 8px;display:flex;gap:8px;justify-content:space-between;align-items:center}
+.banner.warn{border-color:var(--muted);background:var(--warn-bg);color:var(--ink)}
+.empty{border:1.5px dashed var(--line);border-radius:2px;padding:14px 10px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:6px;align-items:center}
+.ico{width:26px;height:26px;border:1.5px dashed var(--line);display:grid;place-items:center;font-size:12px;border-radius:50%}
+table.t{width:100%;border-collapse:collapse;font-size:10.5px}
+table.t th{text-align:left;font-family:var(--mono);font-weight:500;font-size:9.5px;color:var(--muted);border-bottom:1.5px solid var(--ink);padding:3px 4px}
+table.t td{padding:4px;border-bottom:1px solid var(--line-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.pg{display:flex;gap:4px;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px}
+.pg i{font-style:normal;border:1px solid var(--ink);padding:0 6px;border-radius:2px}
+.pg i.on{background:var(--ink);color:var(--bg)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.kv dt{font-family:var(--mono);font-size:9.5px;color:var(--muted)} .kv dd{margin:0}
+.sec{font-weight:600;font-size:11px;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.barchart{display:flex;align-items:flex-end;gap:5px;height:48px}
+.barchart i{flex:1;background:var(--fill-2);border:1px solid var(--ink)}
+.sk{background:linear-gradient(90deg,var(--fill) 0%,var(--fill-2) 50%,var(--fill) 100%);background-size:200% 100%;animation:sh 1.4s linear infinite;border-radius:2px;display:block}
+@keyframes sh{to{background-position:-200% 0}}
+.spin{width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;display:inline-block;animation:rot .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.sk,.spin{animation:none}}
+.ph{border:1.5px solid var(--line);position:relative;background:linear-gradient(to top right,transparent calc(50% - .6px),var(--line) 50%,transparent calc(50% + .6px)),linear-gradient(to bottom right,transparent calc(50% - .6px),var(--line) 50%,transparent calc(50% + .6px))}
+
+/* --- marco móvil --- */
+.phones{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:262px;height:520px;background:var(--paper);border:2px solid var(--ink);border-radius:22px;display:flex;flex-direction:column;overflow:hidden;font-size:11px;flex:none;position:relative}
+.phone .st{height:20px;display:flex;justify-content:space-between;padding:4px 14px 0;font-family:var(--mono);font-size:9px;color:var(--muted);flex:none}
+.phone .hd{padding:8px 12px;border-bottom:1.5px solid var(--ink);font-weight:600;font-size:13px;display:flex;justify-content:space-between;align-items:center;flex:none}
+.phone .pb{flex:1;min-height:0;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.nav{height:46px;border-top:1.5px solid var(--ink);display:flex;flex:none;background:var(--bg)}
+.nav div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:var(--muted)}
+.nav div i{width:14px;height:14px;border:1.5px solid currentColor;border-radius:3px;display:block}
+.nav div.on{color:var(--ink);font-weight:600;background:var(--fill)}
+.nav div.on i{background:var(--ink)}
+.otp{display:flex;gap:6px;justify-content:center}
+.otp i{width:28px;height:36px;border:1.5px solid var(--ink);border-radius:3px;display:grid;place-items:center;font-style:normal;font-family:var(--mono);font-size:15px}
+.pdf{flex:1;border:1.5px solid var(--ink);background:var(--fill);padding:10px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
+.pdf .pg1{background:var(--paper);border:1px solid var(--line);flex:1;padding:10px;display:flex;flex-direction:column;gap:6px;position:relative}
+.card{border:1.5px solid var(--ink);border-radius:4px;padding:8px}
+.tog{width:32px;height:18px;border:1.5px solid var(--ink);border-radius:9px;position:relative;flex:none}
+.tog::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:var(--ink)}
+.tog.on{background:var(--fill-2)} .tog.on::after{left:15px}
+.av{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-weight:600;font-size:16px;background:var(--fill)}
+.note{font-family:var(--hand);color:var(--note);font-size:18px;line-height:1.1;margin:6px 0 0;max-width:262px}
+
+/* --- diferencias --- */
+.diffs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px;margin-top:12px}
+.diff{border-top:2px solid var(--ink);padding-top:10px;min-width:0}
+.diff h4{margin:0 0 6px;font-size:16px}
+.diff dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+.diff dt{font-family:var(--mono);font-size:11px;color:var(--note);padding-top:2px}
+.diff dd{margin:0}
+.diff .why{margin-top:8px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <h1>Wireframes · Convenios UNLPam</h1>
+  <p class="sub">Tareas 1.9 y 1.10. Baja fidelidad, solo rectángulos y texto, con datos ficticios. Web: 4 pantallas con sus variantes de estado. Móvil: 5 pantallas con navegación inferior.</p>
+</header>
+<nav class="anchors" aria-label="Secciones">
+  <a href="#web">1.9 Web</a><a href="#movil">1.10 Móvil</a><a href="#diferencias">Diferencias web / móvil</a>
+</nav>
+
+<section id="web">
+  <h2>1.9 · Web</h2>
+  <p class="brief">Cada pantalla tiene el estado normal y tres variantes: vacío, cargando y error. Las notas en azul explican la decisión de diseño.</p>
+  <div id="web-out"></div>
+</section>
+
+<section id="movil">
+  <h2>1.10 · Móvil</h2>
+  <p class="brief">Cinco pantallas: login con paso de MFA (dos vistas), home, buscador, firmador y perfil. La barra inferior reemplaza al menú lateral de la web.</p>
+  <div id="mov-out" class="phones"></div>
+</section>
+
+<section id="diferencias">
+  <h2>Diferencias entre web y celular</h2>
+  <p class="brief">Mismo texto que va en <code>docs/flujos.md</code>.</p>
+  <div class="diffs">
+    <div class="diff"><h4>1 · Navegación</h4>
+      <dl><dt>Web</dt><dd>Menú lateral fijo con todas las secciones siempre visibles.</dd>
+      <dt>Móvil</dt><dd>Barra inferior con 4 destinos: Inicio, Buscar, Firmar y Perfil.</dd></dl>
+      <p class="why">Por qué: en pantalla chica el pulgar alcanza la parte baja, y un menú lateral le quitaría ancho al contenido.</p></div>
+    <div class="diff"><h4>2 · Listados</h4>
+      <dl><dt>Web</dt><dd>Tabla con columnas, filtros visibles arriba y paginación numerada.</dd>
+      <dt>Móvil</dt><dd>Lista de tarjetas de una columna, búsqueda por texto, filtros como chips y carga de más resultados al llegar al final.</dd></dl>
+      <p class="why">Por qué: una tabla de seis columnas no entra en 360 px sin scroll horizontal, y tocar números de página chicos es incómodo.</p></div>
+    <div class="diff"><h4>3 · Tareas principales</h4>
+      <dl><dt>Web</dt><dd>Carga y edición completa de fichas, revisión con observaciones, exportación CSV.</dd>
+      <dt>Móvil</dt><dd>Consulta rápida, avisos, lectura de QR, firma registrada y acceso con MFA o biometría.</dd></dl>
+      <p class="why">Por qué: en el celular se resuelven tareas cortas y en cualquier lugar; los formularios largos se hacen mejor con teclado y pantalla grande.</p></div>
+  </div>
+</section>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+var sk=function(w,h){return '<i class="sk" style="width:'+(w||100)+'%;height:'+(h||8)+'px"></i>'};
+var ln=function(w,s){return '<i class="ln'+(s?' s':'')+'" style="width:'+w+'%"></i>'};
+var pill=function(t,c){return '<span class="pill '+(c||'')+'">'+t+'</span>'};
+var inp=function(l,v,c){return '<div><span class="lbl">'+l+'</span><div class="inp '+(c||'')+'">'+v+'</div></div>'};
+
+function shell(active,crumb,content,opts){
+  opts=opts||{};
+  var items=['Panel','Convenios','Revisión','Alertas','Usuarios'];
+  return '<div class="wf"><div class="side"><div class="logo">UNLPam</div>'+
+    items.map(function(i){return '<div class="it'+(i===active?' on':'')+'">'+i+'</div>'}).join('')+
+    '</div><div class="main"><div class="bar"><span class="mut">'+crumb+'</span><span class="u"><span class="pill">3 avisos</span><span>Ana Pérez · gestión · FI</span></span></div>'+
+    '<div class="body">'+content+'</div></div></div>';
+}
+function cell(state,note,html){
+  var names={base:'Con datos',vacio:'Vacío',carga:'Cargando',error:'Error'};
+  return '<div class="cell"><p class="cap"><b>'+names[state]+'</b><span>'+note+'</span></p><div class="scroll">'+html+'</div></div>';
+}
+var errBanner=function(msg){return '<div class="banner"><span>'+msg+'</span><span class="btn">Reintentar</span></div>'};
+
+/* ---------- 1 LOGIN ---------- */
+function login(s){
+  var card=function(inner){return '<div class="wf"><div class="full"><div class="bx col" style="width:260px;gap:10px;padding:14px">'+
+    '<div class="row" style="align-items:center;gap:8px"><div class="logo bx" style="padding:4px 8px;font-family:var(--mono);font-weight:500">UNLPam</div><b style="font-size:13px">Convenios</b></div>'+
+    inner+'<span class="mut" style="font-size:9.5px">Uso interno. Datos ficticios. Sin portal público.</span></div></div></div>'};
+  if(s==='base')return card(inp('Correo','ana.perez@unlpam.test')+inp('Clave','••••••••••')+'<span class="btn p" style="text-align:center">Ingresar</span>');
+  if(s==='vacio')return card(inp('Correo','nombre@unlpam.edu.ar','err')+'<span class="errtx" style="margin-top:-4px">Ingresá tu correo.</span>'+inp('Clave','','err')+'<span class="errtx" style="margin-top:-4px">Ingresá tu clave.</span>'+'<span class="btn off" style="text-align:center">Ingresar</span>');
+  if(s==='carga')return card(inp('Correo','ana.perez@unlpam.test','dis')+inp('Clave','••••••••••','dis')+'<span class="btn off" style="text-align:center"><span class="spin"></span>Ingresando…</span>');
+  return card('<div class="banner warn" style="display:block">Correo o clave incorrectos. Quedan 3 intentos.</div>'+inp('Correo','ana.perez@unlpam.test','err')+inp('Clave','','err')+'<span class="btn p" style="text-align:center">Ingresar</span><span class="mut" style="font-size:9.5px">Otros errores: sesión vencida, cuenta bloqueada, sin conexión con el servidor.</span>');
+}
+/* ---------- 2 PANEL ---------- */
+function panel(s){
+  var stat=function(l,v){return '<div class="bx fx1 col" style="gap:4px"><span class="mut">'+l+'</span><span class="big">'+v+'</span></div>'};
+  var statSk='<div class="bx fx1 col" style="gap:6px">'+sk(60,7)+sk(40,18)+'</div>';
+  var vencTbl=function(rows){return '<table class="t"><tr><th>Código</th><th>Título</th><th>Vence</th><th>Preaviso</th><th>Días</th></tr>'+rows+'</table>'};
+  var r=function(a,b,c,d,e,bad){return '<tr><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+d+'</td><td>'+(bad?pill(e,'bad'):e)+'</td></tr>'};
+  if(s==='base')return shell('Panel','Panel',
+    '<div class="row">'+stat('Total','42')+stat('Vigentes','27')+stat('En revisión','6')+stat('Por vencer (60 d)','4')+'</div>'+
+    '<div class="row"><div class="bx fx1"><div class="sec">Por estado</div><div class="barchart"><i style="height:30%"></i><i style="height:40%"></i><i style="height:70%"></i><i style="height:100%"></i><i style="height:15%"></i><i style="height:25%"></i></div><div class="mut" style="font-size:9px;margin-top:3px">borr · rev · apr · firm · resc · arch</div></div>'+
+    '<div class="bx fx1"><div class="sec">Por unidad y año de firma</div><div class="barchart"><i style="height:50%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:100%"></i></div><div class="mut" style="font-size:9px;margin-top:3px">2023 · 2024 · 2025 · 2026</div></div>'+
+    '<div class="bx" style="width:92px"><div class="mut">Personas únicas</div><div class="big" style="margin-top:4px">118</div></div></div>'+
+    '<div class="bx"><div class="sec">Próximos a vencer <span class="btn" style="padding:1px 8px">Ver todos</span></div>'+vencTbl(
+      r('CONV-2026-014','Pasantías FCEyN – Datalab','2026-11-20','2026-10-20','15 d',true)+
+      r('CONV-2025-031','Colaboración Municipio Santa Rosa','2026-12-03','2026-11-03','28 d')+
+      r('CONV-2024-009','Marco INTA Anguil','Sin vencimiento registrado','—','—'))+'</div>');
+  if(s==='vacio')return shell('Panel','Panel',
+    '<div class="row">'+stat('Total','0')+stat('Vigentes','0')+stat('En revisión','0')+stat('Por vencer (60 d)','0')+'</div>'+
+    '<div class="empty" style="flex:1;justify-content:center"><div class="ico">+</div><b style="color:var(--ink)">Todavía no hay convenios en tu alcance</b><span>Los gráficos aparecen cuando se cargue el primero.</span><span class="btn p">Nuevo convenio</span><span style="font-size:9.5px">Solo para roles gestión y administración. Consulta ve solo el texto.</span></div>');
+  if(s==='carga')return shell('Panel','Panel',
+    '<div class="row">'+statSk+statSk+statSk+statSk+'</div><div class="row"><div class="bx fx1 col">'+sk(40,8)+sk(100,48)+'</div><div class="bx fx1 col">'+sk(40,8)+sk(100,48)+'</div></div><div class="bx col" style="gap:7px">'+sk(30,8)+sk(100,10)+sk(100,10)+sk(80,10)+'</div>');
+  return shell('Panel','Panel',errBanner('No se pudo cargar el panel (error 500). Revisá tu conexión y probá de nuevo.')+
+    '<div class="row">'+stat('Total','—')+stat('Vigentes','—')+stat('En revisión','—')+stat('Por vencer','—')+'</div>'+
+    '<div class="bx dash fx1 col" style="justify-content:center;align-items:center;color:var(--muted);text-align:center">Sin datos para mostrar<span style="font-size:9.5px">Otros errores: 401 sesión vencida → login; 403 sin permiso → mensaje y volver.</span></div>');
+}
+/* ---------- 3 LISTADO ---------- */
+function listado(s){
+  var filtros='<div class="row" style="align-items:flex-end;flex-wrap:wrap"><div class="fx1" style="min-width:130px">'+inp('Buscar','Código, título o parte…')+'</div>'+
+    '<div style="width:70px">'+inp('Tipo','Todos ▾')+'</div><div style="width:76px">'+inp('Estado','Todos ▾')+'</div><div style="width:66px">'+inp('Unidad','Mi alcance ▾')+'</div>'+
+    '<div style="width:70px">'+inp('Desde','AAAA-MM-DD')+'</div><div style="width:70px">'+inp('Hasta','AAAA-MM-DD')+'</div></div>';
+  var tools='<div class="row" style="justify-content:space-between;align-items:center"><span class="mut">42 resultados</span><span style="display:flex;gap:6px"><span class="btn">Exportar CSV</span><span class="btn p">Nuevo</span></span></div>';
+  var r=function(c,t,ty,u,e,v){return '<tr><td>'+c+'</td><td>'+t+'</td><td>'+ty+'</td><td>'+u+'</td><td>'+e+'</td><td>'+v+'</td></tr>'};
+  var head='<table class="t"><tr><th>Código</th><th>Título</th><th>Tipo</th><th>Unidad</th><th>Estado</th><th>Vence</th></tr>';
+  if(s==='base')return shell('Convenios','Convenios',filtros+tools+head+
+    r('CONV-2026-014','Pasantías Datalab','pasantía','FCEyN',pill('firmado','ok'),'2026-11-20')+
+    r('CONV-2026-012','Marco Municipio Gral. Pico','marco','FI',pill('revisión','fill'),'—')+
+    r('CONV-2025-031','Colaboración Sta. Rosa','específico','FI',pill('aprobado','fill'),'2026-12-03')+
+    r('CONV-2025-020','Adenda Datalab','adenda','FCEyN',pill('borrador'),'2027-03-01')+
+    r('CONV-2024-009','Marco INTA Anguil','marco','FCEyN',pill('firmado','ok'),'sin vencimiento registrado')+'</table>'+
+    '<div class="pg"><span>1–10 de 42</span><span style="display:flex;gap:3px"><i>‹</i><i class="on">1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>›</i></span></div>');
+  if(s==='vacio')return shell('Convenios','Convenios',filtros+'<div class="row" style="justify-content:space-between;align-items:center"><span class="mut">0 resultados</span><span style="display:flex;gap:6px"><span class="btn off">Exportar CSV</span><span class="btn p">Nuevo</span></span></div>'+
+    '<div class="empty" style="flex:1;justify-content:center"><div class="ico">?</div><b style="color:var(--ink)">Ningún convenio coincide con estos filtros</b><span>Probá con otro texto o ampliá las fechas.</span><span class="btn">Limpiar filtros</span></div>');
+  if(s==='carga')return shell('Convenios','Convenios',filtros+'<div class="row" style="justify-content:space-between;align-items:center">'+sk(18,8)+'<span class="btn off">Exportar CSV</span></div>'+
+    '<div class="col" style="gap:9px;padding:4px 0">'+[100,100,100,100,100,100].map(function(w){return '<div class="row" style="gap:10px">'+sk(16,10)+sk(30,10)+sk(12,10)+sk(10,10)+sk(12,10)+sk(12,10)+'</div>'}).join('')+'</div>');
+  return shell('Convenios','Convenios',filtros+errBanner('No se pudo cargar el listado (error 500).')+
+    '<div class="bx dash fx1 col" style="justify-content:center;align-items:center;color:var(--muted);text-align:center">La tabla no se muestra mientras haya error<span style="font-size:9.5px">Filtros inválidos (fecha “hasta” menor que “desde”): se marca el campo, no se envía la consulta.</span></div>');
+}
+/* ---------- 4 FICHA ---------- */
+function ficha(s){
+  var head=function(state){return '<div class="row" style="justify-content:space-between;align-items:center"><div><span class="mut" style="font-family:var(--mono)">CONV-2026-014 · v3</span><div style="font-size:14px;font-weight:600">Pasantías Datalab – FCEyN</div></div>'+
+    '<span style="display:flex;gap:6px;align-items:center">'+state+'<span class="btn">Editar</span><span class="btn p">Enviar a revisión</span></span></div>'};
+  if(s==='base')return shell('Convenios','Convenios › CONV-2026-014',head(pill('firmado','ok'))+
+    '<div class="row" style="flex:1;min-height:0"><div class="col fx1">'+
+    '<div class="bx"><div class="sec">Datos</div><dl class="kv"><dt>Tipo</dt><dd>pasantía · específico</dd><dt>Unidad</dt><dd>FCEyN</dd><dt>Firma</dt><dd>2025-11-20</dd><dt>Vence</dt><dd>2026-11-20 <span class="mut">(preaviso 2026-10-20)</span></dd><dt>Objeto</dt><dd>'+ln(90)+'</dd><dt>Resol./Exp.</dt><dd>RESHCS 123/2026 · EXP 1234/2026</dd></dl></div>'+
+    '<div class="bx"><div class="sec">Partes <span class="mut">2</span></div><table class="t"><tr><th>Institución</th><th>Rol</th><th>Representante</th></tr><tr><td>UNLPam – FCEyN</td><td>UNLPam</td><td>Dec. Ficticio</td></tr><tr><td>Datalab SA</td><td>contraparte</td><td>R. Ejemplo</td></tr></table></div>'+
+    '<div class="bx"><div class="sec">Antecedentes</div>Se apoya en <u>CONV-2024-009</u> (marco) · Adenda <u>CONV-2025-020</u></div></div>'+
+    '<div class="col" style="width:190px">'+
+    '<div class="bx"><div class="sec">Documentos <span class="btn" style="padding:0 6px">Subir PDF</span></div>'+
+    '<div class="row" style="justify-content:space-between"><span>convenio.pdf</span>'+pill('principal')+'</div><span class="mut" style="font-size:9px">v2 · 1,4 MB · SHA-256 3fa9…c1</span>'+ln(100,1)+
+    '<div class="row" style="justify-content:space-between;margin-top:3px"><span>dictamen.pdf</span>'+pill('dictamen')+'</div><span class="mut" style="font-size:9px">v1 · 310 KB</span></div>'+
+    '<div class="bx fx1"><div class="sec">Observaciones <span class="mut">1 pendiente</span></div><div class="banner warn" style="display:block;font-size:10px">Revisión · 2026-11-02<br>Falta la cláusula de rescisión. <u>Marcar resuelta</u></div></div></div></div>');
+  if(s==='vacio')return shell('Convenios','Convenios › CONV-2026-015',head(pill('borrador'))+
+    '<div class="row" style="flex:1;min-height:0"><div class="col fx1"><div class="bx"><div class="sec">Datos</div><dl class="kv"><dt>Tipo</dt><dd>marco</dd><dt>Vence</dt><dd class="mut">sin vencimiento registrado</dd><dt>Firma</dt><dd class="mut">sin registrar</dd></dl></div>'+
+    '<div class="bx"><div class="sec">Partes <span class="mut">0</span></div><div class="empty" style="padding:6px">Sin partes. Se necesitan al menos 2 para aprobar. <span class="btn">Agregar parte</span></div></div>'+
+    '<div class="bx"><div class="sec">Antecedentes</div><span class="mut">Sin antecedentes vinculados.</span></div></div>'+
+    '<div class="col" style="width:190px"><div class="bx"><div class="sec">Documentos</div><div class="empty" style="padding:6px">Sin documentos. PDF hasta 20 MB. <span class="btn">Subir PDF</span></div></div>'+
+    '<div class="bx fx1"><div class="sec">Observaciones</div><span class="mut">Sin observaciones.</span></div></div></div>');
+  if(s==='carga')return shell('Convenios','Convenios › …',
+    '<div class="row" style="justify-content:space-between">'+sk(40,16)+sk(20,18)+'</div><div class="row" style="flex:1"><div class="col fx1"><div class="bx col">'+sk(20,8)+sk(100,8)+sk(100,8)+sk(70,8)+'</div><div class="bx col">'+sk(20,8)+sk(100,10)+sk(100,10)+'</div><div class="bx col">'+sk(30,8)+sk(60,8)+'</div></div><div class="col" style="width:190px"><div class="bx col">'+sk(40,8)+sk(100,10)+sk(100,10)+'</div><div class="bx fx1 col">'+sk(40,8)+sk(100,24)+'</div></div></div>');
+  return shell('Convenios','Convenios › CONV-2026-014',
+    errBanner('No tenés permiso para ver este convenio (error 403). Pertenece a otra unidad.')+
+    '<div class="bx dash fx1 col" style="justify-content:center;align-items:center;color:var(--muted);text-align:center;gap:8px">No se muestran datos<span class="btn">Volver al listado</span><span style="font-size:9.5px;max-width:300px">Otros errores en esta pantalla:<br>404 convenio inexistente · 409 “Alguien editó este convenio antes que vos. Recargá para ver la versión 4.” · error al subir PDF (más de 20 MB o no es PDF).</span></div>');
+}
+
+var WEB=[
+  ['Login','Pantalla 1 de 4',login,{base:'Formulario completo',vacio:'Validación al enviar vacío',carga:'Botón y campos deshabilitados',error:'Mensaje general, sin decir cuál dato falló'}],
+  ['Panel','Pantalla 2 de 4',panel,{base:'Tarjetas, gráficos y próximos a vencer',vacio:'Todo en 0 y guía para el primer alta',carga:'Esqueletos con la misma forma',error:'Aviso con Reintentar, tarjetas con “—”'}],
+  ['Listado','Pantalla 3 de 4',listado,{base:'Buscador, filtros, tabla y paginación',vacio:'Sin resultados con salida clara',carga:'Filas esqueleto, filtros activos',error:'Aviso con Reintentar'}],
+  ['Ficha','Pantalla 4 de 4',ficha,{base:'Datos, partes, antecedentes, documentos, observaciones',vacio:'Borrador recién creado: qué falta para aprobar',carga:'Esqueleto de la ficha',error:'403 / 404 / 409 explicados'}]
+];
+document.getElementById('web-out').innerHTML=WEB.map(function(sc){
+  return '<h3>'+sc[0]+' <small>'+sc[1]+'</small></h3><div class="grid">'+
+    ['base','vacio','carga','error'].map(function(st){return cell(st,sc[3][st],sc[2](st))}).join('')+'</div>';
+}).join('');
+
+/* ---------- MÓVIL ---------- */
+function phone(title,body,navOn,opts){
+  opts=opts||{};
+  var tabs=['Inicio','Buscar','Firmar','Perfil'];
+  var nav=navOn==null?'':'<div class="nav">'+tabs.map(function(t,i){return '<div class="'+(i===navOn?'on':'')+'"><i></i>'+t+'</div>'}).join('')+'</div>';
+  return '<div><div class="phone"><div class="st"><span>9:41</span><span>●●● ▮</span></div>'+
+    (title?'<div class="hd">'+title+(opts.right||'')+'</div>':'')+'<div class="pb">'+body+'</div>'+nav+'</div><p class="note">'+(opts.note||'')+'</p></div>';
+}
+var P=[];
+P.push(phone('',
+  '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px">'+
+  '<div class="row" style="align-items:center;gap:8px"><div class="bx" style="padding:4px 8px;font-family:var(--mono);font-weight:500">UNLPam</div><b style="font-size:14px">Convenios</b></div>'+
+  inp('Correo','ana.perez@unlpam.test')+inp('Clave','••••••••••')+'<span class="btn p" style="text-align:center;padding:8px">Continuar</span>'+
+  '<span class="mut" style="text-align:center">Paso 1 de 2</span><span class="mut" style="font-size:9.5px;text-align:center">Uso interno. Datos ficticios.</span></div>',null,
+  {note:'1 · Login, paso 1: credenciales.'}));
+P.push(phone('',
+  '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px"><b style="font-size:14px">Verificá que sos vos</b><span class="mut">Ingresá el código de 6 dígitos de tu app de autenticación.</span>'+
+  '<div class="otp"><i>4</i><i>8</i><i>1</i><i>0</i><i>_</i><i>_</i></div><span class="errtx" style="text-align:center">Código incorrecto o vencido. Probá de nuevo.</span>'+
+  '<span class="btn p" style="text-align:center;padding:8px">Verificar</span><span class="btn" style="text-align:center;padding:8px">Usar huella digital</span><span class="mut" style="text-align:center">Paso 2 de 2 · <u>Volver</u></span></div>',null,
+  {note:'1 · Login, paso 2: MFA con código, o biometría como alternativa.'}));
+P.push(phone('Inicio',
+  '<div><b style="font-size:13px">Hola, Ana</b><div class="mut">Facultad de Ingeniería</div></div>'+
+  '<div class="row" style="flex-wrap:wrap"><div class="card" style="flex:1 1 40%"><div class="mut">Vigentes</div><div class="big">27</div></div><div class="card" style="flex:1 1 40%"><div class="mut">En revisión</div><div class="big">6</div></div>'+
+  '<div class="card" style="flex:1 1 40%;border-color:var(--bad)"><div class="mut">Por vencer</div><div class="big">4</div></div><div class="card" style="flex:1 1 40%"><div class="mut">Para firmar</div><div class="big">2</div></div></div>'+
+  '<div class="card col" style="gap:5px"><div class="sec">Próximo a vencer</div><b>CONV-2026-014</b>Pasantías Datalab<span>'+pill('15 días','bad')+'</span></div>'+
+  '<div class="card row" style="justify-content:space-between;align-items:center"><span>Escanear QR de convenio</span><span class="btn">Abrir</span></div>',0,
+  {right:'<span class="pill">3</span>',note:'2 · Home: cajas de resumen, lo urgente primero.'}));
+P.push(phone('Buscar',
+  '<div class="inp">Código, título o parte…</div><div class="row" style="flex-wrap:wrap;gap:5px"><span class="pill fill">Todos</span><span class="pill">Pasantía</span><span class="pill">Marco</span><span class="pill">Firmado</span><span class="pill">Mi unidad</span></div>'+
+  '<span class="mut">42 resultados</span>'+
+  ['CONV-2026-014|Pasantías Datalab|firmado|vence 2026-11-20','CONV-2026-012|Marco Municipio Gral. Pico|revisión|sin vencimiento registrado','CONV-2025-031|Colaboración Sta. Rosa|aprobado|vence 2026-12-03'].map(function(x){x=x.split('|');return '<div class="card col" style="gap:3px"><div class="row" style="justify-content:space-between"><b style="font-family:var(--mono);font-size:10px">'+x[0]+'</b>'+pill(x[2],x[2]==='firmado'?'ok':'')+'</div>'+x[1]+'<span class="mut" style="font-size:10px">'+x[3]+'</span></div>'}).join(''),1,
+  {note:'3 · Buscador: texto, chips de filtro y tarjetas. Vacío: “Sin resultados” y Limpiar.'}));
+P.push(phone('Firmar',
+  '<div class="row" style="justify-content:space-between;align-items:center"><div><b>CONV-2026-014</b><div class="mut">convenio.pdf · v2</div></div>'+pill('aprobado','fill')+'</div>'+
+  '<div class="pdf"><div class="pg1">'+ln(60)+ln(100,1)+ln(100,1)+ln(90,1)+ln(100,1)+ln(70,1)+'<div class="ph" style="height:56px;margin-top:4px"></div>'+ln(100,1)+ln(95,1)+'</div><div class="row" style="justify-content:space-between;font-family:var(--mono);font-size:9px"><span>‹</span><span>Pág. 1 de 6</span><span>›</span></div></div>'+
+  '<div class="banner warn" style="display:block;font-size:10px">Firma registrada: no es firma digital ni valida la legalidad.</div>'+
+  '<span class="btn p" style="text-align:center;padding:9px;font-size:13px">Firmar</span>',2,
+  {note:'4 · Firmador: visor de PDF y botón Firmar. Al tocar, pide confirmar con biometría o PIN.'}));
+P.push(phone('Perfil',
+  '<div class="row" style="align-items:center;gap:10px"><div class="av">AP</div><div><b style="font-size:13px">Ana Pérez</b><div class="mut">gestión · Fac. de Ingeniería</div><div class="mut">ana.perez@unlpam.test</div></div></div>'+
+  '<div class="card col" style="gap:9px"><div class="sec">Seguridad</div>'+
+  '<div class="row" style="justify-content:space-between;align-items:center"><span>Huella digital</span><i class="tog on"></i></div>'+
+  '<div class="row" style="justify-content:space-between;align-items:center"><span>PIN de la app</span><span class="btn">Cambiar</span></div>'+
+  '<div class="row" style="justify-content:space-between;align-items:center"><span>Código MFA</span>'+pill('activo','ok')+'</div></div>'+
+  '<div class="card col" style="gap:9px"><div class="sec">Preferencias</div>'+
+  '<div class="row" style="justify-content:space-between;align-items:center"><span>Modo oscuro</span><i class="tog"></i></div>'+
+  '<div class="row" style="justify-content:space-between;align-items:center"><span>Avisos de vencimiento</span><i class="tog on"></i></div>'+
+  '<div class="row" style="justify-content:space-between;align-items:center"><span>Sugerir mi sede</span><i class="tog"></i></div></div>'+
+  '<span class="btn" style="text-align:center;padding:8px;border-color:var(--bad);color:var(--bad)">Cerrar sesión</span>',3,
+  {note:'5 · Perfil: seguridad, modo claro/oscuro, ubicación opcional y cerrar sesión.'}));
+document.getElementById('mov-out').innerHTML=P.join('');
+</script>
