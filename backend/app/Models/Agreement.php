@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+class Agreement extends Model
+{
+    protected $table = 'convenios';
+
+    protected $fillable = [
+        'codigo', 'titulo', 'tipo', 'unidad_id', 'objeto', 'alcance',
+        'obligaciones', 'condiciones_rescision', 'marco_legal',
+        'resolucion', 'expediente', 'condiciones_renovacion',
+        'confidencialidad', 'notas', 'fecha_firma', 'fecha_inicio',
+        'fecha_vencimiento', 'fecha_preaviso', 'estado', 'version',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'fecha_firma' => 'date',
+            'fecha_inicio' => 'date',
+            'fecha_vencimiento' => 'date',
+            'fecha_preaviso' => 'date',
+            'version' => 'integer',
+        ];
+    }
+
+    public function unidad(): BelongsTo
+    {
+        return $this->belongsTo(Unidad::class, 'unidad_id');
+    }
+
+    public function partes(): BelongsToMany
+    {
+        return $this->belongsToMany(Party::class, 'convenio_parte', 'convenio_id', 'parte_id')
+            ->withPivot('rol_parte');
+    }
+}
