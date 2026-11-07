@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "aaee3a4b-31e0-4927-a054-c8171f92fc30",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/tmp/claude-1000/-home-mica/65361895-d545-454c-b039-b5a6cd602a5e/scratchpad/archify/atomic.json",
+  "output": "/home/mica/Documentos/git/convenios_unlpam/docs/design/arquitectura-movil-atomic.html",
+  "specification": {
+    "sha256": "a67a8a6a25dbe64d83e695326d78f429638919900efe1360faf26b1576b30877",
+    "bytes": 2732
+  },
+  "artifact": {
+    "sha256": "88bf92da2d98cf7bb644bda9117262e6625b5c921368401ec3ff3702e7d6d191",
+    "bytes": 842457
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "87d7ad0b-f0ea-41b9-8517-24d46f7fafae",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/tmp/claude-1000/-home-mica/65361895-d545-454c-b039-b5a6cd602a5e/scratchpad/archify/capas.json",
+  "output": "/home/mica/Documentos/git/convenios_unlpam/docs/design/arquitectura-movil-capas.html",
+  "specification": {
+    "sha256": "8560e47c95e2c57cd3d3fd2bc049a8d66ea6a4d5a1b2ffb8ed3c529bbcc66cbf",
+    "bytes": 3605
+  },
+  "artifact": {
+    "sha256": "62b627865d939c77efccb53ff91fde1de908dfdf1fb3959e8d5c84e17b7cfd71",
+    "bytes": 848251
+  }
+}
