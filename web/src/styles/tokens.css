@@ -1,0 +1,126 @@
+/*
+ * Tokens de diseño (tarea 2.6). Mismos valores que mobile/src/constants/theme.ts
+ * y docs/design/tokens-y-componentes.html.
+ *
+ * Cinco colores base: tinta (bordó casi negro), crema rosada (fondo), rojo UNLPam,
+ * naranja UNLPam y verde. Todo lo demás (estados, error, éxito, aviso) son tonos de
+ * esas cinco familias. Contraste WCAG 2.1 AA verificado en claro y oscuro.
+ *
+ * Modo claro por defecto; modo oscuro con la preferencia del sistema o con
+ * data-theme="dark" en <html> (data-theme="light" fuerza el claro).
+ */
+:root {
+  --fuente-titulo: Montserrat, Arial, Helvetica, sans-serif;
+  --fuente-cuerpo: 'Open Sans', Arial, Helvetica, sans-serif;
+
+  /* Tamaño de letra (Mi Perfil): chica 0.875, mediana 1, grande 1.25 */
+  --escala-letra: 1;
+  --texto-base: calc(1rem * var(--escala-letra));
+  --texto-titulo: calc(1.5rem * var(--escala-letra));
+  --texto-chico: calc(0.875rem * var(--escala-letra));
+
+  --radio-s: 3px;
+  --radio-m: 6px;
+  --radio-l: 12px;
+
+  --color-fondo: #faede8;
+  --color-papel: #fff8f5;
+  --color-relleno: #f1ddd6;
+  --color-texto: #2e1519;
+  --color-texto-suave: #6b4a4e;
+  --color-borde: #8e6e70;
+  --color-encabezado: #2e1519;
+  --color-sobre-encabezado: #fbede8;
+  --color-primario: #c8181c;
+  --color-sobre-primario: #ffffff;
+  --color-acento: #e86a04;
+  --color-error: #a4001b;
+  --color-error-fondo: #fbdada;
+  --color-ok: #1e6b3a;
+  --color-ok-fondo: #ddefe2;
+  --color-aviso: #8a4300;
+  --color-aviso-fondo: #fce3cb;
+  --estado-borrador-texto: #6b4a4e;
+  --estado-borrador-fondo: #fff8f5;
+  --estado-revision-texto: #8a4300;
+  --estado-revision-fondo: #fce3cb;
+  --estado-aprobado-texto: #1e6b3a;
+  --estado-aprobado-fondo: #ddefe2;
+  --estado-firmado-texto: #ffffff;
+  --estado-firmado-fondo: #1e6b3a;
+  --estado-rescindido-texto: #a4001b;
+  --estado-rescindido-fondo: #fbdada;
+  --estado-archivado-texto: #fbede8;
+  --estado-archivado-fondo: #2e1519;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-fondo: #1b0f11;
+    --color-papel: #2a181b;
+    --color-relleno: #3a2226;
+    --color-texto: #fbede8;
+    --color-texto-suave: #cdb4b0;
+    --color-borde: #9a7f80;
+    --color-encabezado: #2a181b;
+    --color-sobre-encabezado: #fbede8;
+    --color-primario: #e86a04;
+    --color-sobre-primario: #1f0e08;
+    --color-acento: #ff8a3d;
+    --color-error: #ff8a8f;
+    --color-error-fondo: #4a1b20;
+    --color-ok: #6fd08c;
+    --color-ok-fondo: #12331f;
+    --color-aviso: #ffb866;
+    --color-aviso-fondo: #43290c;
+    --estado-borrador-texto: #cdb4b0;
+    --estado-borrador-fondo: #2a181b;
+    --estado-revision-texto: #ffb866;
+    --estado-revision-fondo: #43290c;
+    --estado-aprobado-texto: #6fd08c;
+    --estado-aprobado-fondo: #12331f;
+    --estado-firmado-texto: #0f2a18;
+    --estado-firmado-fondo: #6fd08c;
+    --estado-rescindido-texto: #ff8a8f;
+    --estado-rescindido-fondo: #4a1b20;
+    --estado-archivado-texto: #1b0f11;
+    --estado-archivado-fondo: #fbede8;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-fondo: #1b0f11;
+  --color-papel: #2a181b;
+  --color-relleno: #3a2226;
+  --color-texto: #fbede8;
+  --color-texto-suave: #cdb4b0;
+  --color-borde: #9a7f80;
+  --color-encabezado: #2a181b;
+  --color-sobre-encabezado: #fbede8;
+  --color-primario: #e86a04;
+  --color-sobre-primario: #1f0e08;
+  --color-acento: #ff8a3d;
+  --color-error: #ff8a8f;
+  --color-error-fondo: #4a1b20;
+  --color-ok: #6fd08c;
+  --color-ok-fondo: #12331f;
+  --color-aviso: #ffb866;
+  --color-aviso-fondo: #43290c;
+  --estado-borrador-texto: #cdb4b0;
+  --estado-borrador-fondo: #2a181b;
+  --estado-revision-texto: #ffb866;
+  --estado-revision-fondo: #43290c;
+  --estado-aprobado-texto: #6fd08c;
+  --estado-aprobado-fondo: #12331f;
+  --estado-firmado-texto: #0f2a18;
+  --estado-firmado-fondo: #6fd08c;
+  --estado-rescindido-texto: #ff8a8f;
+  --estado-rescindido-fondo: #4a1b20;
+  --estado-archivado-texto: #1b0f11;
+  --estado-archivado-fondo: #fbede8;
+}
+
+[data-tamano-letra='chica'] { --escala-letra: 0.875; }
+[data-tamano-letra='grande'] { --escala-letra: 1.25; }
