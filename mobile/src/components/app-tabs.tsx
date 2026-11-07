@@ -2,6 +2,7 @@ import { NativeTabs } from 'expo-router/native-tabs';
 import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { RUTAS } from '@/navigation/rutas';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
@@ -10,23 +11,14 @@ export default function AppTabs() {
   return (
     <NativeTabs
       backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
+      indicatorColor={colors.backgroundSelected}
       labelStyle={{ selected: { color: colors.text } }}>
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
-      </NativeTabs.Trigger>
+      {RUTAS.map((ruta) => (
+        <NativeTabs.Trigger key={ruta.nombre} name={ruta.nombre}>
+          <NativeTabs.Trigger.Label>{ruta.titulo}</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon src={ruta.icono} renderingMode="template" />
+        </NativeTabs.Trigger>
+      ))}
     </NativeTabs>
   );
 }
