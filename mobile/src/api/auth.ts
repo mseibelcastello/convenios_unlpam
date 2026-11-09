@@ -63,3 +63,21 @@ export async function verificarMfa(codigo: string) {
 export async function cerrarSesion() {
   await borrarToken();
 }
+
+/**
+ * Al abrir la app: pregunta al servidor quién sos (GET /auth/me).
+ * - Si el token ya no sirve (401), lo borra y devuelve false → hay que ir al login.
+ * - Si falla por otra causa (sin red, servidor caído), no te saca de la sesión.
+ */
+export async function sesionVigente(): Promise<boolean> {
+  try {
+    await cliente.get('/auth/me');
+    return true;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      await borrarToken();
+      return false;
+    }
+    return true;
+  }
+}

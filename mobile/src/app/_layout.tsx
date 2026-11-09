@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { sesionVigente } from '@/api/auth';
 import { leerToken } from '@/api/sesion';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 
@@ -12,11 +13,15 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
 
-  // Si no hay sesión guardada, manda al login.
+  // Al abrir: sin token → login. Con token → se valida con /auth/me y se entra directo.
   useEffect(() => {
-    leerToken().then((token) => {
-      if (!token) router.replace('/login');
-    });
+    async function revisarSesion() {
+      const token = await leerToken();
+      if (!token || !(await sesionVigente())) {
+        router.replace('/login');
+      }
+    }
+    revisarSesion();
   }, [router]);
 
   return (
