@@ -1,7 +1,7 @@
 ## 1. Convenciones generales
 - URL base: `/api`
 - Formato: JSON (`Content-Type: application/json`). Exportaciones en PDF.
-- Autenticación: `Authorization: Bearer <token>` en todas las rutas salvo `/auth/login` y `/auth/mfa`.
+- Autenticación: `Authorization: Bearer <token>` en todas las rutas salvo `/auth/login`. `/auth/mfa/verify` usa el token limitado que devuelve el login.
 - Fechas: `AAAA-MM-DD`. Fecha y hora: ISO 8601 con zona horaria.
 
 ### Errores
@@ -20,8 +20,8 @@ Entrar y salir del sistema. Incluye el login, el código MFA que verifica tu ide
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| POST /auth/login | Público | `{correo, clave}` | 200 `{mfa_required: true}` | 401, 422 |
-| POST /auth/mfa | Público | `{correo, codigo}` | 200 `{token, user}` | 401, 422 |
+| POST /auth/login | Público | `{correo, clave}` | 200 `{token, mfa_required: true}` (token limitado, solo sirve para verificar el código) | 401, 422 |
+| POST /auth/mfa/verify | Token limitado | `{codigo}` | 200 `{token, user}` (token completo) | 401, 422, 429 |
 | POST /auth/logout | Autenticado | — | 200 | 401 |
 | GET /auth/me | Autenticado | — | 200 `{user}` | 401 |
 

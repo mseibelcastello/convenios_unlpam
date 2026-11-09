@@ -31,7 +31,8 @@ export function SearchBar({ onBuscar, placeholder = 'Buscar convenio' }: SearchB
           { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
         ]}
       />
-      <Button titulo="Buscar" onPress={() => onBuscar(texto)} />                            //avisa a la funcion onBuscar que texto se busco presionando el boton
+      {/* avisa a onBuscar qué texto se buscó al presionar el botón */}
+      <Button titulo="Buscar" onPress={() => onBuscar(texto)} />
     </View>
   );
 }

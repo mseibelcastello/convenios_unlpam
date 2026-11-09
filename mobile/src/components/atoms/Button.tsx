@@ -28,7 +28,7 @@ export function Button({ titulo, onPress, variante = 'primario' }: ButtonProps) 
           opacity: pressed ? 0.7 : 1,
         },
       ]}>
-        //los colores los toma de los temas configurados en otro archivo
+        {/* los colores los toma de los temas configurados en otro archivo */}
       <ThemedText type="smallBold" themeColor={primario ? 'onPrimary' : 'text'}>
         {titulo}
       </ThemedText>

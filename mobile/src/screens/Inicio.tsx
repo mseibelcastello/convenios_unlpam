@@ -9,7 +9,8 @@ import { BottomTabInset, Spacing } from '@/constants/theme';
 export default function Inicio() {
   return (
     <ThemedView style={styles.contenedor}>
-      <SafeAreaView style={styles.area}>                                                //evita que el contenido quede tapado por las barras
+      {/* SafeAreaView evita que el contenido quede tapado por las barras */}
+      <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido}>
           <ThemedText type="subtitle">Inicio</ThemedText>
           <ConvenioCard
