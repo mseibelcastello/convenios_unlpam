@@ -19,6 +19,7 @@ export default function Perfil() {
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido}>
           <ThemedText type="subtitle">Perfil</ThemedText>
+          <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
           <Button titulo="Cerrar sesión" variante="secundario" onPress={salir} />
         </ScrollView>
       </SafeAreaView>
