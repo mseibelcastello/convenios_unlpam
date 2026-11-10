@@ -19,4 +19,7 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::get('/agreements/{id}', [AgreementController::class, 'show'])->whereNumber('id');
     Route::post('/agreements', [AgreementController::class, 'store'])
         ->middleware('role:gestion,administracion');
+    Route::put('/agreements/{id}', [AgreementController::class, 'update'])
+    ->whereNumber('id')
+    ->middleware('role:gestion,administracion');
 });
