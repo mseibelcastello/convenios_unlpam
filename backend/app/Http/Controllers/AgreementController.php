@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\AuditLog;
 
 class AgreementController extends Controller
 {
@@ -56,15 +57,31 @@ class AgreementController extends Controller
         ]);
     }
 
-    public function show(Request $request, int $id): JsonResponse
-    {
-        // Fuera del alcance del usuario = 404, como si no existiera
-        $convenio = Agreement::visiblesPara($request->user())
-            ->with(['unidad', 'partes'])
-            ->findOrFail($id);
+   public function show(Request $request, int $id): JsonResponse
+{
+    $usuario = $request->user();
 
-        return response()->json($convenio);
+    // Fuera del alcance del usuario = 404, como si no existiera
+    $convenio = Agreement::visiblesPara($usuario)
+        ->with(['unidad', 'partes'])
+        ->findOrFail($id);
+
+    // Consulta no ve datos personales
+    if (in_array($usuario->rol, ['administracion', 'gestion', 'revision'], true)) {
+        $convenio->load('personas');
+
+        if ($convenio->personas->isNotEmpty()) {
+            AuditLog::create([
+                'usuario_id' => $usuario->id,
+                'accion' => 'consultar datos personales',
+                'entidad' => 'convenios',
+                'entidad_id' => $convenio->id,
+            ]);
+        }
     }
+
+    return response()->json($convenio);
+}
 
     public function store(AgreementRequest $request): JsonResponse
     {

@@ -41,7 +41,13 @@ class Agreement extends Model
             ->withPivot('rol_parte');
     }
 
-    public function scopeVisiblesPara(Builder $query, User $usuario): Builder
+    public function personas(): BelongsToMany
+    {
+        return $this->belongsToMany(Person::class, 'convenio_persona', 'convenio_id', 'persona_id')
+            ->withPivot(['rol', 'desde', 'hasta', 'carrera', 'tutor', 'carga_horaria', 'asignacion', 'seguro']);
+    }
+    
+        public function scopeVisiblesPara(Builder $query, User $usuario): Builder
     {
         $unidades = $usuario->unidadesAccesibles();
 
