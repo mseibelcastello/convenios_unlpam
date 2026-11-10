@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agreement;
+use App\Models\AgreementLink;
 use App\Models\AuditLog;
+use App\Models\User;
 use App\Support\CircuitoEstados;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -54,10 +56,16 @@ class AgreementTransitionController extends Controller
             ]);
         }
 
-        if ($hasta === 'aprobado' && $convenio->partes()->count() < 2) {
-            throw ValidationException::withMessages([
-                'estado' => ['Se necesitan al menos 2 partes para aprobar'],
-            ]);
+        if ($hasta === 'aprobado') {
+            if ($convenio->partes()->count() < 2) {
+                throw ValidationException::withMessages([
+                    'estado' => ['Se necesitan al menos 2 partes para aprobar'],
+                ]);
+            }
+
+            if (in_array($convenio->tipo, ['especifico', 'pasantia'], true)) {
+                $this->exigirMarcosVigentes($convenio);
+            }
         }
 
         $cambios = ['estado' => $hasta];
@@ -83,6 +91,11 @@ class AgreementTransitionController extends Controller
                 'fundamento' => $fundamento !== '' ? $fundamento : null,
             ]);
 
+            // Al firmar una renovación, el convenio anterior se archiva en la misma operación
+            if ($hasta === 'firmado' && $convenio->tipo === 'renovacion') {
+                $this->archivarAnteriores($convenio, $usuario);
+            }
+
             return true;
         });
 
@@ -93,6 +106,66 @@ class AgreementTransitionController extends Controller
         }
 
         return response()->json(Agreement::with('unidad')->findOrFail($convenio->id));
+    }
+
+    /** Un específico o una pasantía solo se aprueba si todos sus marcos están firmados y vigentes */
+    private function exigirMarcosVigentes(Agreement $convenio): void
+    {
+        $marcos = AgreementLink::with('destino')
+            ->where('convenio_origen_id', $convenio->id)
+            ->where('tipo_vinculo', 'se_apoya_en')
+            ->get()
+            ->map(fn ($vinculo) => $vinculo->destino);
+
+        if ($marcos->isEmpty()) {
+            throw ValidationException::withMessages([
+                'estado' => ['Falta vincular el marco del que depende el convenio'],
+            ]);
+        }
+
+        $hoy = now()->toDateString();
+
+        foreach ($marcos as $marco) {
+            if ($marco->estado !== 'firmado') {
+                throw ValidationException::withMessages([
+                    'estado' => ["El marco {$marco->codigo} no está firmado"],
+                ]);
+            }
+
+            // Sin fecha de vencimiento cuenta como vigente
+            if ($marco->fecha_vencimiento && $marco->fecha_vencimiento->toDateString() < $hoy) {
+                throw ValidationException::withMessages([
+                    'estado' => ["El marco {$marco->codigo} está vencido"],
+                ]);
+            }
+        }
+    }
+
+    /** Archiva los convenios que esta renovación reemplaza, dejando el rastro en auditoría */
+    private function archivarAnteriores(Agreement $renovacion, User $usuario): void
+    {
+        $anteriores = AgreementLink::where('convenio_origen_id', $renovacion->id)
+            ->where('tipo_vinculo', 'renovacion')
+            ->pluck('convenio_destino_id');
+
+        foreach ($anteriores as $anteriorId) {
+            // Solo se archiva el que sigue firmado; uno ya rescindido o archivado se deja como está
+            $filas = Agreement::where('id', $anteriorId)
+                ->where('estado', 'firmado')
+                ->update(['estado' => 'archivado']);
+
+            if ($filas > 0) {
+                AuditLog::create([
+                    'usuario_id' => $usuario->id,
+                    'accion' => 'cambiar estado',
+                    'entidad' => 'convenios',
+                    'entidad_id' => $anteriorId,
+                    'estado_anterior' => 'firmado',
+                    'estado_nuevo' => 'archivado',
+                    'fundamento' => "Archivado automáticamente al firmarse la renovación {$renovacion->codigo}",
+                ]);
+            }
+        }
     }
 
     /** Fechas que exige el estado firmado, tomadas del cuerpo o de lo ya cargado */
