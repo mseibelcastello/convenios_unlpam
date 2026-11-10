@@ -11,7 +11,10 @@ class AuditLog extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['usuario_id', 'accion', 'entidad', 'entidad_id'];
+    protected $fillable = [
+    'usuario_id', 'accion', 'entidad', 'entidad_id',
+    'estado_anterior', 'estado_nuevo', 'fundamento',
+    ];
 
     protected function casts(): array
     {
