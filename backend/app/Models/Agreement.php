@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Agreement extends Model
 {
@@ -38,5 +39,12 @@ class Agreement extends Model
     {
         return $this->belongsToMany(Party::class, 'convenio_parte', 'convenio_id', 'parte_id')
             ->withPivot('rol_parte');
+    }
+
+    public function scopeVisiblesPara(Builder $query, User $usuario): Builder
+    {
+        $unidades = $usuario->unidadesAccesibles();
+
+        return $unidades === null ? $query : $query->whereIn('unidad_id', $unidades);
     }
 }

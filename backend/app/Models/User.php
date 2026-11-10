@@ -38,4 +38,17 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Unidad::class, 'unidad_id');
     }
+
+        /** null = todas las unidades; si no, la lista de unidades permitidas */
+    public function unidadesAccesibles(): ?array
+    {
+        return $this->unidad_id === null ? null : [(int) $this->unidad_id];
+    }
+
+    public function puedeAccederUnidad(int $unidadId): bool
+    {
+        $unidades = $this->unidadesAccesibles();
+
+        return $unidades === null || in_array($unidadId, $unidades, true);
+    }
 }

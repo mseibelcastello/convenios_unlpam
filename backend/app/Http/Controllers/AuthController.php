@@ -91,7 +91,8 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json($request->user()->load('unidad'));
+       return response()->json(['user' => $request->user()->load('unidad')]);
+       
     }
 
     private function limpiarMfa(User $usuario): void
