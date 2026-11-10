@@ -9,6 +9,7 @@ use App\Http\Controllers\PersonController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgreementTransitionController;
 use App\Http\Controllers\AgreementLinkController;
+use App\Http\Controllers\AgreementDocumentController;
 
 Route::get('/health', fn () => ['ok' => true]);
 
@@ -24,6 +25,13 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Convenios
     Route::get('/agreements', [AgreementController::class, 'index']);
     Route::get('/agreements/{id}', [AgreementController::class, 'show'])->whereNumber('id');
+
+    Route::get('/agreements/{id}/documents', [AgreementDocumentController::class, 'index'])
+    ->whereNumber('id');
+
+    Route::post('/agreements/{id}/documents', [AgreementDocumentController::class, 'store'])
+        ->whereNumber('id')
+        ->middleware('role:administracion,gestion,revision');
 
     Route::get('/agreements/{id}/links', [AgreementLinkController::class, 'index'])->whereNumber('id');
 

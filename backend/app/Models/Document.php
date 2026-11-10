@@ -16,6 +16,8 @@ class Document extends Model
         'ruta_privada', 'tamano_bytes', 'sha256', 'subido_por',
     ];
 
+    protected $hidden = ['ruta_privada'];
+
     protected function casts(): array
     {
         return ['subido_en' => 'datetime'];
