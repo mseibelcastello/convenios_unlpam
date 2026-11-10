@@ -27,6 +27,10 @@ class Agreement extends Model
             'fecha_vencimiento' => 'date',
             'fecha_preaviso' => 'date',
             'version' => 'integer',
+            'fecha_firma' => 'date:Y-m-d',
+            'fecha_inicio' => 'date:Y-m-d',
+            'fecha_vencimiento' => 'date:Y-m-d',
+            'fecha_preaviso' => 'date:Y-m-d',
         ];
     }
 

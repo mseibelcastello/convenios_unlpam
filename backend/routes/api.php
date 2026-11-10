@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PersonController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AgreementTransitionController;
 
 Route::get('/health', fn () => ['ok' => true]);
 
@@ -22,6 +23,10 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Convenios
     Route::get('/agreements', [AgreementController::class, 'index']);
     Route::get('/agreements/{id}', [AgreementController::class, 'show'])->whereNumber('id');
+
+    Route::post('/agreements/{id}/transition', AgreementTransitionController::class)
+    ->whereNumber('id')
+    ->middleware('role:gestion,revision,administracion');
 
     // Partes: todos leen
     Route::get('/parties', [PartyController::class, 'index']);
