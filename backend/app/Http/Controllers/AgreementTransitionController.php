@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Models\Document;
 
 class AgreementTransitionController extends Controller
 {
@@ -60,6 +61,17 @@ class AgreementTransitionController extends Controller
             if ($convenio->partes()->count() < 2) {
                 throw ValidationException::withMessages([
                     'estado' => ['Se necesitan al menos 2 partes para aprobar'],
+                ]);
+            }
+
+            // El PDF principal tiene que estar subido; anexos y dictámenes no lo reemplazan
+            $tienePrincipal = Document::where('convenio_id', $convenio->id)
+                ->where('tipo', 'principal')
+                ->exists();
+
+            if (! $tienePrincipal) {
+                throw ValidationException::withMessages([
+                    'estado' => ['Falta subir el PDF principal'],
                 ]);
             }
 
