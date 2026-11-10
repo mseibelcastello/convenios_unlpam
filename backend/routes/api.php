@@ -8,6 +8,7 @@ use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PersonController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgreementTransitionController;
+use App\Http\Controllers\AgreementLinkController;
 
 Route::get('/health', fn () => ['ok' => true]);
 
@@ -23,6 +24,8 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Convenios
     Route::get('/agreements', [AgreementController::class, 'index']);
     Route::get('/agreements/{id}', [AgreementController::class, 'show'])->whereNumber('id');
+
+    Route::get('/agreements/{id}/links', [AgreementLinkController::class, 'index'])->whereNumber('id');
 
     Route::post('/agreements/{id}/transition', AgreementTransitionController::class)
     ->whereNumber('id')
@@ -53,5 +56,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
         Route::post('/agreements/{id}/people', [AgreementPersonController::class, 'store'])->whereNumber('id');
         Route::delete('/agreements/{id}/people/{personaId}', [AgreementPersonController::class, 'destroy'])
             ->whereNumber(['id', 'personaId']);
-    });
+
+        Route::post('/agreements/{id}/links', [AgreementLinkController::class, 'store'])->whereNumber('id');
+        Route::delete('/agreements/{id}/links/{linkId}', [AgreementLinkController::class, 'destroy'])
+        ->whereNumber(['id', 'linkId']);
+        });
 });
