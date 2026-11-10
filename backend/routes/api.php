@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgreementTransitionController;
 use App\Http\Controllers\AgreementLinkController;
 use App\Http\Controllers\AgreementDocumentController;
+use App\Http\Controllers\DocumentController;
 
 Route::get('/health', fn () => ['ok' => true]);
 
@@ -38,6 +39,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::post('/agreements/{id}/transition', AgreementTransitionController::class)
     ->whereNumber('id')
     ->middleware('role:gestion,revision,administracion');
+
+    Route::get('/documents/{id}', [DocumentController::class, 'show'])->whereNumber('id');
+    Route::get('/documents/{id}/download', [DocumentController::class, 'download'])->whereNumber('id');
 
     // Partes: todos leen
     Route::get('/parties', [PartyController::class, 'index']);
