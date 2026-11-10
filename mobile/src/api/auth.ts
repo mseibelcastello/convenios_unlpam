@@ -33,7 +33,7 @@ export async function login(correo: string, clave: string) {
     await borrarToken();
     const { data } = await cliente.post<{ token: string; mfa_required: boolean }>(
       '/auth/login',
-      { correo, clave },
+      { email: correo, password: clave }, // el backend espera email y password
     );
     if (data.mfa_required) {
       guardarTokenLimitado(data.token);

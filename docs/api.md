@@ -20,7 +20,7 @@ Entrar y salir del sistema. Incluye el login, el código MFA que verifica tu ide
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| POST /auth/login | Público | `{correo, clave}` | 200 `{token, mfa_required: true}` (token limitado, solo sirve para verificar el código) | 401, 422 |
+| POST /auth/login | Público | `{email, password}` | 200 `{token, mfa_required: true}` (token limitado, solo sirve para verificar el código) | 401, 422 |
 | POST /auth/mfa/verify | Token limitado | `{codigo}` | 200 `{token, user}` (token completo) | 401, 422, 429 |
 | POST /auth/logout | Autenticado | — | 200 | 401 |
 | GET /auth/me | Autenticado | — | 200 `{user}` | 401 |
