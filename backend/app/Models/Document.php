@@ -13,14 +13,17 @@ class Document extends Model
 
     protected $fillable = [
         'convenio_id', 'tipo', 'nombre_original', 'version',
-        'ruta_privada', 'tamano_bytes', 'sha256', 'subido_por',
+        'ruta_privada', 'tamano_bytes', 'sha256', 'marca', 'subido_por',
     ];
 
     protected $hidden = ['ruta_privada'];
 
     protected function casts(): array
     {
-        return ['subido_en' => 'datetime'];
+        return [
+            'subido_en' => 'datetime',
+            'marca' => 'array',
+        ];
     }
 
     public function convenio(): BelongsTo
