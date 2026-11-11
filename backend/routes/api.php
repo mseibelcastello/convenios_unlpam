@@ -11,6 +11,8 @@ use App\Http\Controllers\AgreementTransitionController;
 use App\Http\Controllers\AgreementLinkController;
 use App\Http\Controllers\AgreementDocumentController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DashboardController;
+
 
 Route::get('/health', fn () => ['ok' => true]);
 
@@ -42,6 +44,8 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
 
     Route::get('/documents/{id}', [DocumentController::class, 'show'])->whereNumber('id');
     Route::get('/documents/{id}/download', [DocumentController::class, 'download'])->whereNumber('id');
+
+    Route::get('/dashboard', DashboardController::class);
 
     // Partes: todos leen
     Route::get('/parties', [PartyController::class, 'index']);
