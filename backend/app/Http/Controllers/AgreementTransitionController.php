@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use App\Models\Document;
+use App\Models\Observation;
 
 class AgreementTransitionController extends Controller
 {
@@ -58,6 +59,13 @@ class AgreementTransitionController extends Controller
         }
 
         if ($hasta === 'aprobado') {
+            // Con observaciones abiertas no se aprueba: primero hay que resolverlas
+            $abiertas = Observation::where('convenio_id', $convenio->id)->where('resuelta', false)->count();
+            if ($abiertas > 0) {
+                throw ValidationException::withMessages([
+                    'estado' => ["Hay $abiertas observación(es) sin resolver"],
+                ]);
+            }
             if ($convenio->partes()->count() < 2) {
                 throw ValidationException::withMessages([
                     'estado' => ['Se necesitan al menos 2 partes para aprobar'],

@@ -13,6 +13,7 @@ use App\Http\Controllers\AgreementDocumentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AgreementExportController;
+use App\Http\Controllers\ObservationController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -58,6 +59,7 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::middleware('role:administracion,gestion,revision')->group(function () {
         Route::get('/people', [PersonController::class, 'index']);
         Route::get('/agreements/{id}/people', [AgreementPersonController::class, 'index'])->whereNumber('id');
+        Route::get('/agreements/{id}/observations', [ObservationController::class, 'index'])->whereNumber('id');
     });
 
     // Escritura: solo administración y gestión
@@ -80,4 +82,11 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
         Route::delete('/agreements/{id}/links/{linkId}', [AgreementLinkController::class, 'destroy'])
         ->whereNumber(['id', 'linkId']);
         });
+
+        Route::post('/agreements/{id}/observations', [ObservationController::class, 'store'])
+            ->whereNumber('id')->middleware('role:revision');
+        Route::post('/observations/{id}/reply', [ObservationController::class, 'reply'])
+            ->whereNumber('id')->middleware('role:gestion,administracion');
+        Route::post('/observations/{id}/resolve', [ObservationController::class, 'resolve'])
+            ->whereNumber('id')->middleware('role:revision');
 });

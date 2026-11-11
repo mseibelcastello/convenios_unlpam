@@ -10,6 +10,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\AuditLog;
+use App\Models\Observation;
 
 class AgreementController extends Controller
 {
@@ -40,8 +41,10 @@ class AgreementController extends Controller
             ->with(['unidad', 'partes'])
             ->findOrFail($id);
 
-        // Consulta no ve datos personales
-        if (in_array($usuario->rol, ['administracion', 'gestion', 'revision'], true)) {
+        // Consulta no ve datos personales ni observaciones internas
+        $interno = in_array($usuario->rol, ['administracion', 'gestion', 'revision'], true);
+
+        if ($interno) {
             $convenio->load('personas');
 
             if ($convenio->personas->isNotEmpty()) {
@@ -54,7 +57,13 @@ class AgreementController extends Controller
             }
         }
 
-        return response()->json($convenio);
+        $datos = $convenio->toArray();
+
+        if ($interno) {
+            $datos['observaciones'] = Observation::listaDe($convenio->id);
+        }
+
+        return response()->json($datos);
     }
 
     public function store(AgreementRequest $request): JsonResponse
