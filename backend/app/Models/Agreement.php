@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
 
 class Agreement extends Model
 {
@@ -56,5 +57,37 @@ class Agreement extends Model
         $unidades = $usuario->unidadesAccesibles();
 
         return $unidades === null ? $query : $query->whereIn('unidad_id', $unidades);
+    }
+
+    /** Reglas de validación de los filtros del listado y de la exportación */
+    public static function reglasFiltros(): array
+    {
+        return [
+            'q' => ['nullable', 'string', 'max:100'],
+            'tipo' => ['nullable', Rule::in(['marco', 'especifico', 'pasantia', 'adenda', 'renovacion', 'sustitucion'])],
+            'estado' => ['nullable', Rule::in(['borrador', 'revision', 'aprobado', 'firmado', 'rescindido', 'archivado'])],
+            'unidad_id' => ['nullable', 'integer'],
+            'anio' => ['nullable', 'digits:4'],
+        ];
+    }
+
+    public function scopeFiltrar(Builder $query, array $filtros): Builder
+    {
+        if (filled($filtros['q'] ?? null)) {
+            $texto = '%'.addcslashes($filtros['q'], '%_\\').'%';
+            $query->where(fn ($q) => $q->where('codigo', 'like', $texto)->orWhere('titulo', 'like', $texto));
+        }
+
+        foreach (['tipo', 'estado', 'unidad_id'] as $campo) {
+            if (filled($filtros[$campo] ?? null)) {
+                $query->where($campo, $filtros[$campo]);
+            }
+        }
+
+        if (filled($filtros['anio'] ?? null)) {
+            $query->where('codigo', 'like', "CONV-{$filtros['anio']}-%");
+        }
+
+        return $query;
     }
 }

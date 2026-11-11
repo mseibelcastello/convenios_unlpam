@@ -16,72 +16,46 @@ class AgreementController extends Controller
     private const TIPOS = ['marco', 'especifico', 'pasantia', 'adenda', 'renovacion', 'sustitucion'];
     private const ESTADOS = ['borrador', 'revision', 'aprobado', 'firmado', 'rescindido', 'archivado'];
 
-    public function index(Request $request): JsonResponse
+   public function index(Request $request): JsonResponse
     {
-        $filtros = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'tipo' => ['nullable', Rule::in(self::TIPOS)],
-            'estado' => ['nullable', Rule::in(self::ESTADOS)],
-            'unidad_id' => ['nullable', 'integer'],
-            'anio' => ['nullable', 'digits:4'],
+        $filtros = $request->validate(Agreement::reglasFiltros() + [
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $consulta = Agreement::visiblesPara($request->user())->with('unidad');
+        $pagina = Agreement::visiblesPara($request->user())
+            ->filtrar($filtros)
+            ->with('unidad')
+            ->orderBy('codigo')
+            ->paginate(15);
 
-        if (filled($filtros['q'] ?? null)) {
-            $texto = '%'.addcslashes($filtros['q'], '%_\\').'%';
-            $consulta->where(fn ($q) => $q->where('codigo', 'like', $texto)->orWhere('titulo', 'like', $texto));
-        }
+        return $this->lista($pagina);
+    }
 
-        foreach (['tipo', 'estado', 'unidad_id'] as $campo) {
-            if (filled($filtros[$campo] ?? null)) {
-                $consulta->where($campo, $filtros[$campo]);
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $usuario = $request->user();
+
+        // Fuera del alcance del usuario = 404, como si no existiera
+        $convenio = Agreement::visiblesPara($usuario)
+            ->with(['unidad', 'partes'])
+            ->findOrFail($id);
+
+        // Consulta no ve datos personales
+        if (in_array($usuario->rol, ['administracion', 'gestion', 'revision'], true)) {
+            $convenio->load('personas');
+
+            if ($convenio->personas->isNotEmpty()) {
+                AuditLog::create([
+                    'usuario_id' => $usuario->id,
+                    'accion' => 'consultar datos personales',
+                    'entidad' => 'convenios',
+                    'entidad_id' => $convenio->id,
+                ]);
             }
         }
 
-        if (filled($filtros['anio'] ?? null)) {
-            $consulta->where('codigo', 'like', "CONV-{$filtros['anio']}-%");
-        }
-
-        $pagina = $consulta->orderBy('codigo')->paginate(15);
-
-        return response()->json([
-            'data' => $pagina->items(),
-            'meta' => [
-                'page' => $pagina->currentPage(),
-                'total' => $pagina->total(),
-                'per_page' => $pagina->perPage(),
-                'last_page' => $pagina->lastPage(),
-            ],
-        ]);
+        return response()->json($convenio);
     }
-
-   public function show(Request $request, int $id): JsonResponse
-{
-    $usuario = $request->user();
-
-    // Fuera del alcance del usuario = 404, como si no existiera
-    $convenio = Agreement::visiblesPara($usuario)
-        ->with(['unidad', 'partes'])
-        ->findOrFail($id);
-
-    // Consulta no ve datos personales
-    if (in_array($usuario->rol, ['administracion', 'gestion', 'revision'], true)) {
-        $convenio->load('personas');
-
-        if ($convenio->personas->isNotEmpty()) {
-            AuditLog::create([
-                'usuario_id' => $usuario->id,
-                'accion' => 'consultar datos personales',
-                'entidad' => 'convenios',
-                'entidad_id' => $convenio->id,
-            ]);
-        }
-    }
-
-    return response()->json($convenio);
-}
 
     public function store(AgreementRequest $request): JsonResponse
     {

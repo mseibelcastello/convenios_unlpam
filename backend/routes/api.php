@@ -12,6 +12,7 @@ use App\Http\Controllers\AgreementLinkController;
 use App\Http\Controllers\AgreementDocumentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AgreementExportController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -24,6 +25,8 @@ Route::middleware(['auth:sanctum', 'abilities:mfa'])
 Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+
+    Route::get('/agreements/export', AgreementExportController::class);
 
     // Convenios
     Route::get('/agreements', [AgreementController::class, 'index']);
