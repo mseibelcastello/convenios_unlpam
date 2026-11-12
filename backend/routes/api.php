@@ -14,6 +14,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AgreementExportController;
 use App\Http\Controllers\ObservationController;
+use App\Http\Controllers\CommentController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -39,6 +40,7 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::post('/agreements/{id}/documents', [AgreementDocumentController::class, 'store'])
         ->whereNumber('id')
         ->middleware('role:administracion,gestion,revision');
+        
 
     Route::get('/agreements/{id}/links', [AgreementLinkController::class, 'index'])->whereNumber('id');
 
@@ -60,7 +62,8 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
         Route::get('/people', [PersonController::class, 'index']);
         Route::get('/agreements/{id}/people', [AgreementPersonController::class, 'index'])->whereNumber('id');
         Route::get('/agreements/{id}/observations', [ObservationController::class, 'index'])->whereNumber('id');
-    });
+        Route::get('/agreements/{id}/comments', [CommentController::class, 'index'])->whereNumber('id');
+        });
 
     // Escritura: solo administración y gestión
     Route::middleware('role:gestion,administracion')->group(function () {
@@ -89,4 +92,8 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
             ->whereNumber('id')->middleware('role:gestion,administracion');
         Route::post('/observations/{id}/resolve', [ObservationController::class, 'resolve'])
             ->whereNumber('id')->middleware('role:revision');
+
+
+        Route::post('/agreements/{id}/comments', [CommentController::class, 'store'])
+    ->whereNumber('id')->middleware('role:administracion,gestion,revision');
 });
