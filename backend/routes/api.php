@@ -6,6 +6,7 @@ use App\Http\Controllers\AgreementPersonController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\UnidadController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AgreementTransitionController;
 use App\Http\Controllers\AgreementLinkController;
@@ -49,6 +50,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::get('/documents/{id}/download', [DocumentController::class, 'download'])->whereNumber('id');
 
     Route::get('/dashboard', DashboardController::class);
+
+    // Unidades: todos leen
+    Route::get('/unidades', [UnidadController::class, 'index']);
 
     // Partes: todos leen
     Route::get('/parties', [PartyController::class, 'index']);
