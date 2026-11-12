@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AgreementExportController;
 use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\AgreementSignatureController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -52,6 +53,11 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::get('/documents/{id}/download', [DocumentController::class, 'download'])->whereNumber('id');
 
     Route::get('/dashboard', DashboardController::class);
+
+    Route::middleware('role:administracion')->group(function () {
+        Route::get('/agreements/to-sign', [AgreementSignatureController::class, 'pending']);
+        Route::post('/agreements/{id}/sign', [AgreementSignatureController::class, 'store'])->whereNumber('id');
+    });
 
     // Partes: todos leen
     Route::get('/parties', [PartyController::class, 'index']);
@@ -95,5 +101,5 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
 
 
         Route::post('/agreements/{id}/comments', [CommentController::class, 'store'])
-    ->whereNumber('id')->middleware('role:administracion,gestion,revision');
+        ->whereNumber('id')->middleware('role:administracion,gestion,revision');
 });
