@@ -70,3 +70,9 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 .insignia-revision { background: var(--color-aviso-fondo); color: var(--color-aviso); }
 .insignia-rescindido { background: var(--color-error-fondo); color: var(--color-error); }
 .paginacion { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; }
+
+/* Ficha del convenio (tarea 2.20) */
+.ficha-seccion { margin-top: 1.25rem; padding: 0.75rem 1rem; background: var(--color-papel); border: 1px solid var(--color-relleno); border-radius: var(--radio-m); }
+.ficha-seccion h2 { margin: 0 0 0.5rem; font-family: var(--fuente-titulo); font-size: 1.1rem; }
+.ficha-seccion p, .ficha-seccion ul { margin: 0.25rem 0; }
+.ficha-seccion a, .panel-contenido > p > a { color: var(--color-primario); }
