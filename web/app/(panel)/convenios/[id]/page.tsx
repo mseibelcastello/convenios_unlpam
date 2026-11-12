@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 type Convenio = {
   codigo: string;
@@ -29,6 +30,7 @@ type Vinculo = { id: number; codigo: string; titulo: string; tipo_vinculo: strin
 
 export default function Ficha() {
   const { id } = useParams();
+  const { usuario } = useAuth();
   const [convenio, setConvenio] = useState<Convenio | null>(null);
   const [antecedentes, setAntecedentes] = useState<Vinculo[]>([]);
   const [derivados, setDerivados] = useState<Vinculo[]>([]);
@@ -56,6 +58,13 @@ export default function Ficha() {
         {convenio.tipo} · {convenio.unidad.nombre} ·{" "}
         <span className={`insignia insignia-${convenio.estado}`}>{convenio.estado}</span>
       </p>
+
+      {/* Solo se edita en borrador, y solo administración y gestión */}
+      {convenio.estado === "borrador" && (usuario?.rol === "administracion" || usuario?.rol === "gestion") && (
+        <p>
+          <Link href={`/convenios/${id}/editar`}>Editar convenio</Link>
+        </p>
+      )}
 
       <section className="ficha-seccion">
         <h2>Vigencia</h2>

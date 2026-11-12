@@ -76,3 +76,12 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 .ficha-seccion h2 { margin: 0 0 0.5rem; font-family: var(--fuente-titulo); font-size: 1.1rem; }
 .ficha-seccion p, .ficha-seccion ul { margin: 0.25rem 0; }
 .ficha-seccion a, .panel-contenido > p > a { color: var(--color-primario); }
+
+/* Formulario de convenio (tarea 2.21) */
+.formulario { display: flex; flex-direction: column; gap: 1rem; max-width: 40rem; }
+.campo { display: flex; flex-direction: column; gap: 0.3rem; }
+.campo label { font-size: var(--texto-chico); }
+.campo input, .campo select, .campo textarea { padding: 0.55rem 0.7rem; border: 1px solid var(--color-borde); border-radius: var(--radio-m); background: var(--color-papel); color: var(--color-texto); font-size: var(--texto-base); font-family: inherit; }
+.campo [aria-invalid="true"] { border-color: var(--color-error); }
+.campo-error { margin: 0; color: var(--color-error); font-size: var(--texto-chico); }
+.formulario button { align-self: flex-start; padding: 0.6rem 1.25rem; border: 0; border-radius: var(--radio-m); background: var(--color-primario); color: var(--color-sobre-primario); font-size: var(--texto-base); cursor: pointer; }
