@@ -94,24 +94,45 @@ class AgreementController extends Controller
 
         // Solo el borrador se edita; después hay que usar una adenda
         if ($convenio->estado !== 'borrador') {
-            return response()->json([
-                'message' => 'Solo se puede editar un convenio en borrador',
-                'errors' => ['estado' => ['El convenio no está en borrador']],
-            ], 422);
+            return $this->noEsBorrador();
         }
 
         $version = $datos['version'];
         $campos = Arr::except($datos, ['version']);
 
-        // Un solo UPDATE condicionado a la versión: si otra persona editó antes, no toca ninguna fila
+        // Un solo UPDATE condicionado a la versión y al estado: si otra persona editó antes
+        // (o el convenio ya salió de borrador), no toca ninguna fila
         $filas = Agreement::where('id', $id)
             ->where('version', $version)
+            ->where('estado', 'borrador')
             ->update($campos + ['version' => DB::raw('version + 1')]);
 
         if ($filas === 0) {
-            return response()->json(['message' => 'Conflicto de versión'], 409);
+            $actual = Agreement::visiblesPara($usuario)->with('unidad')->find($id);
+
+            if (! $actual) {
+                return response()->json(['message' => 'No encontrado'], 404);
+            }
+
+            if ($actual->estado !== 'borrador') {
+                return $this->noEsBorrador();
+            }
+
+            // La versión que mandó el cliente ya quedó vieja: se le devuelve cómo está hoy
+            return response()->json([
+                'message' => 'Conflicto de versión',
+                'actual' => $actual,
+            ], 409);
         }
 
         return response()->json(Agreement::with('unidad')->findOrFail($id));
+    }
+
+    private function noEsBorrador(): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Solo se puede editar un convenio en borrador',
+            'errors' => ['estado' => ['El convenio no está en borrador']],
+        ], 422);
     }
 }
