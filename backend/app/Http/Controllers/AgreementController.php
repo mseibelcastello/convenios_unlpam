@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\AuditLog;
 use App\Models\Observation;
+use App\Models\Signature;
 
 class AgreementController extends Controller
 {
@@ -61,6 +62,7 @@ class AgreementController extends Controller
 
         if ($interno) {
             $datos['observaciones'] = Observation::listaDe($convenio->id);
+            $datos['firma'] = Signature::deConvenio($convenio->id);
         }
 
         return response()->json($datos);
