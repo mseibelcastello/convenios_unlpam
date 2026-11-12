@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { ESTADOS } from "@/lib/estados";
+import { TIPOS } from "@/lib/tipos";
 
 type Convenio = {
   codigo: string;
@@ -55,8 +57,8 @@ export default function Ficha() {
         {convenio.codigo} · {convenio.titulo}
       </h1>
       <p>
-        {convenio.tipo} · {convenio.unidad.nombre} ·{" "}
-        <span className={`insignia insignia-${convenio.estado}`}>{convenio.estado}</span>
+        {TIPOS[convenio.tipo]} · {convenio.unidad.nombre} ·{" "}
+        <span className={`insignia insignia-${convenio.estado}`}>{ESTADOS[convenio.estado]}</span>
       </p>
 
       {/* Solo se edita en borrador, y solo administración y gestión */}

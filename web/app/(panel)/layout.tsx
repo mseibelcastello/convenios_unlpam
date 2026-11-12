@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { menuPara } from "@/lib/roles";
+import { menuPara, ROLES } from "@/lib/roles";
 
 // Todo lo que está dentro de (panel) exige sesión: sin ella se redirige a /login.
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +45,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
         </nav>
         <div className="panel-usuario">
           <span>
-            {usuario.name} · {usuario.rol}
+            {usuario.name} · {ROLES[usuario.rol]}
           </span>
           <button
             type="button"

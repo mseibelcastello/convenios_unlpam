@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { ESTADOS } from "@/lib/estados";
+import { TIPOS } from "@/lib/tipos";
 
 type Convenio = {
   id: number;
@@ -14,8 +16,6 @@ type Convenio = {
   unidad: { nombre: string } | null;
 };
 
-const TIPOS = ["marco", "especifico", "pasantia", "adenda", "renovacion", "sustitucion"];
-const ESTADOS = ["borrador", "revision", "aprobado", "firmado", "rescindido", "archivado"];
 
 export default function Convenios() {
   const [filtros, setFiltros] = useState({});
@@ -45,14 +45,18 @@ export default function Convenios() {
         <input name="q" placeholder="Buscar por código o título" />
         <select name="tipo">
           <option value="">Todos los tipos</option>
-          {TIPOS.map((t) => (
-            <option key={t}>{t}</option>
+          {Object.entries(TIPOS).map(([valor, texto]) => (
+            <option key={valor} value={valor}>
+              {texto}
+            </option>
           ))}
         </select>
         <select name="estado">
           <option value="">Todos los estados</option>
-          {ESTADOS.map((e) => (
-            <option key={e}>{e}</option>
+          {Object.entries(ESTADOS).map(([valor, texto]) => (
+            <option key={valor} value={valor}>
+              {texto}
+            </option>
           ))}
         </select>
         <input name="anio" placeholder="Año" maxLength={4} />
@@ -77,10 +81,10 @@ export default function Convenios() {
                 <Link href={`/convenios/${c.id}`}>{c.codigo}</Link>
               </td>
               <td>{c.titulo}</td>
-              <td>{c.tipo}</td>
+              <td>{TIPOS[c.tipo]}</td>
               <td>{c.unidad?.nombre}</td>
               <td>
-                <span className={`insignia insignia-${c.estado}`}>{c.estado}</span>
+                <span className={`insignia insignia-${c.estado}`}>{ESTADOS[c.estado]}</span>
               </td>
               <td>{c.fecha_vencimiento}</td>
             </tr>

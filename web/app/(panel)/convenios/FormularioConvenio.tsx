@@ -3,8 +3,8 @@
 import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { TIPOS } from "@/lib/tipos";
 
-const TIPOS = ["marco", "especifico", "pasantia", "adenda", "renovacion", "sustitucion"];
 
 // Todos los campos del convenio, en el orden en que se muestran
 const CAMPOS = [
@@ -112,9 +112,9 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
             {c.tipo === "tipo" && (
               <select {...comun}>
                 <option value="">Elegí un tipo</option>
-                {TIPOS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {Object.entries(TIPOS).map(([valor, texto]) => (
+                  <option key={valor} value={valor}>
+                    {texto}
                   </option>
                 ))}
               </select>
