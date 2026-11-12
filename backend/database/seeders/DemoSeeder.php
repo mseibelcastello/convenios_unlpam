@@ -16,8 +16,9 @@ class DemoSeeder extends Seeder
         $hoy = now()->startOfDay();
 
         // Unidades
-        $fcen = Unidad::create(['nombre' => 'Facultad de Ciencias Exactas y Naturales', 'sigla' => 'FCEyN']);
-        $fcej = Unidad::create(['nombre' => 'Facultad de Ciencias Económicas y Jurídicas', 'sigla' => 'FCEyJ']);
+        $this->call(UnidadesSeeder::class);
+        $fcen = Unidad::where('sigla', 'FCEyN')->first();
+        $fcej = Unidad::where('sigla', 'FCEyJ')->first();
 
         // Usuarios (contraseña "password"; el modelo la guarda con hash)
         $usuarios = [

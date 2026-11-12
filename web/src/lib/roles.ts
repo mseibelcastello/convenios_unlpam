@@ -1,5 +1,13 @@
 export type Rol = "administracion" | "gestion" | "revision" | "consulta";
 
+// Cómo se muestra cada rol
+export const ROLES: Record<Rol, string> = {
+  administracion: "Administración",
+  gestion: "Gestión",
+  revision: "Revisión",
+  consulta: "Consulta",
+};
+
 export type Usuario = {
   id: number;
   name: string;
