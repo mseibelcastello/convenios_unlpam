@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ESTADOS } from "@/lib/estados";
-import { TIPOS } from "@/lib/tipos";
+import { PARTES, ROLES_PARTE, ROLES_PERSONA, TIPOS, VINCULOS } from "@/lib/tipos";
+import AgregarParte from "./AgregarParte";
+import AgregarPersona from "./AgregarPersona";
+import AgregarVinculo from "./AgregarVinculo";
 
 type Convenio = {
   codigo: string;
@@ -23,9 +26,16 @@ type Convenio = {
   fecha_vencimiento: string | null;
   fecha_preaviso: string | null;
   unidad: { nombre: string };
-  partes: { id: number; nombre: string; tipo: string; pivot: { rol_parte: string } }[];
+  partes: {
+    id: number;
+    nombre: string;
+    tipo: string;
+    representante: string | null;
+    cargo_representante: string | null;
+    pivot: { rol_parte: string };
+  }[];
   // Consulta no recibe las personas
-  personas?: { id: number; nombre: string; pivot: { rol: string } }[];
+  personas?: { id: number; nombre: string; pivot: { rol: string; desde: string | null; hasta: string | null } }[];
 };
 
 //lista de elementos ed antecedentes y derivados
@@ -37,6 +47,8 @@ export default function Ficha() {
   const [convenio, setConvenio] = useState<Convenio | null>(null);
   const [antecedentes, setAntecedentes] = useState<Vinculo[]>([]);
   const [derivados, setDerivados] = useState<Vinculo[]>([]);
+  // Al sumar 1 se vuelven a cargar los datos (lo usan los formularios de agregar)
+  const [recarga, setRecarga] = useState(0);
 
   //carga datos
   useEffect(() => {
@@ -45,9 +57,11 @@ export default function Ficha() {
       setAntecedentes(r.data.antecedentes);
       setDerivados(r.data.derivados);
     });
-  }, [id]);
+  }, [id, recarga]);
 
   if (!convenio) return <p>Cargando…</p>;
+
+  const puedeEditar = usuario?.rol === "administracion" || usuario?.rol === "gestion";
 
   return (
     <>
@@ -63,7 +77,7 @@ export default function Ficha() {
       </p>
 
       {/* Solo se edita en borrador, y solo administración y gestión */}
-      {convenio.estado === "borrador" && (usuario?.rol === "administracion" || usuario?.rol === "gestion") && (
+      {convenio.estado === "borrador" && puedeEditar && (
         <p>
           <Link href={`/convenios/${id}/editar`}>Editar convenio</Link>
         </p>
@@ -96,10 +110,19 @@ export default function Ficha() {
         <ul>
           {convenio.partes.map((p) => (
             <li key={p.id}>
-              {p.nombre} ({p.tipo}) · {p.pivot.rol_parte}
+              {p.nombre} ({PARTES[p.tipo]}) · {ROLES_PARTE[p.pivot.rol_parte]}
+              {p.representante && (
+                <>
+                  {" "}
+                  · Representante: {p.representante}
+                  {p.cargo_representante && ` (${p.cargo_representante})`}
+                </>
+              )}
             </li>
           ))}
         </ul>
+
+        {puedeEditar && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
       </section>
 
       {convenio.personas && (
@@ -108,10 +131,14 @@ export default function Ficha() {
           <ul>
             {convenio.personas.map((p) => (
               <li key={`${p.id}-${p.pivot.rol}`}>
-                {p.nombre} · {p.pivot.rol}
+                {p.nombre} · {ROLES_PERSONA[p.pivot.rol]}
+                {p.pivot.desde && ` · del ${p.pivot.desde}`}
+                {p.pivot.hasta && ` al ${p.pivot.hasta}`}
               </li>
             ))}
           </ul>
+
+          {puedeEditar && <AgregarPersona convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
         </section>
       )}
 
@@ -124,10 +151,15 @@ export default function Ficha() {
               <Link href={`/convenios/${v.id}`}>
                 {v.codigo} · {v.titulo}
               </Link>{" "}
-              ({v.tipo_vinculo})
+              ({VINCULOS[v.tipo_vinculo]})
             </li>
           ))}
         </ul>
+
+        {/* Los vínculos solo se cambian en borrador */}
+        {convenio.estado === "borrador" && puedeEditar && (
+          <AgregarVinculo convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />
+        )}
       </section>
 
       <section className="ficha-seccion">
@@ -139,7 +171,7 @@ export default function Ficha() {
               <Link href={`/convenios/${v.id}`}>
                 {v.codigo} · {v.titulo}
               </Link>{" "}
-              ({v.tipo_vinculo})
+              ({VINCULOS[v.tipo_vinculo]})
             </li>
           ))}
         </ul>
