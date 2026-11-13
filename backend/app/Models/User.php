@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 //Esta lista son los campos que Laravel permite guardar cuando creás un usuario
 #[Fillable(['name', 'email', 'password','rol', 'unidad_id'])]
-#[Hidden(['password', 'remember_token', 'mfa_codigo_hash'])]
+#[Hidden(['password', 'remember_token', 'mfa_codigo_hash', 'mfa_secreto'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -31,6 +31,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'mfa_expira_en' => 'datetime',
+            'mfa_secreto' => 'encrypted',
+            'mfa_activado' => 'boolean',
         ];
     }
 

@@ -19,7 +19,7 @@ cliente.interceptors.request.use(async (config) => {
 });
 
 // En estas rutas un 401 significa "datos incorrectos", no "sesión vencida".
-const RUTAS_DE_ACCESO = ['/auth/login', '/auth/mfa/verify'];
+const RUTAS_DE_ACCESO = ['/auth/login', '/auth/mfa/verify', '/auth/mfa/send-code'];
 
 // Si el servidor dice 401 (token vencido o revocado): borra el token y vuelve al login.
 cliente.interceptors.response.use(

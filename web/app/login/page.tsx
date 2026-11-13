@@ -2,11 +2,12 @@
 
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 
 export default function Login() {
-  const { estado, iniciarSesion, verificarCodigo } = useAuth();
+  const { estado, iniciarSesion, enviarCodigoPorMail, verificarCodigo } = useAuth();
   const router = useRouter();
   const [paso, setPaso] = useState<"clave" | "codigo">("clave");
   const [email, setEmail] = useState("");
@@ -15,6 +16,10 @@ export default function Login() {
   const [codigo, setCodigo] = useState("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
+  // Datos para activar Google Authenticator (solo la primera vez)
+  const [activacion, setActivacion] = useState<{ uri: string; clave: string } | null>(null);
+  const [aviso, setAviso] = useState("");
+  const [enviandoMail, setEnviandoMail] = useState(false);
 
   useEffect(() => {
     if (estado === "autenticado") router.replace("/");
@@ -26,7 +31,8 @@ export default function Login() {
     setEnviando(true);
     try {
       if (paso === "clave") {
-        await iniciarSesion(email.trim(), password);
+        const r = await iniciarSesion(email.trim(), password);
+        setActivacion(r.otpauth_uri && r.clave_manual ? { uri: r.otpauth_uri, clave: r.clave_manual } : null);
         setPaso("codigo");
       } else {
         await verificarCodigo(codigo.trim());
@@ -40,11 +46,28 @@ export default function Login() {
     }
   }
 
+  // Pide que la API mande el código por mail
+  async function mandarPorMail() {
+    setError("");
+    setAviso("");
+    setEnviandoMail(true);
+    try {
+      await enviarCodigoPorMail();
+      setAviso(`Te enviamos un código a ${email}. Ingresalo arriba.`);
+    } catch (err) {
+      const e = err as AxiosError<{ message: string }>;
+      setError(e.response?.data?.message ?? "No se pudo enviar el mail");
+    }
+    setEnviandoMail(false);
+  }
+
   function volver() {
     setPaso("clave");
     setCodigo("");
     setPassword("");
     setError("");
+    setAviso("");
+    setActivacion(null);
   }
 
   return (
@@ -72,7 +95,19 @@ export default function Login() {
           </>
         ) : (
           <>
-            <p>Ingresá el código de 6 dígitos que se envió a {email}.</p>
+            {activacion ? (
+              <>
+                <p>Es tu primer ingreso. Escaneá este código con Google Authenticator (o una app parecida) y escribí abajo el código de 6 dígitos que te muestra.</p>
+                <div className="qr">
+                  <QRCodeSVG value={activacion.uri} size={160} bgColor="#ffffff" fgColor="#000000" title="Código QR para Google Authenticator" />
+                </div>
+                <p className="clave-manual">
+                  ¿No podés escanearlo? Ingresá esta clave a mano en la app: <code>{activacion.clave}</code>
+                </p>
+              </>
+            ) : (
+              <p>Ingresá el código de 6 dígitos de Google Authenticator.</p>
+            )}
             <label>
               Código de verificación
               <input
@@ -92,13 +127,19 @@ export default function Login() {
             {error}
           </p>
         )}
+        {aviso && <p role="status">{aviso}</p>}
         <button type="submit" disabled={enviando}>
           {enviando ? "Verificando…" : paso === "clave" ? "Continuar" : "Ingresar"}
         </button>
         {paso === "codigo" && (
-          <button type="button" className="secundario" onClick={volver}>
-            Volver
-          </button>
+          <>
+            <button type="button" className="secundario" onClick={mandarPorMail} disabled={enviandoMail}>
+              {enviandoMail ? "Enviando…" : "Enviarme el código a mi mail"}
+            </button>
+            <button type="button" className="secundario" onClick={volver}>
+              Volver
+            </button>
+          </>
         )}
       </form>
     </main>

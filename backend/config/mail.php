@@ -110,6 +110,17 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mandar todos los mails a una sola casilla (para desarrollo)
+    |--------------------------------------------------------------------------
+    |
+    | Los usuarios de prueba tienen mails falsos. Si se completa MAIL_REDIRIGIR_A
+    | en el .env, todos los mails de la API llegan a esa dirección.
+    */
+
+    'redirigir_a' => env('MAIL_REDIRIGIR_A'),
+
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),

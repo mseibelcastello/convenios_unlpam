@@ -105,3 +105,8 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 
 /* Documentos (tarea 2.29) */
 .ficha-seccion .tabla button { padding: 0.3rem 0.75rem; border: 0; border-radius: var(--radio-m); background: var(--color-primario); color: var(--color-sobre-primario); cursor: pointer; }
+
+/* Código QR del login (Google Authenticator) */
+.qr { align-self: center; padding: 0.75rem; background: #ffffff; border-radius: var(--radio-m); line-height: 0; }
+.clave-manual { margin: 0; font-size: var(--texto-chico); color: var(--color-texto-suave); }
+.clave-manual code { display: block; margin-top: 0.25rem; font-size: 0.85rem; word-break: break-all; color: var(--color-texto); }

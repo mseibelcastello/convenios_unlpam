@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { verificarMfa } from '@/api/auth';
+import { enviarCodigoPorMail, verificarMfa } from '@/api/auth';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,6 +15,24 @@ export default function Codigo() {
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [enviandoMail, setEnviandoMail] = useState(false);
+
+  // Pide que el servidor mande el código al correo
+  async function mandarPorMail() {
+    if (enviandoMail) return;
+    setError(null);
+    setAviso(null);
+    setEnviandoMail(true);
+    try {
+      await enviarCodigoPorMail();
+      setAviso('Te enviamos un código por mail. Ingresalo arriba.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ocurrió un error inesperado');
+    } finally {
+      setEnviandoMail(false);
+    }
+  }
 
   async function verificar() {
     if (cargando) return;
@@ -40,7 +58,8 @@ export default function Codigo() {
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
           <ThemedText type="subtitle">Verificá tu identidad</ThemedText>
           <ThemedText themeColor="textSecondary">
-            Ingresá el código de 6 dígitos que te enviamos por correo.
+            Ingresá el código de 6 dígitos de Google Authenticator. Si todavía no lo activaste, activalo
+            desde la web o pedí el código por mail.
           </ThemedText>
 
           <TextInput
@@ -75,7 +94,14 @@ export default function Codigo() {
             </View>
           )}
 
+          {aviso && <ThemedText type="small">{aviso}</ThemedText>}
+
           <Button titulo={cargando ? 'Verificando…' : 'Verificar'} onPress={verificar} />
+          <Button
+            titulo={enviandoMail ? 'Enviando…' : 'Enviarme el código a mi mail'}
+            variante="secundario"
+            onPress={mandarPorMail}
+          />
           <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
         </ScrollView>
       </SafeAreaView>

@@ -18,9 +18,12 @@
 ### 2.1 /auth
 Entrar y salir del sistema. Incluye el login, el código MFA que verifica tu identidad y la consulta de quién sos (/auth/me). Devuelve el token que se usa en todo lo demás.
 
+El segundo paso (MFA) se resuelve con un código de 6 dígitos de **Google Authenticator** (o cualquier app TOTP) o con un código que se manda al mail del usuario. La primera vez, el login devuelve el QR para activar la app; una vez activada, no se vuelve a mostrar. Con `MAIL_MAILER=log` el mail es simulado y queda en `storage/logs/laravel.log`.
+
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| POST /auth/login | Público | `{email, password}` | 200 `{token, mfa_required: true}` (token limitado, solo sirve para verificar el código) | 401, 422 |
+| POST /auth/login | Público | `{email, password}` | 200 `{token, mfa_required: true, mfa_activado}` (token limitado, solo sirve para verificar el código). Si `mfa_activado` es false, trae además `otpauth_uri` (para el código QR) y `clave_manual` | 401, 422 |
+| POST /auth/mfa/send-code | Token limitado | — | 200 (manda un código de 6 dígitos al mail del usuario; vale 5 minutos) | 401, 429, 502 |
 | POST /auth/mfa/verify | Token limitado | `{codigo}` | 200 `{token, user}` (token completo) | 401, 422, 429 |
 | POST /auth/logout | Autenticado | — | 200 | 401 |
 | GET /auth/me | Autenticado | — | 200 `{user}` | 401 |
