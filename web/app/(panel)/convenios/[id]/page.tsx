@@ -13,8 +13,9 @@ type Convenio = {
   titulo: string;
   tipo: string;
   estado: string;
-  objeto: string;
-  alcance: string;
+  // Pueden faltar si el convenio se cargó con su PDF
+  objeto: string | null;
+  alcance: string | null;
   resolucion: string | null;
   expediente: string | null;
   fecha_firma: string | null;
@@ -82,8 +83,8 @@ export default function Ficha() {
 
       <section className="ficha-seccion">
         <h2>Datos principales</h2>
-        <p>Objeto: {convenio.objeto}</p>
-        <p>Alcance: {convenio.alcance}</p>
+        <p>Objeto: {convenio.objeto ?? "—"}</p>
+        <p>Alcance: {convenio.alcance ?? "—"}</p>
         <p>Resolución: {convenio.resolucion ?? "—"}</p>
         <p>Expediente: {convenio.expediente ?? "—"}</p>
       </section>

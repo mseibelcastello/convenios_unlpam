@@ -85,3 +85,15 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 .campo [aria-invalid="true"] { border-color: var(--color-error); }
 .campo-error { margin: 0; color: var(--color-error); font-size: var(--texto-chico); }
 .formulario button { align-self: flex-start; padding: 0.6rem 1.25rem; border: 0; border-radius: var(--radio-m); background: var(--color-primario); color: var(--color-sobre-primario); font-size: var(--texto-base); cursor: pointer; }
+
+/* Panel de estadísticas (tarea 2.27) */
+.tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.75rem; }
+.tarjeta { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.75rem 1rem; background: var(--color-papel); border: 1px solid var(--color-relleno); border-radius: var(--radio-m); }
+.tarjeta strong { font-family: var(--fuente-titulo); font-size: 1.75rem; }
+.tarjeta span { font-size: var(--texto-chico); color: var(--color-texto-suave); }
+.graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 0 1rem; }
+.ficha-seccion details { margin-top: 0.5rem; }
+.ficha-seccion summary { cursor: pointer; color: var(--color-primario); }
+.modo { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 1rem; border: 1px solid var(--color-borde); border-radius: var(--radio-m); }
+.modo legend { padding: 0 0.4rem; font-size: var(--texto-chico); }
+.modo label { display: flex; align-items: center; gap: 0.5rem; }
