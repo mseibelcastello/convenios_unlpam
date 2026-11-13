@@ -42,6 +42,7 @@ export async function login(correo: string, clave: string) {
     }
     return data;
   } catch (error) {
+    
     throw new Error(mensajeDeError(error, 'Correo o clave incorrectos'));
   }
 }
