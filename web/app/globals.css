@@ -97,3 +97,8 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 .modo { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 1rem; border: 1px solid var(--color-borde); border-radius: var(--radio-m); }
 .modo legend { padding: 0 0.4rem; font-size: var(--texto-chico); }
 .modo label { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Agregar vínculos, partes y personas en la ficha (tarea 2.28) */
+.solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.agregar { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-relleno); }
+.agregar h3 { margin: 0 0 0.5rem; font-size: 1rem; }
