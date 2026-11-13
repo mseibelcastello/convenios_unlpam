@@ -12,11 +12,12 @@ const CAMPOS = [
   { nombre: "titulo", etiqueta: "Título", tipo: "texto", obligatorio: true },
   { nombre: "tipo", etiqueta: "Tipo", tipo: "tipo", obligatorio: true },
   { nombre: "unidad_id", etiqueta: "Unidad", tipo: "unidad", obligatorio: true },
-  { nombre: "objeto", etiqueta: "Objeto", tipo: "largo", obligatorio: true },
-  { nombre: "alcance", etiqueta: "Alcance", tipo: "largo", obligatorio: true },
-  { nombre: "obligaciones", etiqueta: "Obligaciones", tipo: "largo", obligatorio: true },
-  { nombre: "condiciones_rescision", etiqueta: "Condiciones de rescisión", tipo: "largo", obligatorio: true },
-  { nombre: "marco_legal", etiqueta: "Marco legal", tipo: "largo", obligatorio: true },
+  // "contenido": el texto del convenio. Si se carga el PDF, ya está en el PDF y no se pide.
+  { nombre: "objeto", etiqueta: "Objeto", tipo: "largo", obligatorio: true, contenido: true },
+  { nombre: "alcance", etiqueta: "Alcance", tipo: "largo", obligatorio: true, contenido: true },
+  { nombre: "obligaciones", etiqueta: "Obligaciones", tipo: "largo", obligatorio: true, contenido: true },
+  { nombre: "condiciones_rescision", etiqueta: "Condiciones de rescisión", tipo: "largo", obligatorio: true, contenido: true },
+  { nombre: "marco_legal", etiqueta: "Marco legal", tipo: "largo", obligatorio: true, contenido: true },
   { nombre: "resolucion", etiqueta: "Resolución", tipo: "texto", obligatorio: false },
   { nombre: "expediente", etiqueta: "Expediente", tipo: "texto", obligatorio: false },
   { nombre: "condiciones_renovacion", etiqueta: "Condiciones de renovación", tipo: "largo", obligatorio: false },
@@ -33,8 +34,9 @@ type Unidad = { id: number; nombre: string; sigla: string };
 type Props = {
   // Valores de un convenio existente (al editar); vacío al crear
   inicial?: Record<string, unknown>;
-  // Hace el POST o el PUT. Si la API responde con error, se muestra en el formulario
-  enviar: (datos: Record<string, string>) => Promise<void>;
+  // Hace el POST o el PUT. Si la API responde con error, se muestra en el formulario.
+  // El archivo (PDF) solo se pide al crear; al editar llega null.
+  enviar: (datos: Record<string, string>, archivo: File | null) => Promise<void>;
 };
 
 export default function FormularioConvenio({ inicial, enviar }: Props) {
@@ -50,6 +52,11 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
   const [unidades, setUnidades] = useState<Unidad[]>([]);
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const esAlta = !inicial;
+  // Al crear se elige cómo cargar el convenio: con su PDF o completando todos los campos
+  const [modo, setModo] = useState<"pdf" | "formulario">("pdf");
+  const conPdf = esAlta && modo === "pdf";
 
   useEffect(() => {
     api.get("/unidades").then((r) => setUnidades(r.data));
@@ -63,8 +70,21 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
     e.preventDefault();
     setErrores({});
     setMensaje("");
+
+    // La API también lo controla; acá se avisa antes de mandar
+    if (conPdf && archivo && (archivo.type !== "application/pdf" || archivo.size > 20 * 1024 * 1024)) {
+      setErrores({ archivo: "Tiene que ser un PDF de hasta 20 MB." });
+      return;
+    }
+
+    // Con el PDF no se mandan los campos de contenido
+    const datos = { ...valores };
+    if (conPdf) {
+      for (const c of CAMPOS) if (c.contenido) delete datos[c.nombre];
+    }
+
     try {
-      await enviar(valores);
+      await enviar(datos, conPdf ? archivo : null);
     } catch (err) {
       const respuesta = isAxiosError(err) ? err.response : undefined;
       if (respuesta?.status === 422 && respuesta.data.errors) {
@@ -74,7 +94,7 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
         setErrores(nuevos);
         setMensaje("Revisá los campos marcados.");
       } else {
-        setMensaje(respuesta?.data?.message ?? "No se pudo guardar.");
+        setMensaje(respuesta?.data?.message ?? (err instanceof Error ? err.message : "No se pudo guardar."));
       }
     }
   }
@@ -88,13 +108,53 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
       )}
       <p>Los campos con * son obligatorios.</p>
 
+      {esAlta && (
+        <fieldset className="modo">
+          <legend>¿Cómo querés cargar el convenio?</legend>
+          <label>
+            <input type="radio" name="modo" checked={modo === "pdf"} onChange={() => setModo("pdf")} />
+            Con el PDF del convenio
+          </label>
+          <label>
+            <input type="radio" name="modo" checked={modo === "formulario"} onChange={() => setModo("formulario")} />
+            Completando el formulario
+          </label>
+        </fieldset>
+      )}
+
+      {conPdf && (
+        <div className="campo">
+          <label htmlFor="archivo">PDF del convenio (hasta 20 MB) *</label>
+          <input
+            id="archivo"
+            name="archivo"
+            type="file"
+            accept=".pdf,application/pdf"
+            required
+            onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+            aria-invalid={errores.archivo ? true : undefined}
+            aria-describedby={errores.archivo ? "error-archivo" : undefined}
+          />
+          {errores.archivo && (
+            <p className="campo-error" id="error-archivo">
+              {errores.archivo}
+            </p>
+          )}
+        </div>
+      )}
+
       {CAMPOS.map((c) => {
+        // Con el PDF no se piden los campos de contenido. Al completar el formulario son
+        // obligatorios; al editar no, porque un convenio cargado con PDF puede no tenerlos.
+        if (c.contenido && conPdf) return null;
+        const obligatorio = c.contenido ? esAlta : c.obligatorio;
+
         const comun = {
           id: c.nombre,
           name: c.nombre,
           value: valores[c.nombre],
           onChange: cambiar,
-          required: c.obligatorio,
+          required: obligatorio,
           "aria-invalid": errores[c.nombre] ? true : undefined,
           "aria-describedby": errores[c.nombre] ? `error-${c.nombre}` : undefined,
         };
@@ -103,7 +163,7 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
           <div className="campo" key={c.nombre}>
             <label htmlFor={c.nombre}>
               {c.etiqueta}
-              {c.obligatorio && " *"}
+              {obligatorio && " *"}
             </label>
 
             {c.tipo === "largo" && <textarea rows={3} {...comun} />}
