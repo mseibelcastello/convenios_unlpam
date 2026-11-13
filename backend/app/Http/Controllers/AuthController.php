@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CodigoMfaMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -64,10 +65,7 @@ class AuthController extends Controller
         $usuario->save();
 
         try {
-            Mail::raw(
-                "Tu código de acceso es $codigo. Vale ".self::MINUTOS_VIGENCIA.' minutos.',
-                fn ($mensaje) => $mensaje->to($usuario->email)->subject('Código de acceso - Convenios UNLPam')
-            );
+            Mail::to($usuario->email)->send(new CodigoMfaMail($usuario->name, $codigo, self::MINUTOS_VIGENCIA));
         } catch (\Throwable $e) {
             Log::warning('No se pudo enviar el mail del código: '.$e->getMessage());
 
