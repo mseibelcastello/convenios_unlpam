@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { descargarArchivo } from "@/lib/descargas";
 import { ESTADOS } from "@/lib/estados";
 import { TIPOS } from "@/lib/tipos";
 
@@ -22,6 +23,8 @@ export default function Convenios() {
   const [pagina, setPagina] = useState(1);
   const [convenios, setConvenios] = useState<Convenio[]>([]);
   const [ultimaPagina, setUltimaPagina] = useState(1);
+  const [exportando, setExportando] = useState(false);
+  const [avisoExportar, setAvisoExportar] = useState("");
 
   useEffect(() => {
     api.get("/agreements", { params: { ...filtros, page: pagina } }).then((r) => {
@@ -35,6 +38,23 @@ export default function Convenios() {
     e.preventDefault();
     setFiltros(Object.fromEntries(new FormData(e.currentTarget)));
     setPagina(1);
+  }
+
+  // Exporta en PDF los convenios que cumplen los filtros aplicados con "Buscar"
+  async function exportar() {
+    setAvisoExportar("");
+    if (convenios.length === 0) {
+      setAvisoExportar("No hay convenios para exportar con estos filtros.");
+      return;
+    }
+    setExportando(true);
+    try {
+      const hoy = new Date().toLocaleDateString("sv-SE");
+      await descargarArchivo("/agreements/export", `convenios-${hoy}.pdf`, { ...filtros, formato: "pdf" });
+    } catch (err) {
+      setAvisoExportar(err instanceof Error ? err.message : "No se pudo exportar.");
+    }
+    setExportando(false);
   }
 
   return (
@@ -61,7 +81,12 @@ export default function Convenios() {
         </select>
         <input name="anio" placeholder="Año" maxLength={4} />
         <button type="submit">Buscar</button>
+        <button type="button" onClick={exportar} disabled={exportando}>
+          {exportando ? "Generando PDF…" : "Exportar PDF"}
+        </button>
       </form>
+
+      {avisoExportar && <p role="status">{avisoExportar}</p>}
 
       <table className="tabla">
         <thead>

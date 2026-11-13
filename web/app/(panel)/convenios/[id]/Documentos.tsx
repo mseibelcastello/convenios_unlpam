@@ -1,9 +1,9 @@
 "use client";
 
-import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { descargarArchivo } from "@/lib/descargas";
 import { TIPOS_DOCUMENTO } from "@/lib/tipos";
 import SubirDocumento from "./SubirDocumento";
 
@@ -38,27 +38,12 @@ export default function Documentos({ convenioId }: { convenioId: number }) {
     api.get(`/agreements/${convenioId}/documents`).then((r) => setDocumentos(r.data.data));
   }, [convenioId, recarga]);
 
-  // La descarga necesita el token, así que no sirve un enlace común:
-  // se pide el archivo con axios y se lo entrega al navegador.
   async function descargar(d: Documento) {
     setError("");
     try {
-      const r = await api.get(`/documents/${d.id}/download`, { responseType: "blob" });
-      const url = URL.createObjectURL(r.data);
-      const enlace = document.createElement("a");
-      enlace.href = url;
-      enlace.download = d.nombre_original;
-      enlace.click();
-      URL.revokeObjectURL(url);
+      await descargarArchivo(`/documents/${d.id}/download`, d.nombre_original);
     } catch (err) {
-      // Con responseType "blob", el mensaje del error también llega como blob
-      let texto = "No se pudo descargar el documento.";
-      if (isAxiosError(err) && err.response?.data instanceof Blob) {
-        try {
-          texto = JSON.parse(await err.response.data.text()).message ?? texto;
-        } catch {}
-      }
-      setError(texto);
+      setError(err instanceof Error ? err.message : "No se pudo descargar el documento.");
     }
   }
 
