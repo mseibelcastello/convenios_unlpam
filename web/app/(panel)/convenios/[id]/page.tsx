@@ -10,6 +10,7 @@ import { PARTES, ROLES_PARTE, ROLES_PERSONA, TIPOS, VINCULOS } from "@/lib/tipos
 import AgregarParte from "./AgregarParte";
 import AgregarPersona from "./AgregarPersona";
 import AgregarVinculo from "./AgregarVinculo";
+import Documentos from "./Documentos";
 
 type Convenio = {
   codigo: string;
@@ -104,6 +105,8 @@ export default function Ficha() {
       </section>
 
 
+
+      <Documentos convenioId={Number(id)} />
 
       <section className="ficha-seccion">
         <h2>Partes</h2>

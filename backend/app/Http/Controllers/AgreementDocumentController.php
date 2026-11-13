@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agreement;
 use App\Models\AuditLog;
 use App\Models\Document;
+use App\Models\User;
 use App\Support\MarcaPdf;
 use Illuminate\Http\File;
 use Illuminate\Http\JsonResponse;
@@ -29,6 +30,12 @@ class AgreementDocumentController extends Controller
             ->orderBy('tipo')
             ->orderBy('version')
             ->get();
+
+        // Se suma el nombre de quien lo subió; "subido_por" sigue siendo el id
+        $nombres = User::whereIn('id', $documentos->pluck('subido_por'))->pluck('name', 'id');
+        foreach ($documentos as $documento) {
+            $documento->subido_por_nombre = $nombres[$documento->subido_por] ?? null;
+        }
 
         return response()->json([
             'data' => $documentos,
