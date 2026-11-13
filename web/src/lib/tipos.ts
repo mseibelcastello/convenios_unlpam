@@ -14,6 +14,15 @@ export const ROLES_PARTE: Record<string, string> = {
   otro: "Otro",
 };
 
+// Tipos de documento (PDF) de un convenio
+export const TIPOS_DOCUMENTO: Record<string, string> = {
+  principal: "Principal",
+  anexo: "Anexo",
+  dictamen: "Dictamen",
+  resolucion: "Resolución",
+  otro: "Otro",
+};
+
 // Rol de una persona dentro de un convenio
 export const ROLES_PERSONA: Record<string, string> = {
   representante: "Representante",

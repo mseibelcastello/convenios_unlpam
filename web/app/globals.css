@@ -102,3 +102,6 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .agregar { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--color-relleno); }
 .agregar h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+
+/* Documentos (tarea 2.29) */
+.ficha-seccion .tabla button { padding: 0.3rem 0.75rem; border: 0; border-radius: var(--radio-m); background: var(--color-primario); color: var(--color-sobre-primario); cursor: pointer; }
