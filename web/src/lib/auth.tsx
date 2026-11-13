@@ -6,10 +6,14 @@ import type { Usuario } from "./roles";
 
 type Estado = "cargando" | "anonimo" | "autenticado";
 
+// Lo que responde el login: si todavía no activó Google Authenticator, trae los datos para el QR
+type RespuestaLogin = { mfa_activado: boolean; otpauth_uri?: string; clave_manual?: string };
+
 type Auth = {
   estado: Estado;
   usuario: Usuario | null;
-  iniciarSesion: (email: string, password: string) => Promise<void>;
+  iniciarSesion: (email: string, password: string) => Promise<RespuestaLogin>;
+  enviarCodigoPorMail: () => Promise<void>;
   verificarCodigo: (codigo: string) => Promise<void>;
   cerrarSesion: () => Promise<void>;
 };
@@ -39,6 +43,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function iniciarSesion(email: string, password: string) {
     const r = await api.post("/auth/login", { email, password });
     setTokenMfa(r.data.token);
+    return r.data;
+  }
+
+  // Alternativa a la app: la API manda un código al mail del usuario
+  async function enviarCodigoPorMail() {
+    await api.post("/auth/mfa/send-code", null, { headers: { Authorization: `Bearer ${tokenMfa}` } });
   }
 
   // Paso 2: código. Si es correcto, la API devuelve el token completo.
@@ -61,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <Contexto.Provider value={{ estado, usuario, iniciarSesion, verificarCodigo, cerrarSesion }}>
+    <Contexto.Provider value={{ estado, usuario, iniciarSesion, enviarCodigoPorMail, verificarCodigo, cerrarSesion }}>
       {children}
     </Contexto.Provider>
   );

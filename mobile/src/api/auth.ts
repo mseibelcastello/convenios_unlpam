@@ -21,7 +21,7 @@ function mensajeDeError(error: unknown, mensaje401: string): string {
     const errores = data?.errors as Record<string, string[]> | undefined;
     return (errores && Object.values(errores)[0]?.[0]) ?? data?.message ?? 'Datos inválidos';
   }
-  if (status === 423 || status === 429) {
+  if (status === 423 || status === 429 || status === 502) {
     return data?.message ?? 'Demasiados intentos. Volvé a iniciar sesión';
   }
   return 'Error del servidor. Probá de nuevo más tarde';
@@ -58,6 +58,15 @@ export async function verificarMfa(codigo: string) {
     return data.user;
   } catch (error) {
     throw new Error(mensajeDeError(error, 'Código incorrecto o vencido'));
+  }
+}
+
+/** Alternativa a Google Authenticator: el servidor manda un código de 6 dígitos al correo. */
+export async function enviarCodigoPorMail() {
+  try {
+    await cliente.post('/auth/mfa/send-code');
+  } catch (error) {
+    throw new Error(mensajeDeError(error, 'Volvé a iniciar sesión'));
   }
 }
 
