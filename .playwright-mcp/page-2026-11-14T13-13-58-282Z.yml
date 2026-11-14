@@ -1,0 +1,16 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - img "Universidad Nacional de La Pampa" [ref=e5]
+      - heading "Convenios UNLPam" [level=1] [ref=e6]
+      - paragraph [ref=e7]: Universidad Nacional de La Pampa
+      - generic [ref=e8]:
+        - text: Correo electrónico
+        - textbox "Correo electrónico" [ref=e9]
+      - generic [ref=e10]:
+        - text: Contraseña
+        - generic [ref=e11]:
+          - textbox "Contraseña Mostrar contraseña" [ref=e12]
+          - button "Mostrar contraseña" [ref=e13] [cursor=pointer]
+      - button "Continuar" [ref=e17] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e23] [cursor=pointer]

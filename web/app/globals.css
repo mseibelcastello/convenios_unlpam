@@ -35,26 +35,85 @@ body {
 h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 0 0 0.75rem; }
 .estado-carga { padding: 2rem; color: var(--color-texto-suave); }
 
-.panel-encabezado { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; padding: 0.75rem 1.25rem; background: var(--color-encabezado); color: var(--color-sobre-encabezado); }
-.panel-marca { font-family: var(--fuente-titulo); }
-.panel-menu { display: flex; flex-wrap: wrap; gap: 0.25rem; flex: 1; }
-.panel-menu a { padding: 0.4rem 0.75rem; border-radius: var(--radio-m); color: inherit; text-decoration: none; }
-.panel-menu a:hover, .panel-menu a[aria-current="page"] { background: var(--color-primario); color: var(--color-sobre-primario); }
-.panel-usuario { display: flex; align-items: center; gap: 0.75rem; font-size: var(--texto-chico); }
-.panel-usuario button { padding: 0.35rem 0.75rem; border: 1px solid currentColor; border-radius: var(--radio-m); background: transparent; color: inherit; cursor: pointer; }
-.panel-contenido { padding: 1.5rem 1.25rem; max-width: 72rem; margin: 0 auto; }
+/* Login futurista: paleta oscura solo para esta pantalla (mismos colores de la marca) */
+.login {
+  --color-fondo: #150b0d;
+  --color-papel: #2a181b;
+  --color-texto: #fbede8;
+  --color-texto-suave: #cdb4b0;
+  --color-borde: #9a7f80;
+  --color-error: #ff8a8f;
+  --color-error-fondo: #4a1b20;
+  min-height: 100vh; display: grid; place-items: center; padding: 1rem; color: var(--color-texto);
+  position: relative; isolation: isolate; overflow: hidden;
+  background:
+    linear-gradient(rgba(251, 237, 232, 0.05) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, rgba(251, 237, 232, 0.05) 1px, transparent 1px) 0 0 / 44px 44px,
+    #150b0d;
+}
+.login-tarjeta { width: 100%; max-width: 24rem; display: flex; flex-direction: column; gap: 1rem; padding: 1.75rem; background: rgba(42, 24, 27, 0.75); backdrop-filter: blur(14px); border: 1px solid rgba(255, 138, 61, 0.4); border-radius: 16px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 40px rgba(232, 106, 4, 0.18), 0 20px 50px rgba(0, 0, 0, 0.5); }
+.login-tarjeta h1 { margin: 0; text-align: center; letter-spacing: 0.04em; }
+.login-unidad { margin: -0.5rem 0 0; text-align: center; font-size: var(--texto-chico); color: var(--color-texto-suave); }
+.login-tarjeta input:focus-visible { outline: 2px solid #ff8a3d; outline-offset: 1px; box-shadow: 0 0 14px rgba(255, 138, 61, 0.45); }
+@media (hover: hover) and (pointer: fine) {
+  .login-tarjeta button:not(.secundario):not(.ojo):hover:not(:disabled) { box-shadow: 0 0 18px rgba(232, 106, 4, 0.55); }
+}
+.login-tarjeta button:focus-visible { outline: 2px solid #ff8a3d; outline-offset: 2px; }
 
-.login { min-height: 100vh; display: grid; place-items: center; padding: 1rem; }
-.login-tarjeta { width: 100%; max-width: 24rem; display: flex; flex-direction: column; gap: 1rem; padding: 1.75rem; background: var(--color-papel); border: 1px solid var(--color-borde); border-radius: var(--radio-l); }
+/* Logos oficiales en versión clara, directamente sobre el fondo oscuro, con un leve brillo */
+.logo-unidad { align-self: center; display: flex; }
+.logo-unidad img { display: block; height: 6rem; width: auto; max-width: 100%; mix-blend-mode: lighten; filter: drop-shadow(0 0 14px rgba(232, 106, 4, 0.35)); }
 .login-tarjeta label { display: flex; flex-direction: column; gap: 0.3rem; font-size: var(--texto-chico); }
 .login-tarjeta input { padding: 0.6rem 0.75rem; border: 1px solid var(--color-borde); border-radius: var(--radio-m); background: var(--color-fondo); color: var(--color-texto); font-size: var(--texto-base); }
-.login-tarjeta button { padding: 0.65rem; border: 0; border-radius: var(--radio-m); background: var(--color-primario); color: var(--color-sobre-primario); font-size: var(--texto-base); cursor: pointer; }
+.login-tarjeta button { padding: 0.65rem; border: 0; border-radius: var(--radio-m); background: linear-gradient(90deg, #b3141a, #c2410c); color: #ffffff; font-size: var(--texto-base); cursor: pointer; }
 .login-tarjeta button:disabled { opacity: 0.6; cursor: wait; }
 .login-tarjeta button.secundario { background: transparent; color: var(--color-texto); border: 1px solid var(--color-borde); }
 .login-error { margin: 0; padding: 0.5rem 0.75rem; border-radius: var(--radio-m); background: var(--color-error-fondo); color: var(--color-error); font-size: var(--texto-chico); }
 .campo-clave { position: relative; display: flex; }
 .campo-clave input { flex: 1; padding-right: 2.5rem; }
 .login-tarjeta .ojo { position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%); padding: 0.2rem 0.4rem; background: transparent; color: var(--color-texto-suave); }
+
+/* Animaciones del login */
+.login { --ease-out: cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes login-entrada { from { opacity: 0; transform: translateY(12px) scale(0.97); } }
+@keyframes login-subir { from { opacity: 0; transform: translateY(8px); } }
+@keyframes login-fade { from { opacity: 0; } }
+/* Fondo: dos resplandores que derivan lento (solo transform, no pesa) */
+@keyframes login-deriva { to { transform: translate3d(22rem, 14rem, 0) scale(1.4); } }
+.login::before, .login::after { content: ""; position: absolute; z-index: -1; pointer-events: none; width: 46rem; height: 34rem; border-radius: 50%; will-change: transform; }
+.login::before { top: -10rem; left: -12rem; background: radial-gradient(closest-side, rgba(200, 24, 28, 0.6), transparent); animation: login-deriva 8s ease-in-out infinite alternate; }
+.login::after { bottom: -10rem; right: -12rem; background: radial-gradient(closest-side, rgba(232, 106, 4, 0.5), transparent); animation: login-deriva 11s ease-in-out infinite alternate-reverse; }
+.login-tarjeta { position: relative; animation: login-entrada 300ms var(--ease-out) both; }
+.login-tarjeta .paso { display: flex; flex-direction: column; gap: 1rem; animation: login-subir 250ms var(--ease-out) 80ms both; }
+.login-error { animation: login-subir 200ms var(--ease-out) both; }
+/* Salida al verificar el código */
+@keyframes login-salida { to { opacity: 0; transform: scale(1.08); } }
+@keyframes login-onda { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(9); } }
+@keyframes login-fade-salida { to { opacity: 0; } }
+.login-tarjeta.saliendo { animation: login-salida 420ms var(--ease-out) forwards; pointer-events: none; }
+.login .onda { position: absolute; z-index: 2; left: 50%; top: 50%; width: 10rem; height: 10rem; margin: -5rem 0 0 -5rem; border-radius: 50%; border: 1px solid #ff8a3d; box-shadow: 0 0 24px rgba(232, 106, 4, 0.55), inset 0 0 24px rgba(232, 106, 4, 0.35); pointer-events: none; animation: login-onda 900ms var(--ease-out) both; }
+/* Giro de la tarjeta al cambiar de paso: gira hasta quedar de canto (200ms), se cambia el contenido y vuelve de frente */
+@keyframes login-giro-sale { to { transform: perspective(900px) rotateY(90deg); } }
+@keyframes login-giro-entra { from { transform: perspective(900px) rotateY(-90deg); } }
+.login-tarjeta.giro-sale { animation: login-giro-sale 200ms var(--ease-out) forwards; pointer-events: none; }
+.login-tarjeta.giro-entra { animation: login-giro-entra 320ms var(--ease-out) both; }
+/* Resplandor que sigue al mouse (solo con mouse) */
+.login-tarjeta::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 300ms ease; background: radial-gradient(14rem circle at var(--mx, 50%) var(--my, 50%), rgba(255, 138, 61, 0.16), transparent 70%); }
+@media (hover: hover) and (pointer: fine) {
+  .login-tarjeta:hover::before { opacity: 1; }
+}
+.login-tarjeta input { transition: border-color 150ms ease, box-shadow 150ms ease; }
+.login-tarjeta button { transition: transform 150ms var(--ease-out), box-shadow 150ms ease, opacity 150ms ease, background-color 150ms ease; }
+.login-tarjeta button:not(.ojo):active:not(:disabled) { transform: scale(0.97); }
+.login-tarjeta .ojo { transition: color 150ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .login-tarjeta, .login-tarjeta .paso, .login-error { animation-name: login-fade; }
+  .login::before, .login::after { animation: none; }
+  .login-tarjeta.saliendo, .login-tarjeta.giro-sale { animation-name: login-fade-salida; }
+  .login .onda { display: none; }
+  .login-tarjeta.giro-entra { animation-name: login-fade; }
+  .login-tarjeta button:not(.ojo):active:not(:disabled) { transform: none; }
+}
 
 /* Listado de convenios (tarea 2.19) */
 .filtros { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
@@ -88,7 +147,7 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 
 /* Panel de estadísticas (tarea 2.27) */
 .tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.75rem; }
-.tarjeta { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.75rem 1rem; background: var(--color-papel); border: 1px solid var(--color-relleno); border-radius: var(--radio-m); }
+.tarjeta { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.75rem 1rem; background: color-mix(in srgb, var(--color-papel) 60%, transparent); backdrop-filter: blur(10px); border: 1px solid color-mix(in srgb, var(--color-borde) 35%, transparent); border-radius: var(--radio-m); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
 .tarjeta strong { font-family: var(--fuente-titulo); font-size: 1.75rem; }
 .tarjeta span { font-size: var(--texto-chico); color: var(--color-texto-suave); }
 .graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 0 1rem; }
@@ -110,3 +169,462 @@ h1 { font-family: var(--fuente-titulo); font-size: var(--texto-titulo); margin: 
 .qr { align-self: center; padding: 0.75rem; background: #ffffff; border-radius: var(--radio-m); line-height: 0; }
 .clave-manual { margin: 0; font-size: var(--texto-chico); color: var(--color-texto-suave); }
 .clave-manual code { display: block; margin-top: 0.25rem; font-size: 0.85rem; word-break: break-all; color: var(--color-texto); }
+
+/* ==========================================================================
+   Panel: sistema de diseño para todas las secciones (tema oscuro, igual que el login).
+   Está al final del archivo a propósito: así gana sobre las reglas sueltas de más arriba.
+   Las secciones existentes (listado, ficha, formularios) lo heredan por usar las mismas clases.
+   ========================================================================== */
+.panel {
+  --color-fondo: #faede8; --color-papel: #fff8f5; --color-relleno: #f1ddd6;
+  --color-texto: #2e1519; --color-texto-suave: #6b4a4e; --color-borde: #8e6e70;
+  --color-primario: #c8181c; --color-sobre-primario: #ffffff; --color-acento: #e86a04;
+  --color-error: #a4001b; --color-error-fondo: #fbdada;
+  --color-ok: #1e6b3a; --color-ok-fondo: #ddefe2;
+  --color-aviso: #8a4300; --color-aviso-fondo: #fce3cb;
+  --vidrio: rgba(255, 255, 255, 0.5);
+  --vidrio-borde: rgba(232, 106, 4, 0.3);
+  --linea: rgba(46, 21, 25, 0.1);
+  --sombra-vidrio: 0 8px 32px rgba(150, 60, 20, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  color: var(--color-texto);
+  min-height: 100vh; display: grid; grid-template-columns: 16.5rem minmax(0, 1fr); isolation: isolate;
+  background:
+    linear-gradient(rgba(46, 21, 25, 0.035) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, rgba(46, 21, 25, 0.035) 1px, transparent 1px) 0 0 / 44px 44px,
+    #fbf1ed;
+}
+/* Destellos naranjas detrás de todo: son lo que el vidrio desenfoca. Derivan muy despacio, solo con transform. */
+.panel::before { content: ""; position: fixed; inset: -12rem; z-index: -1; pointer-events: none; will-change: transform; background: radial-gradient(36rem 26rem at calc(100% - 17rem) 14rem, rgba(255, 138, 61, 0.62), transparent 64%), radial-gradient(40rem 30rem at 16rem calc(100% - 16rem), rgba(232, 106, 4, 0.54), transparent 64%); animation: panel-deriva-a 17s ease-in-out infinite alternate; }
+/* Capa B: destellos más chicos, que derivan al revés y con otro ritmo */
+.panel-principal::before { content: ""; position: fixed; inset: -12rem; z-index: -1; pointer-events: none; will-change: transform; background: radial-gradient(30rem 22rem at 52% 48%, rgba(255, 138, 61, 0.28), transparent 65%), radial-gradient(26rem 20rem at 72% 72%, rgba(232, 106, 4, 0.32), transparent 65%); animation: panel-deriva-b 13s ease-in-out infinite alternate-reverse; }
+@keyframes panel-deriva-a { to { transform: translate3d(20rem, 11rem, 0) scale(1.25) rotate(4deg); } }
+@keyframes panel-deriva-b { to { transform: translate3d(-22rem, -10rem, 0) scale(1.3) rotate(-5deg); } }
+.panel :is(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid #c2410c; outline-offset: 2px; }
+
+/* ---- Barra lateral ---- */
+.barra { position: sticky; top: 0; z-index: 30; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.25rem; padding: 1.1rem 0.9rem; background: var(--vidrio); backdrop-filter: blur(18px) saturate(1.4); border-right: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 6px 0 30px rgba(150, 60, 20, 0.08); }
+.barra::after { content: ""; position: absolute; top: 0; right: -1px; bottom: 0; width: 1px; background: linear-gradient(180deg, #e86a04, rgba(232, 106, 4, 0) 45%); pointer-events: none; }
+.barra-marca { display: flex; align-items: center; gap: 0.75rem; padding: 0.25rem 0.4rem 1rem; border-bottom: 1px solid var(--linea); }
+.barra-marca .logo-unidad { isolation: isolate; padding: 0.4rem; border-radius: 12px; background: linear-gradient(160deg, #3a1a1f, #2e1519); box-shadow: 0 4px 14px rgba(46, 21, 25, 0.3); }
+.barra-marca .logo-unidad img { height: 2rem; }
+.barra-marca strong { display: block; font-family: var(--fuente-titulo); font-size: 1.05rem; letter-spacing: 0.04em; }
+.barra-marca small { color: var(--color-texto-suave); font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; }
+
+.menu { position: relative; flex: 1; display: flex; flex-direction: column; gap: 1.25rem; }
+.menu-grupo { display: flex; flex-direction: column; gap: 0.15rem; }
+.menu-grupo p { margin: 0 0 0.35rem 0.8rem; font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-texto-suave); opacity: 0.75; }
+.menu a { position: relative; z-index: 1; display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.8rem; border-radius: 10px; color: var(--color-texto-suave); text-decoration: none; transition: color 150ms ease, background-color 150ms ease; }
+.menu a svg { flex: none; transition: transform 200ms var(--ease-out), color 150ms ease; }
+.menu a[aria-current="page"] { color: var(--color-texto); font-weight: 600; }
+.menu a[aria-current="page"] svg { color: #c2410c; }
+@media (hover: hover) and (pointer: fine) {
+  .menu a:hover { color: var(--color-texto); background: rgba(46, 21, 25, 0.05); }
+  .menu a:hover svg { transform: scale(1.12); }
+}
+/* Recuadro que se desliza hasta la sección activa */
+.menu-indicador { position: absolute; left: 0; right: 0; top: 0; z-index: 0; border-radius: 10px; opacity: 0; pointer-events: none; background: linear-gradient(90deg, rgba(232, 106, 4, 0.2), rgba(255, 255, 255, 0.55)); border: 1px solid rgba(232, 106, 4, 0.45); box-shadow: 0 6px 18px rgba(232, 106, 4, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+.menu-indicador::before { content: ""; position: absolute; left: -1px; top: 22%; bottom: 22%; width: 3px; border-radius: 3px; background: #e86a04; box-shadow: 0 0 10px rgba(232, 106, 4, 0.7); }
+.menu-indicador.listo { transition: transform 320ms var(--ease-out), opacity 200ms ease; }
+
+.barra-usuario { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem; border-radius: 12px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 4px 16px rgba(150, 60, 20, 0.08); }
+.barra-usuario-datos { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.barra-usuario-datos strong, .barra-usuario-datos small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barra-usuario-datos small { color: var(--color-texto-suave); font-size: 0.75rem; }
+.avatar { flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: linear-gradient(135deg, #b3141a, #c2410c); color: #ffffff; font-size: 0.8rem; font-weight: 700; box-shadow: 0 3px 12px rgba(232, 106, 4, 0.4); }
+.icono-boton { flex: none; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: 0; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--color-texto-suave); cursor: pointer; transition: color 150ms ease, background-color 150ms ease, transform 150ms var(--ease-out); }
+.icono-boton:active { transform: scale(0.94); }
+@media (hover: hover) and (pointer: fine) {
+  .icono-boton:hover { color: var(--color-texto); background: rgba(46, 21, 25, 0.07); }
+}
+.barra-fondo { display: none; }
+
+/* ---- Zona principal: header, contenido y footer ---- */
+.panel-principal { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; }
+.panel-encabezado { position: sticky; top: 0; z-index: 20; box-sizing: border-box; display: flex; align-items: center; gap: 1rem; height: 4rem; padding: 0 1.75rem; background: rgba(255, 250, 247, 0.55); backdrop-filter: blur(16px) saturate(1.4); border-bottom: 1px solid rgba(255, 255, 255, 0.7); box-shadow: 0 4px 24px rgba(150, 60, 20, 0.07); }
+.panel-encabezado::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 14rem; height: 1px; background: linear-gradient(90deg, #e86a04, transparent); }
+.migas { flex: 1; margin: 0; display: flex; align-items: center; gap: 0.55rem; font-size: var(--texto-chico); color: var(--color-texto-suave); }
+.migas strong { color: var(--color-texto); font-family: var(--fuente-titulo); font-size: 1rem; }
+.menu-boton { display: none; }
+.boton-principal { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.55rem 1.1rem; border-radius: 10px; background: linear-gradient(90deg, #b3141a, #c2410c); color: #ffffff; font-weight: 600; text-decoration: none; transition: transform 150ms var(--ease-out), box-shadow 150ms ease; }
+.boton-principal:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .boton-principal:hover { box-shadow: 0 0 18px rgba(232, 106, 4, 0.55); }
+}
+.panel-contenido { flex: 1; width: 100%; box-sizing: border-box; max-width: 80rem; margin: 0 auto; padding: 2rem 1.75rem 3rem; }
+.panel-pie { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem; padding: 1rem 1.75rem; border-top: 1px solid var(--linea); font-size: var(--texto-chico); color: var(--color-texto-suave); }
+.pagina { animation: pagina-entra 200ms var(--ease-out) both; }
+@keyframes pagina-entra { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---- Tipografía y bloques de contenido (sirven para todas las secciones) ---- */
+.panel .panel-contenido h1 { font-size: 1.9rem; margin: 0 0 0.35rem; }
+.panel .panel-contenido h2 { margin: 2rem 0 1rem; font-family: var(--fuente-titulo); font-size: 1.15rem; }
+.panel .subtitulo { margin: 0 0 0.5rem; color: var(--color-texto-suave); }
+.panel .panel-contenido a { color: var(--color-primario); }
+.panel .ficha-seccion { margin-top: 1.25rem; padding: 1.25rem 1.4rem; border-radius: 16px; background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: var(--sombra-vidrio); }
+.panel .ficha-seccion h2 { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.9rem; font-size: 1.05rem; }
+.contador { padding: 0.1rem 0.6rem; border-radius: 999px; background: var(--color-aviso-fondo); color: var(--color-aviso); font-size: 0.8rem; font-family: var(--fuente-cuerpo); }
+.vacio { color: var(--color-texto-suave); }
+.panel .graficos { gap: 0 1.25rem; }
+
+/* Tarjetas de números */
+.panel .tarjetas { grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: 0.9rem; }
+.panel .tarjeta { position: relative; overflow: hidden; padding: 1rem 1.1rem 1rem 1.35rem; border-radius: 14px; background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: var(--sombra-vidrio); transition: transform 200ms var(--ease-out), border-color 200ms ease, box-shadow 200ms ease; }
+.panel .tarjeta::before { content: ""; position: absolute; left: 0; top: 0.9rem; bottom: 0.9rem; width: 3px; border-radius: 0 3px 3px 0; background: var(--acento, #e86a04); box-shadow: 0 0 10px var(--acento, #e86a04); }
+.panel .tarjeta strong { font-size: 2rem; line-height: 1.1; }
+.panel .tarjeta-total { background: linear-gradient(135deg, rgba(200, 24, 28, 0.16), rgba(255, 138, 61, 0.28)); border-color: var(--vidrio-borde); }
+.estado-borrador { --acento: #8e6e70; }
+.estado-revision { --acento: #e58a1f; }
+.estado-aprobado, .estado-firmado { --acento: #2f9e5a; }
+.estado-rescindido { --acento: #c8181c; }
+.estado-archivado { --acento: #2e1519; }
+@media (hover: hover) and (pointer: fine) {
+  .panel .tarjeta:hover { transform: translateY(-3px); border-color: var(--vidrio-borde); box-shadow: 0 14px 30px rgba(150, 60, 20, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
+}
+
+/* Esqueletos de carga */
+@keyframes esqueleto { to { transform: translateX(100%); } }
+.esqueleto { min-height: 5rem; }
+.esqueleto::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent); transform: translateX(-100%); animation: esqueleto 1.4s linear infinite; }
+.esqueleto::before { display: none; }
+
+/* Filas de convenios con su insignia de urgencia */
+.filas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.filas li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0; padding: 0.7rem 0.9rem; border-radius: 12px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.8); transition: background-color 150ms ease, border-color 150ms ease; }
+.filas a { min-width: 0; display: flex; flex-direction: column; color: var(--color-texto); text-decoration: none; }
+.filas a strong { font-size: 0.8rem; letter-spacing: 0.04em; color: #b8420a; }
+.filas a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) {
+  .filas li:hover { background: rgba(255, 255, 255, 0.85); border-color: var(--vidrio-borde); }
+}
+.urgencia { flex: none; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.urgencia-vencido { background: var(--color-error-fondo); color: var(--color-error); }
+.urgencia-pronto { background: var(--color-aviso-fondo); color: var(--color-aviso); }
+.urgencia-ok { background: rgba(46, 21, 25, 0.07); color: var(--color-texto-suave); }
+
+/* Insignias de estado (los colores de cada estado están en las reglas de más arriba) */
+.panel .insignia { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.65rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; }
+.panel .insignia::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.panel .insignia-archivado { background: #2e1519; color: #fbede8; }
+.panel .insignia-borrador { background: rgba(46, 21, 25, 0.08); color: var(--color-texto-suave); }
+
+/* Tablas */
+.panel .tabla { background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4); border-collapse: separate; border-spacing: 0; border: 1px solid rgba(255, 255, 255, 0.75); border-radius: 14px; box-shadow: var(--sombra-vidrio); }
+.panel .tabla th { padding: 0.75rem 0.9rem; background: rgba(46, 21, 25, 0.04); border-bottom: 1px solid var(--linea); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-texto-suave); }
+.panel .tabla th:first-child { border-top-left-radius: 13px; }
+.panel .tabla th:last-child { border-top-right-radius: 13px; }
+.panel .tabla td { padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--linea); transition: background-color 150ms ease; }
+.panel .tabla tbody tr:last-child td { border-bottom: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .panel .tabla tbody tr:hover td { background: rgba(255, 138, 61, 0.1); }
+}
+
+/* Filtros y formularios */
+.panel .filtros { gap: 0.6rem; margin-bottom: 1.25rem; padding: 0.9rem; border-radius: 14px; background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: var(--sombra-vidrio); }
+.panel :is(.filtros, .campo) :is(input, select, textarea) { padding: 0.6rem 0.85rem; border: 1px solid rgba(46, 21, 25, 0.18); border-radius: 10px; background: rgba(255, 255, 255, 0.75); color: var(--color-texto); transition: border-color 150ms ease, box-shadow 150ms ease; }
+.panel :is(.filtros, .campo) :is(input, select, textarea):focus-visible { outline: none; border-color: #e86a04; box-shadow: 0 0 0 3px rgba(232, 106, 4, 0.22); }
+.panel .filtros input::placeholder { color: var(--color-texto-suave); }
+
+/* Botones del contenido: principal (degradé) y secundario (borde) */
+.panel .panel-contenido button { padding: 0.55rem 1.15rem; border: 0; border-radius: 10px; background: linear-gradient(90deg, #b3141a, #c2410c); color: #ffffff; font-weight: 600; font-size: var(--texto-base); cursor: pointer; transition: transform 150ms var(--ease-out), box-shadow 150ms ease, opacity 150ms ease; }
+.panel .panel-contenido button:active:not(:disabled) { transform: scale(0.97); }
+.panel .panel-contenido button:disabled { opacity: 0.5; cursor: default; }
+.panel .panel-contenido .filtros button[type="button"], .panel .panel-contenido .paginacion button { background: transparent; border: 1px solid var(--vidrio-borde); color: var(--color-texto); }
+@media (hover: hover) and (pointer: fine) {
+  .panel .panel-contenido button:hover:not(:disabled) { box-shadow: 0 0 18px rgba(232, 106, 4, 0.45); }
+}
+.panel .paginacion { justify-content: center; }
+
+/* ---- Entrada después del login: la barra viene de la izquierda, el header baja y el contenido sube escalonado ---- */
+@keyframes barra-entra { from { opacity: 0; transform: translateX(-100%); } }
+@keyframes encabezado-entra { from { opacity: 0; transform: translateY(-100%); } }
+@keyframes panel-entra-contenido { from { opacity: 0; transform: translateY(18px); } }
+.panel-entrada::before { animation: login-fade 900ms ease both, panel-deriva-a 17s ease-in-out infinite alternate; }
+.panel-entrada .panel-principal::before { animation: login-fade 900ms ease both, panel-deriva-b 13s ease-in-out infinite alternate-reverse; }
+@keyframes panel-cortina { to { opacity: 0; } }
+.panel-entrada::after { content: ""; position: fixed; inset: 0; z-index: 60; background: #150b0d; pointer-events: none; animation: panel-cortina 650ms ease-out both; }
+.panel-entrada .barra { animation: barra-entra 560ms var(--ease-out) 220ms both; }
+.panel-entrada .panel-encabezado { animation: encabezado-entra 520ms var(--ease-out) 340ms both; }
+.panel-entrada .menu a { animation: panel-entra-contenido 480ms var(--ease-out) both; animation-delay: calc(520ms + var(--i, 0) * 60ms); }
+.panel-entrada .barra-usuario { animation: panel-entra-contenido 480ms var(--ease-out) 740ms both; }
+.panel-entrada .panel-pie { animation: login-fade 700ms ease 1050ms both; }
+.panel-entrada .pagina { animation: none; }
+.panel-entrada .pagina > * { animation: panel-entra-contenido 560ms var(--ease-out) both; }
+.panel-entrada .pagina > :nth-child(1) { animation-delay: 600ms; }
+.panel-entrada .pagina > :nth-child(2) { animation-delay: 670ms; }
+.panel-entrada .pagina > :nth-child(3) { animation-delay: 740ms; }
+.panel-entrada .pagina > :nth-child(4) { animation-delay: 810ms; }
+.panel-entrada .pagina > :nth-child(5) { animation-delay: 880ms; }
+.panel-entrada .pagina > :nth-child(n + 6) { animation-delay: 950ms; }
+
+/* ---- Celular y pantallas chicas: la barra pasa a ser un cajón lateral ---- */
+@media (max-width: 56rem) {
+  .panel { grid-template-columns: minmax(0, 1fr); }
+  .barra { position: fixed; top: 0; bottom: 0; left: 0; width: 17rem; max-width: 85vw; transform: translateX(-100%); visibility: hidden; transition: transform 300ms var(--ease-out), visibility 0s linear 300ms; background: rgba(255, 248, 245, 0.95); }
+  .barra.abierta { transform: none; visibility: visible; transition-delay: 0s; }
+  .barra-fondo { display: block; position: fixed; inset: 0; z-index: 25; background: rgba(46, 21, 25, 0.4); opacity: 0; pointer-events: none; transition: opacity 250ms ease; }
+  .barra-fondo.visible { opacity: 1; pointer-events: auto; }
+  .menu-boton { display: grid; }
+  .panel-encabezado { padding: 0 1rem; }
+  .migas span { display: none; }
+  .panel-contenido { padding: 1.5rem 1rem 2.5rem; }
+  .panel-pie { padding: 1rem; }
+}
+
+/* ---- Reducir movimiento: solo fades, sin desplazamientos ---- */
+@media (prefers-reduced-motion: reduce) {
+  .pagina, .panel-entrada .barra, .panel-entrada .panel-encabezado, .panel-entrada .menu a, .panel-entrada .barra-usuario, .panel-entrada .pagina > * { animation-name: login-fade; }
+  .menu-indicador.listo { transition: opacity 200ms ease; }
+  .esqueleto::after { animation: none; }
+  .barra { transition: none; }
+  .panel .tarjeta:hover { transform: none; }
+  .menu a svg, .panel .panel-contenido button:active:not(:disabled), .boton-principal:active, .icono-boton:active { transform: none; }
+}
+
+/* Detalles de formularios y tablas en el panel */
+.panel .tabla td:first-child { white-space: nowrap; }
+.panel input { accent-color: #e86a04; }
+.panel .modo { border: 1px solid rgba(46, 21, 25, 0.16); border-radius: 14px; background: var(--vidrio); }
+.panel .campo input[type="file"]::file-selector-button { margin-right: 0.75rem; padding: 0.35rem 0.8rem; border: 1px solid var(--vidrio-borde); border-radius: 8px; background: rgba(232, 106, 4, 0.12); color: var(--color-texto); cursor: pointer; }
+
+/* Celular: las tablas se desplazan dentro de su caja, sin ensanchar toda la página */
+@media (max-width: 56rem) {
+  .panel .tabla { display: block; overflow-x: auto; }
+}
+@media (max-width: 30rem) {
+  .boton-principal span { display: none; }
+  .boton-principal { padding: 0.55rem; }
+}
+.panel .filas a { color: var(--color-texto); }
+
+/* ---- Identidad: tipografías de la marca y el destello del logo ---- */
+/* Los controles de formulario no heredan la fuente por defecto */
+button, input, select, textarea { font-family: inherit; }
+.panel .panel-contenido h1 { font-weight: 700; letter-spacing: -0.01em; }
+.panel .panel-contenido h2 { font-weight: 600; }
+.panel .tarjeta strong, .barra-marca strong { font-weight: 700; }
+
+/* Al entrar después del login, el logo aparece con un destello de la llama */
+@keyframes logo-aparece { from { opacity: 0; transform: scale(0.5) rotate(-8deg); } 60% { transform: scale(1.08) rotate(0); } }
+@keyframes logo-brillo { 40% { box-shadow: 0 0 34px 8px rgba(255, 138, 61, 0.8); } }
+.panel-entrada .barra-marca .logo-unidad { animation: logo-aparece 700ms var(--ease-out) 650ms both, logo-brillo 1100ms ease-out 650ms both; }
+@media (prefers-reduced-motion: reduce) {
+  .panel-entrada .barra-marca .logo-unidad { animation: login-fade 500ms ease 650ms both; }
+}
+
+/* Reducir movimiento: el fondo queda quieto */
+@media (prefers-reduced-motion: reduce) {
+  .panel::before, .panel-principal::before, .panel-entrada::before, .panel-entrada .panel-principal::before { animation: none; }
+}
+
+/* ---- Formulario de convenio: secciones de vidrio, elección de modo, zona del PDF y barra de guardado ---- */
+.formulario { max-width: 60rem; min-width: 0; gap: 1.25rem; }
+.formulario .ficha-seccion { margin: 0; }
+.formulario .ficha-seccion h2 { margin-top: 0; }
+.campos-rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+.campos-rejilla .campo-ancho { grid-column: 1 / -1; }
+@media (max-width: 40rem) { .campos-rejilla { grid-template-columns: minmax(0, 1fr); } }
+
+.modo-opciones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; margin: 0; padding: 0; border: 0; }
+.modo-opciones legend { margin-bottom: 0.6rem; padding: 0; font-family: var(--fuente-titulo); font-weight: 600; }
+.modo-opcion { position: relative; display: flex; flex-direction: column; gap: 0.25rem; padding: 1rem 1.1rem; border: 1px solid var(--vidrio-borde); border-radius: 16px; background: var(--vidrio); backdrop-filter: blur(14px); cursor: pointer; transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease; }
+.modo-opcion input { position: absolute; opacity: 0; pointer-events: none; }
+.modo-opcion strong { font-family: var(--fuente-titulo); }
+.modo-opcion span { color: var(--color-texto-suave); font-size: var(--texto-chico); }
+.modo-opcion:has(input:checked) { border-color: #e86a04; background: rgba(255, 255, 255, 0.85); box-shadow: 0 0 0 3px rgba(232, 106, 4, 0.2); }
+.modo-opcion:has(input:focus-visible) { outline: 2px solid #e86a04; outline-offset: 2px; }
+@media (max-width: 40rem) { .modo-opciones { grid-template-columns: minmax(0, 1fr); } }
+
+.zona-pdf { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 2rem 1rem; border: 2px dashed rgba(232, 106, 4, 0.5); border-radius: 14px; background: rgba(255, 255, 255, 0.55); text-align: center; cursor: pointer; transition: border-color 150ms ease, background-color 150ms ease; }
+.zona-pdf input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.zona-pdf strong { font-family: var(--fuente-titulo); overflow-wrap: anywhere; }
+.zona-pdf span { color: var(--color-texto-suave); font-size: var(--texto-chico); }
+.zona-pdf.arrastrando { border-color: #e86a04; background: rgba(255, 138, 61, 0.18); }
+.zona-pdf.con-archivo { border-style: solid; border-color: rgba(30, 107, 58, 0.5); background: rgba(221, 239, 226, 0.6); }
+.zona-pdf:has(input:focus-visible) { outline: 2px solid #e86a04; outline-offset: 2px; }
+
+.formulario-barra { position: sticky; bottom: 0.75rem; z-index: 5; display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--vidrio-borde); border-radius: 14px; background: rgba(255, 255, 255, 0.82); backdrop-filter: blur(14px); box-shadow: var(--sombra-vidrio); }
+.formulario-barra span { margin-right: auto; color: var(--color-texto-suave); font-size: var(--texto-chico); }
+.formulario .boton-secundario { align-self: auto; background: transparent; color: var(--color-texto); border: 1px solid rgba(46, 21, 25, 0.25); }
+.formulario-barra button { align-self: auto; }
+@media (max-width: 30rem) { .formulario-barra span { display: none; } .formulario-barra button { flex: 1; } }
+
+/* ---- La "i" de ayuda junto a las etiquetas ---- */
+.campo-etiqueta { display: flex; align-items: center; gap: 0.4rem; }
+.campo { position: relative; }
+.info { display: inline-block; }
+.formulario .info button { align-self: auto; display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; padding: 0; border: 1px solid rgba(232, 106, 4, 0.6); border-radius: 50%; background: rgba(255, 138, 61, 0.14); color: #8a4300; font: italic 700 0.7rem/1 var(--fuente-titulo); cursor: help; }
+.formulario .info button:focus-visible { outline: 2px solid #e86a04; outline-offset: 2px; }
+.info-texto { position: absolute; left: 0; top: -0.4rem; z-index: 10; width: max-content; max-width: min(18rem, 100%); padding: 0.55rem 0.75rem; border: 1px solid var(--vidrio-borde); border-radius: 10px; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(12px); box-shadow: var(--sombra-vidrio); color: var(--color-texto); font: 400 0.8rem/1.4 var(--fuente-cuerpo); text-align: left; opacity: 0; visibility: hidden; transform: translateY(calc(-100% + 4px)); transition: opacity 150ms ease, transform 150ms var(--ease-out), visibility 150ms; pointer-events: none; }
+.info.abierta .info-texto, .info:has(button:focus-visible) .info-texto { opacity: 1; visibility: visible; transform: translateY(-100%); }
+@media (hover: hover) and (pointer: fine) { .info:hover .info-texto { opacity: 1; visibility: visible; transform: translateY(-100%); } }
+@media (prefers-reduced-motion: reduce) { .info-texto { transition: opacity 150ms ease; transform: translateY(-100%); } }
+
+/* ---- Listado de convenios ---- */
+.panel h1 .contador { margin-left: 0.5rem; padding: 0.15rem 0.65rem; border-radius: 999px; background: rgba(232, 106, 4, 0.14); color: #8a4300; font-size: 0.9rem; font-weight: 600; vertical-align: middle; }
+
+.panel .boton-secundario { padding: 0.55rem 1.1rem; border: 1px solid rgba(46, 21, 25, 0.22); border-radius: 10px; background: rgba(255, 255, 255, 0.6); color: var(--color-texto); cursor: pointer; transition: background-color 150ms ease, border-color 150ms ease; }
+.panel .boton-secundario:disabled { opacity: 0.5; cursor: default; }
+.panel .boton-texto { padding: 0.55rem 0.5rem; border: 0; background: transparent; color: #b8420a; font-weight: 600; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) {
+  .panel .boton-secundario:not(:disabled):hover { background: #fff; border-color: var(--vidrio-borde); }
+  .panel .boton-texto:hover { text-decoration: underline; }
+}
+
+.filtros .buscador { position: relative; flex: 1 1 11rem; display: flex; align-items: center; min-width: 0; }
+.filtros .buscador svg { position: absolute; left: 0.8rem; color: var(--color-texto-suave); pointer-events: none; }
+.filtros .buscador input { width: 100%; padding-left: 2.5rem; }
+
+.tabla-convenios tbody tr { position: relative; }
+.panel .tabla-convenios td.celda-convenio { display: flex; flex-direction: column; gap: 0.1rem; min-width: 14rem; white-space: normal; }
+.tabla-convenios .codigo { align-self: flex-start; font-family: var(--fuente-titulo); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; color: #b8420a; text-decoration: none; }
+/* El link del código cubre la fila entera: toda la fila se puede tocar y sigue siendo un link para el teclado */
+.tabla-convenios .codigo::after { content: ""; position: absolute; inset: 0; }
+.tabla-convenios .codigo:focus-visible { outline: none; }
+.tabla-convenios .codigo:focus-visible::after { outline: 2px solid #e86a04; outline-offset: -2px; border-radius: 10px; }
+.tabla-convenios .titulo { font-weight: 600; color: var(--color-texto); }
+.tabla-convenios small { color: var(--color-texto-suave); font-size: 0.78rem; }
+.etiqueta-tipo { padding: 0.15rem 0.6rem; border-radius: 8px; background: rgba(46, 21, 25, 0.06); color: var(--color-texto-suave); font-size: 0.8rem; white-space: nowrap; }
+.vencimiento { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; white-space: nowrap; }
+.sin-dato { color: var(--color-texto-suave); font-size: 0.85rem; font-style: italic; }
+@media (hover: hover) and (pointer: fine) { .tabla-convenios tbody tr { cursor: pointer; } }
+
+.lista-esqueleto { display: flex; flex-direction: column; gap: 0.6rem; }
+.lista-esqueleto .esqueleto { position: relative; overflow: hidden; min-height: 4.2rem; border-radius: 14px; background: var(--vidrio); border: 1px solid rgba(255, 255, 255, 0.75); }
+
+.vacio-grande { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; padding: 2.5rem 1rem; border-radius: 16px; background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: var(--sombra-vidrio); text-align: center; }
+.vacio-grande strong { font-family: var(--fuente-titulo); font-size: 1.05rem; }
+.vacio-grande span { color: var(--color-texto-suave); }
+.vacio-grande button { margin-top: 0.6rem; }
+
+.panel .paginacion { justify-content: center; margin-top: 1.25rem; color: var(--color-texto-suave); font-size: var(--texto-chico); }
+
+/* En el celular cada convenio es una tarjeta, no una fila de tabla cortada */
+@media (max-width: 56rem) {
+  .panel .tabla-convenios { display: block; overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+  .tabla-convenios thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .tabla-convenios tbody { display: flex; flex-direction: column; gap: 0.7rem; }
+  .tabla-convenios tr { display: grid; position: relative; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "convenio convenio" "tipo vence"; gap: 0.6rem 0.75rem; align-items: center; padding: 0.9rem 1rem; border-radius: 14px; background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: var(--sombra-vidrio); }
+  .panel .tabla-convenios td { display: block; padding: 0; border: 0; min-width: 0; }
+  .tabla-convenios td:nth-child(1) { grid-area: convenio; }
+  .tabla-convenios td:nth-child(2) { grid-area: tipo; }
+  .tabla-convenios td:nth-child(3) { position: absolute; top: 0.9rem; right: 1rem; }
+  .tabla-convenios td:nth-child(4) { grid-area: vence; justify-self: end; }
+  .panel .tabla-convenios td.celda-convenio { display: flex; min-width: 0; padding-right: 6.5rem; }
+  .tabla-convenios .titulo { overflow-wrap: anywhere; }
+  .vencimiento { align-items: flex-end; font-size: 0.85rem; }
+}
+
+/* ---- Ficha del convenio ---- */
+.panel a.volver { display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding: 0.5rem 1rem 0.5rem 0.75rem; border: 1px solid var(--vidrio-borde); border-radius: 999px; background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(10px); box-shadow: var(--sombra-vidrio); color: var(--color-texto); font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: background-color 150ms ease, color 150ms ease; }
+.volver svg { transition: transform 200ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .panel a.volver:hover { background: #fff; color: #b8420a; }
+  .volver:hover svg { transform: translateX(-3px); }
+}
+@media (prefers-reduced-motion: reduce) { .volver:hover svg { transform: none; } }
+
+.ficha-cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.ficha-cabecera > div { min-width: 0; }
+.ficha-cabecera h1 { margin: 0.15rem 0 0.6rem; }
+.codigo-ficha { font-family: var(--fuente-titulo); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.05em; color: #b8420a; }
+.ficha-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin: 0; color: var(--color-texto-suave); }
+.panel a.boton-secundario { display: inline-flex; align-items: center; flex: none; color: var(--color-texto); text-decoration: none; }
+
+.ficha-rejilla { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1.25rem; align-items: start; }
+.ficha-columna, .ficha-lateral { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.ficha-lateral { position: sticky; top: 5rem; }
+.ficha-rejilla .ficha-seccion { margin: 0; }
+/* En pantallas chicas todo va en una columna y solo la vigencia sube al principio */
+@media (max-width: 64rem) {
+  .ficha-rejilla { grid-template-columns: minmax(0, 1fr); }
+  .ficha-columna, .ficha-lateral { display: contents; }
+  .vigencia-seccion { order: -1; }
+}
+/* En la columna angosta la etiqueta del vínculo va debajo del título, para que no lo corte */
+.ficha-lateral .filas li { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+.ficha-lateral .filas a { width: 100%; }
+.ficha-lateral .filas a span { white-space: normal; }
+@media (max-width: 40rem) { .ficha-cabecera { flex-direction: column; } }
+
+.datos-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.5rem; margin: 0; }
+.datos-lista .ancho { grid-column: 1 / -1; }
+.datos-lista dt { margin-bottom: 0.2rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-texto-suave); }
+.datos-lista dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 40rem) { .datos-lista { grid-template-columns: minmax(0, 1fr); } }
+
+/* Vigencia como línea de tiempo vertical */
+.vigencia { position: relative; list-style: none; margin: 0; padding: 0 0 0 1.4rem; display: flex; flex-direction: column; gap: 1rem; }
+.vigencia::before { content: ""; position: absolute; left: 0.32rem; top: 0.4rem; bottom: 0.4rem; width: 2px; background: linear-gradient(#e86a04, rgba(232, 106, 4, 0.2)); border-radius: 2px; }
+.vigencia li { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; margin: 0; }
+.vigencia li::before { content: ""; position: absolute; left: -1.4rem; top: 0.3rem; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #e86a04; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9); }
+.vigencia li.falta::before { background: rgba(46, 21, 25, 0.25); }
+.vigencia li > span:first-child { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-texto-suave); }
+.vigencia li.falta strong { font-weight: 400; font-style: italic; color: var(--color-texto-suave); }
+.vigencia .urgencia { margin-top: 0.25rem; }
+
+.tarjetas-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; }
+.tarjetas-lista li { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; margin: 0; padding: 0.85rem 1rem; border-radius: 12px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.8); }
+.tarjetas-lista small { color: var(--color-texto-suave); }
+.parte-datos { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.rol { padding: 0.15rem 0.6rem; border-radius: 999px; background: rgba(46, 21, 25, 0.08); color: var(--color-texto); font-size: 0.75rem; font-weight: 600; }
+.rol-unlpam { background: rgba(232, 106, 4, 0.16); color: #8a4300; }
+.filas .etiqueta-tipo { flex: none; }
+
+.documentos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.documentos-lista li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0; padding: 0.7rem 0.9rem; border-radius: 12px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.8); }
+.documento-datos { min-width: 0; display: flex; flex-direction: column; }
+.documento-datos strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.documento-datos small { color: var(--color-texto-suave); }
+@media (max-width: 40rem) { .documentos-lista li { flex-direction: column; align-items: stretch; } }
+
+/* Botón que abre la ventana de "Agregar ..." */
+.boton-agregar { display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 1rem; padding: 0.5rem 1rem; border: 1px dashed rgba(232, 106, 4, 0.6); border-radius: 10px; background: transparent; color: #b8420a; font-weight: 600; cursor: pointer; transition: background-color 150ms ease; }
+.boton-agregar::before { content: "+"; font-size: 1.1rem; line-height: 1; }
+@media (hover: hover) and (pointer: fine) { .boton-agregar:hover { background: rgba(232, 106, 4, 0.1); } }
+.ventana .modo { flex-direction: row; flex-wrap: wrap; gap: 0.4rem 1.5rem; padding: 0 0 0.5rem; border: 0; background: transparent; }
+.ventana .modo legend { display: block; width: 100%; padding: 0 0 0.3rem; }
+
+/* ---- Ventana modal (<dialog>) ---- */
+html:has(dialog[open]) { overflow: hidden; }
+.ventana { inset: 0; margin: auto; width: min(34rem, calc(100vw - 2rem)); max-height: min(90vh, 46rem); padding: 0; border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 18px; background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(18px) saturate(1.4); box-shadow: 0 24px 60px rgba(46, 21, 25, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9); color: var(--color-texto); font: inherit; overflow: hidden; }
+.ventana[open] { animation: ventana-entra 220ms var(--ease-out); }
+.ventana::backdrop { background: rgba(46, 21, 25, 0.38); backdrop-filter: blur(6px); }
+.ventana[open]::backdrop { animation: ventana-fondo 220ms ease; }
+@keyframes ventana-entra { from { opacity: 0; transform: translateY(12px) scale(0.97); } }
+@keyframes ventana-fondo { from { opacity: 0; } }
+.ventana-caja { display: flex; flex-direction: column; max-height: inherit; }
+.ventana-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--linea); }
+.ventana-cabecera h2 { margin: 0; font-size: 1.1rem; }
+.ventana-cuerpo { padding: 1.25rem; overflow-y: auto; }
+.ventana .formulario { max-width: none; }
+@media (max-width: 40rem) {
+  /* En el celular sube desde abajo, como una hoja */
+  .ventana { width: 100%; max-width: 100%; margin: auto 0 0; max-height: 92vh; border-radius: 18px 18px 0 0; }
+  .ventana[open] { animation-name: ventana-sube; }
+  @keyframes ventana-sube { from { transform: translateY(100%); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ventana[open] { animation: ventana-fondo 200ms ease; }
+}
+
+/* Los botones "no principales" ganan a la regla general de botones rojos del contenido del panel */
+.panel .panel-contenido button:is(.boton-agregar, .boton-secundario, .boton-texto, .icono-boton),
+.panel .panel-contenido button:is(.boton-agregar, .boton-secundario, .boton-texto, .icono-boton):hover:not(:disabled) { box-shadow: none; }
+.panel .panel-contenido button.boton-agregar { background: transparent; color: #b8420a; border: 1px dashed rgba(232, 106, 4, 0.6); }
+.panel .panel-contenido button.boton-secundario { background: rgba(255, 255, 255, 0.6); color: var(--color-texto); border: 1px solid rgba(46, 21, 25, 0.22); }
+.panel .panel-contenido button.boton-texto { padding: 0.55rem 0.5rem; background: transparent; color: #b8420a; }
+.panel .panel-contenido button.icono-boton { padding: 0; background: transparent; color: var(--color-texto-suave); font-weight: 400; }
+@media (hover: hover) and (pointer: fine) {
+  .panel .panel-contenido button.boton-agregar:hover:not(:disabled) { background: rgba(232, 106, 4, 0.1); }
+  .panel .panel-contenido button.boton-secundario:hover:not(:disabled) { background: #fff; border-color: var(--vidrio-borde); }
+  .panel .panel-contenido button.icono-boton:hover:not(:disabled) { color: var(--color-texto); background: rgba(46, 21, 25, 0.07); }
+}
+
+
+/* El buscador de antecedentes dentro de la ventana no necesita su propia tarjeta */
+.panel .ventana .filtros { margin-bottom: 1rem; padding: 0; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; flex-wrap: nowrap; }
+.ventana .filtros input { flex: 1; min-width: 0; }
+
+/* Se reserva siempre el lugar de la barra de scroll: sin esto, al aparecer o desaparecer (página corta, ventana abierta) todo el panel, botón incluido, se corre unos 15 px */
+html { scrollbar-gutter: stable; }

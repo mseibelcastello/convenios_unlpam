@@ -4,6 +4,7 @@ import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
+import LogoUnidad from "@/components/LogoUnidad";
 import { useAuth } from "@/lib/auth";
 
 export default function Login() {
@@ -18,12 +19,26 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false);
   // Datos para activar Google Authenticator (solo la primera vez)
   const [activacion, setActivacion] = useState<{ uri: string; clave: string } | null>(null);
+  // Unidad del usuario (para mostrar su logo en el segundo paso)
+  const [unidad, setUnidad] = useState<{ nombre: string; sigla: string } | null>(null);
   const [aviso, setAviso] = useState("");
   const [enviandoMail, setEnviandoMail] = useState(false);
+  const [saliendo, setSaliendo] = useState(false);
+  // Giro de la tarjeta al cambiar de paso: "sale" (gira hasta quedar de canto) y "entra" (vuelve a girar de frente)
+  const [giro, setGiro] = useState<"" | "sale" | "entra">("");
 
+  // Gira la tarjeta y hace el cambio justo cuando está de canto, para que no se vea el salto
+  async function girar(cambio: () => void) {
+    setGiro("sale");
+    await new Promise((r) => setTimeout(r, 200));
+    cambio();
+    setGiro("entra");
+  }
+
+  // Si ya estaba logueado, lo saca del login. En el paso del código redirige enviar(), después de la animación de salida.
   useEffect(() => {
-    if (estado === "autenticado") router.replace("/");
-  }, [estado, router]);
+    if (estado === "autenticado" && paso === "clave") router.replace("/");
+  }, [estado, paso, router]);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -32,10 +47,19 @@ export default function Login() {
     try {
       if (paso === "clave") {
         const r = await iniciarSesion(email.trim(), password);
-        setActivacion(r.otpauth_uri && r.clave_manual ? { uri: r.otpauth_uri, clave: r.clave_manual } : null);
-        setPaso("codigo");
+        await girar(() => {
+          setActivacion(r.otpauth_uri && r.clave_manual ? { uri: r.otpauth_uri, clave: r.clave_manual } : null);
+          setUnidad(r.unidad);
+          setPaso("codigo");
+        });
       } else {
         await verificarCodigo(codigo.trim());
+        setSaliendo(true);
+        // El panel lee esta marca para hacer su animación de entrada (solo después de iniciar sesión)
+        try {
+          sessionStorage.setItem("entrada-panel", "1");
+        } catch {}
+        await new Promise((r) => setTimeout(r, 450));
         router.replace("/");
       }
     } catch (err) {
@@ -62,20 +86,35 @@ export default function Login() {
   }
 
   function volver() {
-    setPaso("clave");
-    setCodigo("");
-    setPassword("");
-    setError("");
-    setAviso("");
-    setActivacion(null);
+    girar(() => {
+      setPaso("clave");
+      setCodigo("");
+      setPassword("");
+      setError("");
+      setAviso("");
+      setActivacion(null);
+      setUnidad(null);
+    });
   }
 
   return (
     <main className="login">
-      <form className="login-tarjeta" onSubmit={enviar} noValidate>
+      <form
+        className={`login-tarjeta ${saliendo ? "saliendo" : giro && `giro-${giro}`}`}
+        onSubmit={enviar}
+        onPointerMove={(e) => {
+          // Posición del mouse dentro de la tarjeta, para el resplandor que lo sigue
+          const r = e.currentTarget.getBoundingClientRect();
+          e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+          e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+        }}
+        noValidate
+      >
+        <LogoUnidad unidad={paso === "codigo" ? unidad : null} />
         <h1>Convenios UNLPam</h1>
+        <p className="login-unidad">{paso === "codigo" && unidad ? unidad.nombre : "Universidad Nacional de La Pampa"}</p>
         {paso === "clave" ? (
-          <>
+          <div className="paso" key="clave">
             <label>
               Correo electrónico
               <input type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -92,9 +131,9 @@ export default function Login() {
                 </button>
               </span>
             </label>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="paso" key="codigo">
             {activacion ? (
               <>
                 <p>Es tu primer ingreso. Escaneá este código con Google Authenticator (o una app parecida) y escribí abajo el código de 6 dígitos que te muestra.</p>
@@ -120,7 +159,7 @@ export default function Login() {
                 onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ""))}
               />
             </label>
-          </>
+          </div>
         )}
         {error && (
           <p role="alert" className="login-error">
@@ -142,6 +181,7 @@ export default function Login() {
           </>
         )}
       </form>
+      {saliendo && <span className="onda" aria-hidden="true" />}
     </main>
   );
 }

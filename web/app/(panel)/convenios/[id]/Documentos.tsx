@@ -57,38 +57,24 @@ export default function Documentos({ convenioId }: { convenioId: number }) {
         </p>
       )}
 
-      {documentos.length === 0 && <p>Sin documentos</p>}
+      {documentos.length === 0 && <p className="vacio">Todavía no hay documentos.</p>}
       {documentos.length > 0 && (
-        <table className="tabla">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Versión</th>
-              <th>Archivo</th>
-              <th>Tamaño</th>
-              <th>Subido</th>
-              <th>Por</th>
-              <th>Descargar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {documentos.map((d) => (
-              <tr key={d.id}>
-                <td>{TIPOS_DOCUMENTO[d.tipo]}</td>
-                <td>{d.version}</td>
-                <td>{d.nombre_original}</td>
-                <td>{tamano(d.tamano_bytes)}</td>
-                <td>{fecha(d.subido_en)}</td>
-                <td>{d.subido_por_nombre ?? "—"}</td>
-                <td>
-                  <button type="button" onClick={() => descargar(d)} aria-label={`Descargar ${d.nombre_original}`}>
-                    Descargar
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul className="documentos-lista">
+          {documentos.map((d) => (
+            <li key={d.id}>
+              <span className="documento-datos">
+                <strong title={d.nombre_original}>{d.nombre_original}</strong>
+                <small>
+                  {TIPOS_DOCUMENTO[d.tipo]} · versión {d.version} · {tamano(d.tamano_bytes)} · {fecha(d.subido_en)}
+                  {d.subido_por_nombre && ` · ${d.subido_por_nombre}`}
+                </small>
+              </span>
+              <button type="button" className="boton-secundario" onClick={() => descargar(d)} aria-label={`Descargar ${d.nombre_original}`}>
+                Descargar
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
 
       {puedeSubir && <SubirDocumento convenioId={convenioId} alGuardar={() => setRecarga(recarga + 1)} />}

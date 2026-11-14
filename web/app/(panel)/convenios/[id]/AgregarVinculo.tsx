@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Ventana from "@/components/Ventana";
 import { api } from "@/lib/api";
 import { leerError } from "@/lib/errores";
 import { TIPOS, VINCULOS } from "@/lib/tipos";
@@ -20,6 +21,7 @@ export default function AgregarVinculo({ convenioId, alGuardar }: Props) {
   const [tipoVinculo, setTipoVinculo] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
+  const [abierta, setAbierta] = useState(false);
 
   function buscar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -44,6 +46,7 @@ export default function AgregarVinculo({ convenioId, alGuardar }: Props) {
       setDestino("");
       setTipoVinculo("");
       alGuardar();
+      setAbierta(false);
     } catch (err) {
       const { mensaje, campos } = leerError(err);
       setErrores(campos);
@@ -53,8 +56,11 @@ export default function AgregarVinculo({ convenioId, alGuardar }: Props) {
   }
 
   return (
-    <div className="agregar">
-      <h3>Agregar antecedente</h3>
+    <>
+      <button type="button" className="boton-agregar" onClick={() => setAbierta(true)}>
+        Agregar antecedente
+      </button>
+      <Ventana abierta={abierta} titulo="Agregar antecedente" alCerrar={() => setAbierta(false)}>
 
       <form className="filtros" onSubmit={buscar}>
         <label htmlFor="busqueda-vinculo" className="solo-lector">
@@ -126,6 +132,7 @@ export default function AgregarVinculo({ convenioId, alGuardar }: Props) {
 
         <button type="submit">Agregar vínculo</button>
       </form>
-    </div>
+      </Ventana>
+    </>
   );
 }

@@ -1,0 +1,114 @@
+CAMPOS PARA CARGAR UN CONVENIO (copiar y pegar en el formulario)
+=================================================================
+Datos ficticios para pruebas, pensados para la Facultad de Ingeniería.
+Entrá con gestion.FI@demo.test (contraseña: password) para que la unidad ya sea Ingeniería.
+Los códigos usan la serie 9xx para no chocar con los convenios cargados por los seeders.
+
+Cómo cargarlos:
+  - "Completar el formulario": llená todos los campos de cada ejemplo.
+  - "Subir el PDF": subí archivos-de-prueba/convenio-de-prueba.pdf y completá solo
+    Código, Tipo, Título, Unidad, fechas y los campos "otros" (los de contenido quedan en el PDF).
+  - Después, en el convenio ya creado, podés subir como documentos:
+      anexo-de-prueba.pdf     -> tipo "Anexo"
+      dictamen-de-prueba.pdf  -> tipo "Dictamen" (lo puede subir revision.FI@demo.test)
+  - Las partes (UNLPam y la contraparte) se agregan desde la ficha del convenio.
+
+
+-----------------------------------------------------------------
+EJEMPLO 1 - Convenio marco de prácticas profesionales (el que corresponde al PDF de prueba)
+-----------------------------------------------------------------
+Código:                    CONV-2026-901
+Tipo:                      Marco
+Título:                    Convenio marco de prácticas profesionales con Empresa de Telecomunicaciones Ejemplo S.A.
+Unidad:                    Facultad de Ingeniería
+
+Fecha de firma:            10/11/2026
+Fecha de inicio:           10/11/2026
+Fecha de vencimiento:      10/11/2028
+Fecha de preaviso:         11/09/2028
+
+Objeto:                    Desarrollar prácticas profesionales asistidas y supervisadas para estudiantes avanzados de las carreras de la Facultad de Ingeniería en los ámbitos de trabajo de la empresa.
+Alcance:                   Prácticas de estudiantes de Ingeniería en Sistemas, Electromecánica, Industrial y en Computación. No incluye relación laboral ni pasantías rentadas.
+Obligaciones:              La Facultad designa un tutor académico por estudiante y verifica el plan de trabajo. La empresa designa un tutor profesional, brinda los medios necesarios y garantiza seguridad e higiene. Los estudiantes cuentan con seguro de accidentes personales.
+Condiciones de rescisión:  Cualquiera de las partes puede rescindir con 60 días de aviso por escrito, sin indemnización. Las prácticas en curso se completan.
+Marco legal:               Ley de Educación Superior 24.521, Estatuto de la UNLPam y normas del Consejo Superior.
+
+Resolución:                CS 901/2026
+Expediente:                EXP 1234/2026
+Condiciones de renovación: Se renueva por períodos de dos años si ninguna parte avisa lo contrario con 60 días de anticipación.
+Confidencialidad:          Los estudiantes y tutores mantienen reserva sobre la información técnica y comercial de la empresa.
+Notas:                     Ejemplo ficticio para pruebas.
+
+Partes a agregar:          Universidad Nacional de La Pampa (rol UNLPam)
+                           Empresa de Telecomunicaciones Ejemplo S.A. (tipo Empresa, rol Contraparte;
+                           representante: Presidente Ficticio, cargo: Presidente)
+
+
+-----------------------------------------------------------------
+EJEMPLO 2 - Convenio específico con otra universidad (Ingeniería Biomédica)
+-----------------------------------------------------------------
+Código:                    CONV-2026-902
+Tipo:                      Específico
+Título:                    Convenio específico para el dictado compartido de asignaturas de Ingeniería Biomédica
+Unidad:                    Facultad de Ingeniería
+
+Fecha de firma:            03/03/2026
+Fecha de inicio:           16/03/2026
+Fecha de vencimiento:      16/03/2029
+Fecha de preaviso:         15/01/2029
+
+Objeto:                    Dictar de manera compartida asignaturas del plan de estudios de Ingeniería Biomédica, mediante el intercambio de docentes y el uso de instalaciones de ambas universidades.
+Alcance:                   Asignaturas de 4.º y 5.º año de la carrera. Incluye clases teóricas, prácticas de laboratorio y evaluaciones. No incluye el otorgamiento de títulos, que corresponde a cada universidad.
+Obligaciones:              Cada universidad aporta docentes y laboratorios según el cronograma anual acordado, y reconoce las asignaturas cursadas por los estudiantes de la otra.
+Condiciones de rescisión:  Aviso por escrito con 90 días de anticipación; se garantiza que los estudiantes en curso terminen el ciclo lectivo.
+Marco legal:               Convenio marco entre Universidades Nacionales y Provinciales y normas del Consejo Superior de la UNLPam.
+
+Resolución:                CS 902/2026
+Expediente:                (vacío)
+Condiciones de renovación: Renovación automática por períodos de tres años, salvo aviso en contrario.
+Confidencialidad:          (vacío)
+Notas:                     Ejemplo ficticio para pruebas. Sirve para probar un vencimiento lejano.
+
+Partes a agregar:          Universidad Nacional de La Pampa (rol UNLPam)
+                           Universidad Ejemplo (tipo Universidad, rol Contraparte)
+
+
+-----------------------------------------------------------------
+EJEMPLO 3 - Convenio por vencer pronto (para probar alertas de Vencimientos)
+-----------------------------------------------------------------
+IMPORTANTE: poné las fechas en relación a HOY para que aparezca como "por vencer".
+  Vencimiento = hoy + 20 días.   Preaviso = vencimiento - 60 días (ya pasado, así se ve la alerta).
+
+Código:                    CONV-2026-903
+Tipo:                      Pasantía
+Título:                    Convenio de pasantías educativas con Metalúrgica Ejemplo S.R.L.
+Unidad:                    Facultad de Ingeniería
+
+Fecha de firma:            (hace 2 años)
+Fecha de inicio:           (igual a la firma)
+Fecha de vencimiento:      (hoy + 20 días)
+Fecha de preaviso:         (vencimiento - 60 días)
+
+Objeto:                    Pasantías educativas de estudiantes de Ingeniería Electromecánica e Industrial en la planta de la empresa.
+Alcance:                   Hasta 4 pasantes simultáneos, con 20 horas semanales, bajo supervisión de un tutor de la empresa y otro de la Facultad.
+Obligaciones:              La empresa otorga una asignación estímulo mensual y cobertura de seguro. La Facultad realiza el seguimiento académico y emite la certificación.
+Condiciones de rescisión:  Aviso por escrito con 30 días de anticipación.
+Marco legal:               Ley de Pasantías Educativas 26.427 y normas del Consejo Superior.
+
+Resolución:                (vacío)
+Expediente:                EXP 3456/2024
+Condiciones de renovación: Renovación por acuerdo escrito de ambas partes, con 60 días de anticipación al vencimiento.
+Confidencialidad:          (vacío)
+Notas:                     Ejemplo ficticio para pruebas de alertas.
+
+Partes a agregar:          Universidad Nacional de La Pampa (rol UNLPam)
+                           Metalúrgica Ejemplo S.R.L. (tipo Empresa, rol Contraparte)
+
+
+-----------------------------------------------------------------
+PARA PROBAR ERRORES DEL FORMULARIO (a propósito)
+-----------------------------------------------------------------
+  - Código repetido:         CONV-2026-901 por segunda vez       -> debe avisar que ya existe
+  - Código con mal formato:  convenio-1                          -> debe pedir el formato CONV-AAAA-NNN
+  - Vencimiento anterior a la firma                              -> debe avisar la fecha incoherente
+  - Archivo que no es PDF (por ejemplo, este .txt)               -> debe rechazarlo

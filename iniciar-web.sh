@@ -41,6 +41,8 @@ fi
 composer install --no-interaction
 php artisan migrate --force
 php artisan db:seed --class=UnidadesSeeder --force
+# Convenios reales y un usuario por facultad (no repite lo que ya existe)
+php artisan db:seed --class=ConveniosRealesSeeder --force
 
 # 3. Web: dependencias
 paso "Web: dependencias"
@@ -77,6 +79,8 @@ echo "Todo listo:"
 echo "  Web:     http://localhost:3000"
 echo "  Backend: http://localhost:8000/api/health"
 echo "  Usuarios de prueba: admin@demo.test, gestion@demo.test, revision@demo.test, consulta@demo.test (contraseña: password)"
+echo "  Por facultad: gestion.FI@demo.test (Ingeniería), revision.FI@demo.test, consulta.FI@demo.test,"
+echo "                gestion.FA / FCEyJ / FCEyN / FCH / FCS / FCV @demo.test (misma contraseña)"
 echo "  El código del login va a aparecer acá abajo cuando inicies sesión."
 echo "  Para la app móvil, en otra terminal: ./iniciar-movil.sh"
 echo "  Ctrl+C para frenar todo."

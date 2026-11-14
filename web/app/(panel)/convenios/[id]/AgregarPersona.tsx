@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Ventana from "@/components/Ventana";
 import { api } from "@/lib/api";
 import { leerError } from "@/lib/errores";
 import { ROLES_PERSONA } from "@/lib/tipos";
@@ -34,6 +35,7 @@ export default function AgregarPersona({ convenioId, alGuardar }: Props) {
   const [valores, setValores] = useState(VACIOS);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
+  const [abierta, setAbierta] = useState(false);
 
   const esPasante = valores.rol === "pasante";
 
@@ -75,6 +77,7 @@ export default function AgregarPersona({ convenioId, alGuardar }: Props) {
 
       setValores(VACIOS);
       alGuardar();
+      setAbierta(false);
     } catch (err) {
       const { mensaje, campos } = leerError(err);
       setErrores(campos);
@@ -112,8 +115,11 @@ export default function AgregarPersona({ convenioId, alGuardar }: Props) {
   }
 
   return (
-    <div className="agregar">
-      <h3>Agregar persona</h3>
+    <>
+      <button type="button" className="boton-agregar" onClick={() => setAbierta(true)}>
+        Agregar persona
+      </button>
+      <Ventana abierta={abierta} titulo="Agregar persona" alCerrar={() => setAbierta(false)}>
 
       <fieldset className="modo">
         <legend>¿Qué persona querés agregar?</legend>
@@ -210,6 +216,7 @@ export default function AgregarPersona({ convenioId, alGuardar }: Props) {
 
         <button type="submit">Agregar persona</button>
       </form>
-    </div>
+      </Ventana>
+    </>
   );
 }

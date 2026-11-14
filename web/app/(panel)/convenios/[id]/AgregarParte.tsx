@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Ventana from "@/components/Ventana";
 import { api } from "@/lib/api";
 import { leerError } from "@/lib/errores";
 import { PARTES, ROLES_PARTE } from "@/lib/tipos";
@@ -24,6 +25,7 @@ export default function AgregarParte({ convenioId, alGuardar }: Props) {
   const [rolParte, setRolParte] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
+  const [abierta, setAbierta] = useState(false);
 
   // Al elegir "una parte que ya existe" se carga la lista de partes
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function AgregarParte({ convenioId, alGuardar }: Props) {
       setNueva(NUEVA_VACIA);
       setRolParte("");
       alGuardar();
+      setAbierta(false);
     } catch (err) {
       const { mensaje, campos } = leerError(err);
       setErrores(campos);
@@ -88,8 +91,11 @@ export default function AgregarParte({ convenioId, alGuardar }: Props) {
   }
 
   return (
-    <div className="agregar">
-      <h3>Agregar parte</h3>
+    <>
+      <button type="button" className="boton-agregar" onClick={() => setAbierta(true)}>
+        Agregar parte
+      </button>
+      <Ventana abierta={abierta} titulo="Agregar parte" alCerrar={() => setAbierta(false)}>
 
       <fieldset className="modo">
         <legend>¿Qué parte querés agregar?</legend>
@@ -194,6 +200,7 @@ export default function AgregarParte({ convenioId, alGuardar }: Props) {
 
         <button type="submit">Agregar parte</button>
       </form>
-    </div>
+      </Ventana>
+    </>
   );
 }

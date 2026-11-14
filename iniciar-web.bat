@@ -28,6 +28,8 @@ if not exist .env (
 call composer install --no-interaction
 call php artisan migrate --force
 call php artisan db:seed --class=UnidadesSeeder --force
+REM Convenios reales y un usuario por facultad (no repite lo que ya existe)
+call php artisan db:seed --class=ConveniosRealesSeeder --force
 if not exist storage\logs\laravel.log type nul > storage\logs\laravel.log
 cd ..
 
@@ -48,6 +50,8 @@ echo Todo listo:
 echo   Web:     http://localhost:3000
 echo   Backend: http://localhost:8000/api/health
 echo   Usuarios de prueba: admin@demo.test, gestion@demo.test, revision@demo.test, consulta@demo.test ^(clave: password^)
+echo   Por facultad: gestion.FI@demo.test ^(Ingenieria^), revision.FI@demo.test, consulta.FI@demo.test,
+echo                 gestion.FA / FCEyJ / FCEyN / FCH / FCS / FCV @demo.test ^(misma clave^)
 echo   El codigo del login aparece en la ventana "Codigos de login" cuando inicies sesion.
 echo   Para frenar todo, cerrar las tres ventanas que se abrieron.
 echo   Para la app movil: iniciar-movil.bat

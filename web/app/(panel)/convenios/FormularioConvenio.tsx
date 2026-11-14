@@ -1,32 +1,40 @@
 "use client";
 
 import { isAxiosError } from "axios";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { TIPOS } from "@/lib/tipos";
 
 
-// Todos los campos del convenio, en el orden en que se muestran
+// Todos los campos del convenio, agrupados en las secciones en que se muestran
 const CAMPOS = [
-  { nombre: "codigo", etiqueta: "Código (ej: CONV-2026-001)", tipo: "texto", obligatorio: true },
-  { nombre: "titulo", etiqueta: "Título", tipo: "texto", obligatorio: true },
-  { nombre: "tipo", etiqueta: "Tipo", tipo: "tipo", obligatorio: true },
-  { nombre: "unidad_id", etiqueta: "Unidad", tipo: "unidad", obligatorio: true },
+  { nombre: "codigo", etiqueta: "Código", tipo: "texto", obligatorio: true, grupo: "principal", info: "Código con el que se identifica el convenio. Formato CONV-AAAA-NNN, por ejemplo: CONV-2026-001." },
+  { nombre: "tipo", etiqueta: "Tipo", tipo: "tipo", obligatorio: true, grupo: "principal" },
+  { nombre: "titulo", etiqueta: "Título", tipo: "texto", obligatorio: true, grupo: "principal", ancho: true },
+  { nombre: "unidad_id", etiqueta: "Unidad", tipo: "unidad", obligatorio: true, grupo: "principal", ancho: true },
+  { nombre: "fecha_firma", etiqueta: "Fecha de firma", tipo: "fecha", obligatorio: false, grupo: "fechas" },
+  { nombre: "fecha_inicio", etiqueta: "Fecha de inicio", tipo: "fecha", obligatorio: false, grupo: "fechas" },
+  { nombre: "fecha_vencimiento", etiqueta: "Fecha de vencimiento", tipo: "fecha", obligatorio: false, grupo: "fechas" },
+  { nombre: "fecha_preaviso", etiqueta: "Fecha de preaviso", tipo: "fecha", obligatorio: false, grupo: "fechas", info: "Día desde el que hay que avisar si se quiere renovar o terminar el convenio. Se calcula a partir del vencimiento." },
   // "contenido": el texto del convenio. Si se carga el PDF, ya está en el PDF y no se pide.
-  { nombre: "objeto", etiqueta: "Objeto", tipo: "largo", obligatorio: true, contenido: true },
-  { nombre: "alcance", etiqueta: "Alcance", tipo: "largo", obligatorio: true, contenido: true },
-  { nombre: "obligaciones", etiqueta: "Obligaciones", tipo: "largo", obligatorio: true, contenido: true },
-  { nombre: "condiciones_rescision", etiqueta: "Condiciones de rescisión", tipo: "largo", obligatorio: true, contenido: true },
-  { nombre: "marco_legal", etiqueta: "Marco legal", tipo: "largo", obligatorio: true, contenido: true },
-  { nombre: "resolucion", etiqueta: "Resolución", tipo: "texto", obligatorio: false },
-  { nombre: "expediente", etiqueta: "Expediente", tipo: "texto", obligatorio: false },
-  { nombre: "condiciones_renovacion", etiqueta: "Condiciones de renovación", tipo: "largo", obligatorio: false },
-  { nombre: "confidencialidad", etiqueta: "Confidencialidad", tipo: "largo", obligatorio: false },
-  { nombre: "notas", etiqueta: "Notas", tipo: "largo", obligatorio: false },
-  { nombre: "fecha_firma", etiqueta: "Fecha de firma", tipo: "fecha", obligatorio: false },
-  { nombre: "fecha_inicio", etiqueta: "Fecha de inicio", tipo: "fecha", obligatorio: false },
-  { nombre: "fecha_vencimiento", etiqueta: "Fecha de vencimiento", tipo: "fecha", obligatorio: false },
-  { nombre: "fecha_preaviso", etiqueta: "Fecha de preaviso", tipo: "fecha", obligatorio: false },
+  { nombre: "objeto", etiqueta: "Objeto", tipo: "largo", obligatorio: true, contenido: true, grupo: "contenido", ancho: true },
+  { nombre: "alcance", etiqueta: "Alcance", tipo: "largo", obligatorio: true, contenido: true, grupo: "contenido", ancho: true, info: "Hasta dónde llega el convenio: qué cubre y qué no." },
+  { nombre: "obligaciones", etiqueta: "Obligaciones", tipo: "largo", obligatorio: true, contenido: true, grupo: "contenido", ancho: true, info: "Qué se compromete a hacer cada parte." },
+  { nombre: "condiciones_rescision", etiqueta: "Condiciones de rescisión", tipo: "largo", obligatorio: true, contenido: true, grupo: "contenido", ancho: true, info: "Cómo y con qué aviso se puede terminar el convenio." },
+  { nombre: "marco_legal", etiqueta: "Marco legal", tipo: "largo", obligatorio: true, contenido: true, grupo: "contenido", ancho: true, info: "Normas en las que se apoya el convenio (leyes, ordenanzas)." },
+  { nombre: "resolucion", etiqueta: "Resolución", tipo: "texto", obligatorio: false, grupo: "otros", info: "Resolución que aprueba el convenio. Formato libre, por ejemplo: RESHCS 123/2026." },
+  { nombre: "expediente", etiqueta: "Expediente", tipo: "texto", obligatorio: false, grupo: "otros", info: "Número de expediente del trámite. Formato libre, por ejemplo: EXP 1234/2026." },
+  { nombre: "condiciones_renovacion", etiqueta: "Condiciones de renovación", tipo: "largo", obligatorio: false, grupo: "otros", ancho: true },
+  { nombre: "confidencialidad", etiqueta: "Confidencialidad", tipo: "largo", obligatorio: false, grupo: "otros", ancho: true, info: "Cláusula de confidencialidad, si existe." },
+  { nombre: "notas", etiqueta: "Notas", tipo: "largo", obligatorio: false, grupo: "otros", ancho: true },
+];
+
+const GRUPOS = [
+  { id: "principal", titulo: "Datos principales" },
+  { id: "fechas", titulo: "Fechas" },
+  { id: "contenido", titulo: "Contenido del convenio" },
+  { id: "otros", titulo: "Otros datos" },
 ];
 
 type Unidad = { id: number; nombre: string; sigla: string };
@@ -38,6 +46,37 @@ type Props = {
   // El archivo (PDF) solo se pide al crear; al editar llega null.
   enviar: (datos: Record<string, string>, archivo: File | null) => Promise<void>;
 };
+
+// La "i" junto a una etiqueta: el texto se ve al pasar el mouse, al enfocarla con el teclado o al tocarla
+function Info({ texto }: { texto: string }) {
+  const [abierta, setAbierta] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const id = useId();
+
+  useEffect(() => {
+    if (!abierta) return;
+    const cerrar = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setAbierta(false);
+    };
+    document.addEventListener("pointerdown", cerrar);
+    document.addEventListener("keydown", cerrar);
+    return () => {
+      document.removeEventListener("pointerdown", cerrar);
+      document.removeEventListener("keydown", cerrar);
+    };
+  }, [abierta]);
+
+  return (
+    <span className={abierta ? "info abierta" : "info"} ref={ref}>
+      <button type="button" aria-label="Qué es este campo" aria-expanded={abierta} aria-describedby={id} onClick={() => setAbierta(!abierta)}>
+        i
+      </button>
+      <span className="info-texto" role="tooltip" id={id}>
+        {texto}
+      </span>
+    </span>
+  );
+}
 
 export default function FormularioConvenio({ inicial, enviar }: Props) {
   const [valores, setValores] = useState<Record<string, string>>(() =>
@@ -53,6 +92,8 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
   const [mensaje, setMensaje] = useState("");
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [arrastrando, setArrastrando] = useState(false);
+  const router = useRouter();
   const esAlta = !inicial;
   // Al crear se elige cómo cargar el convenio: con su PDF o completando todos los campos
   const [modo, setModo] = useState<"pdf" | "formulario">("pdf");
@@ -72,6 +113,10 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
     setMensaje("");
 
     // La API también lo controla; acá se avisa antes de mandar
+    if (conPdf && !archivo) {
+      setErrores({ archivo: "Elegí el PDF del convenio." });
+      return;
+    }
     if (conPdf && archivo && (archivo.type !== "application/pdf" || archivo.size > 20 * 1024 * 1024)) {
       setErrores({ archivo: "Tiene que ser un PDF de hasta 20 MB." });
       return;
@@ -99,6 +144,83 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
     }
   }
 
+  function campo(c: (typeof CAMPOS)[number]) {
+    const obligatorio = "contenido" in c && c.contenido ? esAlta : c.obligatorio;
+    const comun = {
+      id: c.nombre,
+      name: c.nombre,
+      value: valores[c.nombre],
+      onChange: cambiar,
+      required: obligatorio,
+      "aria-invalid": errores[c.nombre] ? true : undefined,
+      "aria-describedby": errores[c.nombre] ? `error-${c.nombre}` : undefined,
+    };
+
+    return (
+      <div className={"ancho" in c && c.ancho ? "campo campo-ancho" : "campo"} key={c.nombre}>
+        <div className="campo-etiqueta">
+          <label htmlFor={c.nombre}>
+            {c.etiqueta}
+            {obligatorio && " *"}
+          </label>
+          {"info" in c && c.info && <Info texto={c.info} />}
+        </div>
+
+        {c.tipo === "largo" && <textarea rows={3} {...comun} />}
+        {c.tipo === "texto" && <input type="text" {...comun} />}
+        {c.tipo === "fecha" && <input type="date" {...comun} />}
+        {c.tipo === "tipo" && (
+          <select {...comun}>
+            <option value="">Elegí un tipo</option>
+            {Object.entries(TIPOS).map(([valor, texto]) => (
+              <option key={valor} value={valor}>
+                {texto}
+              </option>
+            ))}
+          </select>
+        )}
+        {c.tipo === "unidad" && (
+          <select {...comun}>
+            <option value="">Elegí una unidad</option>
+            <optgroup label="Facultades">
+              {unidades
+                .filter((u) => !u.nombre.startsWith("Secretaría"))
+                .map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.sigla} · {u.nombre}
+                  </option>
+                ))}
+            </optgroup>
+            <optgroup label="Secretarías">
+              {unidades
+                .filter((u) => u.nombre.startsWith("Secretaría"))
+                .map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.sigla} · {u.nombre}
+                  </option>
+                ))}
+            </optgroup>
+          </select>
+        )}
+
+        {errores[c.nombre] && (
+          <p className="campo-error" id={`error-${c.nombre}`}>
+            {errores[c.nombre]}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  function soltar(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setArrastrando(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) setArchivo(f);
+  }
+
+  const tamano = archivo ? (archivo.size < 1024 * 1024 ? `${Math.max(1, Math.round(archivo.size / 1024))} KB` : `${(archivo.size / 1024 / 1024).toFixed(1)} MB`) : "";
+
   return (
     <form className="formulario" onSubmit={guardar}>
       {mensaje && (
@@ -106,113 +228,84 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
           {mensaje}
         </p>
       )}
-      <p>Los campos con * son obligatorios.</p>
 
       {esAlta && (
-        <fieldset className="modo">
+        <fieldset className="modo-opciones">
           <legend>¿Cómo querés cargar el convenio?</legend>
-          <label>
+          <label className="modo-opcion">
             <input type="radio" name="modo" checked={modo === "pdf"} onChange={() => setModo("pdf")} />
-            Con el PDF del convenio
+            <strong>Subir el PDF</strong>
+            <span>Más rápido: el texto del convenio queda en el archivo.</span>
           </label>
-          <label>
+          <label className="modo-opcion">
             <input type="radio" name="modo" checked={modo === "formulario"} onChange={() => setModo("formulario")} />
-            Completando el formulario
+            <strong>Completar el formulario</strong>
+            <span>Cargás objeto, alcance, obligaciones y demás a mano.</span>
           </label>
         </fieldset>
       )}
 
       {conPdf && (
-        <div className="campo">
-          <label htmlFor="archivo">PDF del convenio (hasta 20 MB) *</label>
-          <input
-            id="archivo"
-            name="archivo"
-            type="file"
-            accept=".pdf,application/pdf"
-            required
-            onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-            aria-invalid={errores.archivo ? true : undefined}
-            aria-describedby={errores.archivo ? "error-archivo" : undefined}
-          />
+        <section className="ficha-seccion">
+          <h2>PDF del convenio</h2>
+          <label
+            className={`zona-pdf${arrastrando ? " arrastrando" : ""}${archivo ? " con-archivo" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setArrastrando(true);
+            }}
+            onDragLeave={() => setArrastrando(false)}
+            onDrop={soltar}
+          >
+            <input
+              id="archivo"
+              name="archivo"
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+              aria-invalid={errores.archivo ? true : undefined}
+              aria-describedby={errores.archivo ? "error-archivo" : undefined}
+            />
+            {archivo ? (
+              <>
+                <strong>{archivo.name}</strong>
+                <span>{tamano} · tocá para elegir otro</span>
+              </>
+            ) : (
+              <>
+                <strong>Arrastrá el PDF hasta acá</strong>
+                <span>o tocá para elegirlo · hasta 20 MB</span>
+              </>
+            )}
+          </label>
           {errores.archivo && (
             <p className="campo-error" id="error-archivo">
               {errores.archivo}
             </p>
           )}
-        </div>
+        </section>
       )}
 
-      {CAMPOS.map((c) => {
+      {GRUPOS.map((g) => {
         // Con el PDF no se piden los campos de contenido. Al completar el formulario son
         // obligatorios; al editar no, porque un convenio cargado con PDF puede no tenerlos.
-        if (c.contenido && conPdf) return null;
-        const obligatorio = c.contenido ? esAlta : c.obligatorio;
-
-        const comun = {
-          id: c.nombre,
-          name: c.nombre,
-          value: valores[c.nombre],
-          onChange: cambiar,
-          required: obligatorio,
-          "aria-invalid": errores[c.nombre] ? true : undefined,
-          "aria-describedby": errores[c.nombre] ? `error-${c.nombre}` : undefined,
-        };
-
+        const lista = CAMPOS.filter((c) => c.grupo === g.id && !("contenido" in c && c.contenido && conPdf));
+        if (lista.length === 0) return null;
         return (
-          <div className="campo" key={c.nombre}>
-            <label htmlFor={c.nombre}>
-              {c.etiqueta}
-              {obligatorio && " *"}
-            </label>
-
-            {c.tipo === "largo" && <textarea rows={3} {...comun} />}
-            {c.tipo === "texto" && <input type="text" {...comun} />}
-            {c.tipo === "fecha" && <input type="date" {...comun} />}
-            {c.tipo === "tipo" && (
-              <select {...comun}>
-                <option value="">Elegí un tipo</option>
-                {Object.entries(TIPOS).map(([valor, texto]) => (
-                  <option key={valor} value={valor}>
-                    {texto}
-                  </option>
-                ))}
-              </select>
-            )}
-            {c.tipo === "unidad" && (
-              <select {...comun}>
-                <option value="">Elegí una unidad</option>
-                <optgroup label="Facultades">
-                  {unidades
-                    .filter((u) => !u.nombre.startsWith("Secretaría"))
-                    .map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.sigla} · {u.nombre}
-                      </option>
-                    ))}
-                </optgroup>
-                <optgroup label="Secretarías">
-                  {unidades
-                    .filter((u) => u.nombre.startsWith("Secretaría"))
-                    .map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.sigla} · {u.nombre}
-                      </option>
-                    ))}
-                </optgroup>
-              </select>
-            )}
-
-            {errores[c.nombre] && (
-              <p className="campo-error" id={`error-${c.nombre}`}>
-                {errores[c.nombre]}
-              </p>
-            )}
-          </div>
+          <section className="ficha-seccion" key={g.id}>
+            <h2>{g.titulo}</h2>
+            <div className="campos-rejilla">{lista.map(campo)}</div>
+          </section>
         );
       })}
 
-      <button type="submit">Guardar</button>
+      <div className="formulario-barra">
+        <span>Los campos con * son obligatorios.</span>
+        <button type="button" className="boton-secundario" onClick={() => router.back()}>
+          Cancelar
+        </button>
+        <button type="submit">Guardar</button>
+      </div>
     </form>
   );
 }
