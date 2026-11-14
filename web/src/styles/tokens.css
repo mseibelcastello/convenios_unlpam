@@ -10,8 +10,9 @@
  * data-theme="dark" en <html> (data-theme="light" fuerza el claro).
  */
 :root {
-  --fuente-titulo: Montserrat, Arial, Helvetica, sans-serif;
-  --fuente-cuerpo: 'Open Sans', Arial, Helvetica, sans-serif;
+  /* Las variables --font-* las crea next/font en app/layout.tsx; el resto es el respaldo si no cargan */
+  --fuente-titulo: var(--font-montserrat), Montserrat, Arial, Helvetica, sans-serif;
+  --fuente-cuerpo: var(--font-open-sans), 'Open Sans', Arial, Helvetica, sans-serif;
 
   /* Tamaño de letra (Mi Perfil): chica 0.875, mediana 1, grande 1.25 */
   --escala-letra: 1;

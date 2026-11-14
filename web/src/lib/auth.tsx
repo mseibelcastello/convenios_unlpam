@@ -7,7 +7,13 @@ import type { Usuario } from "./roles";
 type Estado = "cargando" | "anonimo" | "autenticado";
 
 // Lo que responde el login: si todavía no activó Google Authenticator, trae los datos para el QR
-type RespuestaLogin = { mfa_activado: boolean; otpauth_uri?: string; clave_manual?: string };
+// "unidad" es la del usuario (null si no tiene), para mostrar su logo en el segundo paso
+type RespuestaLogin = {
+  mfa_activado: boolean;
+  otpauth_uri?: string;
+  clave_manual?: string;
+  unidad: { nombre: string; sigla: string } | null;
+};
 
 type Auth = {
   estado: Estado;

@@ -38,6 +38,8 @@ class AuthController extends Controller
             'token' => $usuario->createToken('mfa', ['mfa'])->plainTextToken,
             'mfa_required' => true,
             'mfa_activado' => $usuario->mfa_activado,
+            // Para mostrar el logo de su unidad en el segundo paso (null si no tiene unidad)
+            'unidad' => $usuario->unidad?->only(['nombre', 'sigla']),
         ];
 
         // Primera vez con la app: se muestra el QR para escanear. Una vez activada, nunca más.

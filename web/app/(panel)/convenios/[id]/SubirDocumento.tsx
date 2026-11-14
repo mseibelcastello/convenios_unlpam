@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Ventana from "@/components/Ventana";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { leerError } from "@/lib/errores";
@@ -18,6 +19,7 @@ export default function SubirDocumento({ convenioId, alGuardar }: Props) {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [mensaje, setMensaje] = useState("");
+  const [abierta, setAbierta] = useState(false);
 
   // Revisión solo puede subir dictámenes (la API también lo controla)
   const tipos = Object.entries(TIPOS_DOCUMENTO).filter(([valor]) => usuario?.rol !== "revision" || valor === "dictamen");
@@ -44,6 +46,7 @@ export default function SubirDocumento({ convenioId, alGuardar }: Props) {
       setTipo("");
       setArchivo(null);
       alGuardar();
+      setAbierta(false);
     } catch (err) {
       const { mensaje, campos } = leerError(err);
       setErrores(campos);
@@ -53,8 +56,11 @@ export default function SubirDocumento({ convenioId, alGuardar }: Props) {
   }
 
   return (
-    <div className="agregar">
-      <h3>Subir documento</h3>
+    <>
+      <button type="button" className="boton-agregar" onClick={() => setAbierta(true)}>
+        Subir documento
+      </button>
+      <Ventana abierta={abierta} titulo="Subir documento" alCerrar={() => setAbierta(false)}>
 
       <form className="formulario" onSubmit={subir}>
         {mensaje && (
@@ -107,6 +113,7 @@ export default function SubirDocumento({ convenioId, alGuardar }: Props) {
 
         <button type="submit">Subir documento</button>
       </form>
-    </div>
+      </Ventana>
+    </>
   );
 }

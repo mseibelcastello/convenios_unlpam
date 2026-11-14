@@ -22,7 +22,7 @@ El segundo paso (MFA) se resuelve con un código de 6 dígitos de **Google Authe
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| POST /auth/login | Público | `{email, password}` | 200 `{token, mfa_required: true, mfa_activado}` (token limitado, solo sirve para verificar el código). Si `mfa_activado` es false, trae además `otpauth_uri` (para el código QR) y `clave_manual` | 401, 422 |
+| POST /auth/login | Público | `{email, password}` | 200 `{token, mfa_required: true, mfa_activado, unidad}` (`unidad` es `{nombre, sigla}` o `null` si el usuario no tiene; token limitado, solo sirve para verificar el código). Si `mfa_activado` es false, trae además `otpauth_uri` (para el código QR) y `clave_manual` | 401, 422 |
 | POST /auth/mfa/send-code | Token limitado | — | 200 (manda un código de 6 dígitos al mail del usuario; vale 5 minutos) | 401, 429, 502 |
 | POST /auth/mfa/verify | Token limitado | `{codigo}` | 200 `{token, user}` (token completo) | 401, 422, 429 |
 | POST /auth/logout | Autenticado | — | 200 | 401 |

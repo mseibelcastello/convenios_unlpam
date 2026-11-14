@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Icono } from "@/components/Iconos";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ESTADOS } from "@/lib/estados";
+import { diasHasta, fechaLarga } from "@/lib/fechas";
 import { PARTES, ROLES_PARTE, ROLES_PERSONA, TIPOS, VINCULOS } from "@/lib/tipos";
 import AgregarParte from "./AgregarParte";
 import AgregarPersona from "./AgregarPersona";
@@ -26,7 +28,7 @@ type Convenio = {
   fecha_inicio: string | null;
   fecha_vencimiento: string | null;
   fecha_preaviso: string | null;
-  unidad: { nombre: string };
+  unidad: { nombre: string; sigla?: string };
   partes: {
     id: number;
     nombre: string;
@@ -60,125 +62,195 @@ export default function Ficha() {
     });
   }, [id, recarga]);
 
-  if (!convenio) return <p>Cargando…</p>;
+  if (!convenio) {
+    return (
+      <div className="lista-esqueleto" aria-busy="true" aria-label="Cargando convenio">
+        <div className="esqueleto" style={{ minHeight: "7rem" }} />
+        <div className="esqueleto" />
+        <div className="esqueleto" />
+      </div>
+    );
+  }
 
   const puedeEditar = usuario?.rol === "administracion" || usuario?.rol === "gestion";
+  const enBorrador = convenio.estado === "borrador";
+
+  // La vigencia, en el orden en que ocurre
+  const dias = convenio.fecha_vencimiento ? diasHasta(convenio.fecha_vencimiento) : null;
+  const avisoVencimiento = convenio.estado === "firmado" && dias !== null && dias <= 30;
+  const fechas = [
+    { etiqueta: "Firma", valor: convenio.fecha_firma },
+    { etiqueta: "Inicio", valor: convenio.fecha_inicio },
+    { etiqueta: "Preaviso", valor: convenio.fecha_preaviso },
+  ];
 
   return (
     <>
-      <p>
-        <Link href="/convenios">← Volver al listado</Link>
-      </p>
-      <h1>
-        {convenio.codigo} · {convenio.titulo}
-      </h1>
-      <p>
-        {TIPOS[convenio.tipo]} · {convenio.unidad.nombre} ·{" "}
-        <span className={`insignia insignia-${convenio.estado}`}>{ESTADOS[convenio.estado]}</span>
-      </p>
+      <Link href="/convenios" className="volver">
+        <Icono nombre="volver" />
+        <span>Volver al listado</span>
+      </Link>
 
-      {/* Solo se edita en borrador, y solo administración y gestión */}
-      {convenio.estado === "borrador" && puedeEditar && (
-        <p>
-          <Link href={`/convenios/${id}/editar`}>Editar convenio</Link>
-        </p>
-      )}
-
-      <section className="ficha-seccion">
-        <h2>Vigencia</h2>
-        <p>Firma: {convenio.fecha_firma ?? "sin registrar"}</p>
-        <p>Inicio: {convenio.fecha_inicio ?? "sin registrar"}</p>
-        <p>
-          {convenio.fecha_vencimiento
-            ? `Vence el ${convenio.fecha_vencimiento}` +
-              (convenio.fecha_preaviso ? ` (preaviso el ${convenio.fecha_preaviso})` : "")
-            : "Sin vencimiento registrado"}
-        </p>
-      </section>
-
-      <section className="ficha-seccion">
-        <h2>Datos principales</h2>
-        <p>Objeto: {convenio.objeto ?? "—"}</p>
-        <p>Alcance: {convenio.alcance ?? "—"}</p>
-        <p>Resolución: {convenio.resolucion ?? "—"}</p>
-        <p>Expediente: {convenio.expediente ?? "—"}</p>
-      </section>
-
-
-
-      <Documentos convenioId={Number(id)} />
-
-      <section className="ficha-seccion">
-        <h2>Partes</h2>
-        <ul>
-          {convenio.partes.map((p) => (
-            <li key={p.id}>
-              {p.nombre} ({PARTES[p.tipo]}) · {ROLES_PARTE[p.pivot.rol_parte]}
-              {p.representante && (
-                <>
-                  {" "}
-                  · Representante: {p.representante}
-                  {p.cargo_representante && ` (${p.cargo_representante})`}
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {puedeEditar && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
-      </section>
-
-      {convenio.personas && (
-        <section className="ficha-seccion">
-          <h2>Personas</h2>
-          <ul>
-            {convenio.personas.map((p) => (
-              <li key={`${p.id}-${p.pivot.rol}`}>
-                {p.nombre} · {ROLES_PERSONA[p.pivot.rol]}
-                {p.pivot.desde && ` · del ${p.pivot.desde}`}
-                {p.pivot.hasta && ` al ${p.pivot.hasta}`}
-              </li>
-            ))}
-          </ul>
-
-          {puedeEditar && <AgregarPersona convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
-        </section>
-      )}
-
-      <section className="ficha-seccion">
-        <h2>Antecedentes</h2>
-        {antecedentes.length === 0 && <p>Ninguno</p>}
-        <ul>
-          {antecedentes.map((v) => (
-            <li key={v.id}>
-              <Link href={`/convenios/${v.id}`}>
-                {v.codigo} · {v.titulo}
-              </Link>{" "}
-              ({VINCULOS[v.tipo_vinculo]})
-            </li>
-          ))}
-        </ul>
-
-        {/* Los vínculos solo se cambian en borrador */}
-        {convenio.estado === "borrador" && puedeEditar && (
-          <AgregarVinculo convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />
+      <header className="ficha-cabecera">
+        <div>
+          <span className="codigo-ficha">{convenio.codigo}</span>
+          <h1>{convenio.titulo}</h1>
+          <p className="ficha-meta">
+            <span className="etiqueta-tipo">{TIPOS[convenio.tipo]}</span>
+            <span title={convenio.unidad.nombre}>{convenio.unidad.nombre}</span>
+            <span className={`insignia insignia-${convenio.estado}`}>{ESTADOS[convenio.estado]}</span>
+          </p>
+        </div>
+        {/* Solo se edita en borrador, y solo administración y gestión */}
+        {enBorrador && puedeEditar && (
+          <Link className="boton-secundario" href={`/convenios/${id}/editar`}>
+            Editar convenio
+          </Link>
         )}
-      </section>
+      </header>
 
-      <section className="ficha-seccion">
-        <h2>Derivados</h2>
-        {derivados.length === 0 && <p>Ninguno</p>}
-        <ul>
-          {derivados.map((v) => (
-            <li key={v.id}>
-              <Link href={`/convenios/${v.id}`}>
-                {v.codigo} · {v.titulo}
-              </Link>{" "}
-              ({VINCULOS[v.tipo_vinculo]})
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="ficha-rejilla">
+        <div className="ficha-columna">
+          <section className="ficha-seccion">
+            <h2>Datos del convenio</h2>
+            <dl className="datos-lista">
+              <div className="ancho">
+                <dt>Objeto</dt>
+                <dd>{convenio.objeto ?? <span className="sin-dato">Sin cargar</span>}</dd>
+              </div>
+              <div className="ancho">
+                <dt>Alcance</dt>
+                <dd>{convenio.alcance ?? <span className="sin-dato">Sin cargar</span>}</dd>
+              </div>
+              <div>
+                <dt>Resolución</dt>
+                <dd>{convenio.resolucion ?? <span className="sin-dato">Sin cargar</span>}</dd>
+              </div>
+              <div>
+                <dt>Expediente</dt>
+                <dd>{convenio.expediente ?? <span className="sin-dato">Sin cargar</span>}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <Documentos convenioId={Number(id)} />
+
+          <section className="ficha-seccion">
+            <h2>
+              Partes <span className="contador">{convenio.partes.length}</span>
+            </h2>
+            <ul className="tarjetas-lista">
+              {convenio.partes.map((p) => (
+                <li key={p.id}>
+                  <strong>{p.nombre}</strong>
+                  <span className="parte-datos">
+                    <span className={p.pivot.rol_parte === "UNLPam" ? "rol rol-unlpam" : "rol"}>{ROLES_PARTE[p.pivot.rol_parte]}</span>
+                    <span className="etiqueta-tipo">{PARTES[p.tipo]}</span>
+                  </span>
+                  {p.representante && (
+                    <small>
+                      {p.representante}
+                      {p.cargo_representante && ` · ${p.cargo_representante}`}
+                    </small>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {puedeEditar && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+          </section>
+
+          {convenio.personas && (
+            <section className="ficha-seccion">
+              <h2>
+                Personas <span className="contador">{convenio.personas.length}</span>
+              </h2>
+              {convenio.personas.length === 0 && <p className="vacio">Todavía no hay personas vinculadas.</p>}
+              <ul className="tarjetas-lista">
+                {convenio.personas.map((p) => (
+                  <li key={`${p.id}-${p.pivot.rol}`}>
+                    <strong>{p.nombre}</strong>
+                    <span className="parte-datos">
+                      <span className="rol">{ROLES_PERSONA[p.pivot.rol]}</span>
+                    </span>
+                    {(p.pivot.desde || p.pivot.hasta) && (
+                      <small>
+                        {p.pivot.desde && `Desde ${fechaLarga(p.pivot.desde)}`}
+                        {p.pivot.desde && p.pivot.hasta && " · "}
+                        {p.pivot.hasta && `Hasta ${fechaLarga(p.pivot.hasta)}`}
+                      </small>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              {puedeEditar && <AgregarPersona convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+            </section>
+          )}
+        </div>
+
+        <aside className="ficha-lateral">
+          <section className="ficha-seccion vigencia-seccion">
+            <h2>Vigencia</h2>
+            <ol className="vigencia">
+              {fechas.map((f) => (
+                <li key={f.etiqueta} className={f.valor ? "" : "falta"}>
+                  <span>{f.etiqueta}</span>
+                  <strong>{f.valor ? fechaLarga(f.valor) : "Sin registrar"}</strong>
+                </li>
+              ))}
+              <li className={convenio.fecha_vencimiento ? "" : "falta"}>
+                <span>Vencimiento</span>
+                <strong>{convenio.fecha_vencimiento ? fechaLarga(convenio.fecha_vencimiento) : "Sin vencimiento registrado"}</strong>
+                {avisoVencimiento && dias !== null && (
+                  <span className={`urgencia ${dias < 0 ? "urgencia-vencido" : "urgencia-pronto"}`}>
+                    {dias < 0 ? `Venció hace ${-dias} d` : dias === 0 ? "Vence hoy" : `Vence en ${dias} d`}
+                  </span>
+                )}
+              </li>
+            </ol>
+          </section>
+
+          <section className="ficha-seccion">
+            <h2>
+              Antecedentes <span className="contador">{antecedentes.length}</span>
+            </h2>
+            {antecedentes.length === 0 && <p className="vacio">Ninguno por ahora.</p>}
+            <ul className="filas">
+              {antecedentes.map((v) => (
+                <li key={v.id}>
+                  <Link href={`/convenios/${v.id}`}>
+                    <strong>{v.codigo}</strong>
+                    <span>{v.titulo}</span>
+                  </Link>
+                  <span className="etiqueta-tipo">{VINCULOS[v.tipo_vinculo]}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Los vínculos solo se cambian en borrador */}
+            {enBorrador && puedeEditar && <AgregarVinculo convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+          </section>
+
+          <section className="ficha-seccion">
+            <h2>
+              Derivados <span className="contador">{derivados.length}</span>
+            </h2>
+            {derivados.length === 0 && <p className="vacio">Ninguno por ahora.</p>}
+            <ul className="filas">
+              {derivados.map((v) => (
+                <li key={v.id}>
+                  <Link href={`/convenios/${v.id}`}>
+                    <strong>{v.codigo}</strong>
+                    <span>{v.titulo}</span>
+                  </Link>
+                  <span className="etiqueta-tipo">{VINCULOS[v.tipo_vinculo]}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+      </div>
     </>
   );
 }

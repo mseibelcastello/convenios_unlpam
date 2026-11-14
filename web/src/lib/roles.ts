@@ -13,19 +13,20 @@ export type Usuario = {
   name: string;
   email: string;
   rol: Rol;
-  unidad?: { id: number; nombre: string } | null;
+  unidad?: { id: number; nombre: string; sigla?: string } | null;
 };
 
-type ItemMenu = { href: string; texto: string; roles: Rol[] | "todos" };
+// "grupo" es el título de la sección del menú lateral; "icono" es el nombre de un ícono de components/Iconos.tsx
+type ItemMenu = { href: string; texto: string; icono: string; grupo: string; roles: Rol[] | "todos" };
 
 // "Nuevo convenio" no aparece para revisión ni consulta (igual que el permiso
 // de POST /agreements en la API).
 const MENU: ItemMenu[] = [
-  { href: "/", texto: "Inicio", roles: "todos" },
-  { href: "/convenios", texto: "Convenios", roles: "todos" },
-  { href: "/convenios/nuevo", texto: "Nuevo convenio", roles: ["administracion", "gestion"] },
-  { href: "/vencimientos", texto: "Vencimientos", roles: "todos" },
-  { href: "/usuarios", texto: "Usuarios", roles: ["administracion"] },
+  { href: "/", texto: "Inicio", icono: "inicio", grupo: "Principal", roles: "todos" },
+  { href: "/convenios", texto: "Convenios", icono: "convenios", grupo: "Principal", roles: "todos" },
+  { href: "/vencimientos", texto: "Vencimientos", icono: "vencimientos", grupo: "Principal", roles: "todos" },
+  { href: "/convenios/nuevo", texto: "Nuevo convenio", icono: "nuevo", grupo: "Gestión", roles: ["administracion", "gestion"] },
+  { href: "/usuarios", texto: "Usuarios", icono: "usuarios", grupo: "Administración", roles: ["administracion"] },
 ];
 
 export function menuPara(rol: Rol) {
