@@ -4,6 +4,7 @@ import "./globals.css";
 import "@/styles/tokens.css";
 import { Suspense } from "react";
 import { AuthProvider } from "@/lib/auth";
+import Sincronizador from "@/components/Sincronizador";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* El panel lee la URL (usePathname): con Cache Components eso tiene que ir dentro de un Suspense,
             si no "next build" falla. La estructura que queda fuera es la que se pre-carga para navegar sin red. */}
         <Suspense fallback={<p className="estado-carga">Cargando…</p>}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            {/* Manda los cambios hechos sin conexión cuando vuelve la red */}
+            <Sincronizador />
+          </AuthProvider>
         </Suspense>
       </body>
     </html>

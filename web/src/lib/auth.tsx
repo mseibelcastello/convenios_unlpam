@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "./api";
-import { borrarDatosLocales, esSinConexion } from "./local";
+import { borrarDatosLocales, esSinConexion, sincronizar } from "./local";
 import type { Usuario } from "./roles";
 
 type Estado = "cargando" | "anonimo" | "autenticado";
@@ -81,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function cerrarSesion() {
+    // Antes de borrar lo local, se intenta mandar lo que quedó pendiente (si no hay red, se pierde)
+    await sincronizar().catch(() => {});
     await api.post("/auth/logout").catch(() => {});
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");

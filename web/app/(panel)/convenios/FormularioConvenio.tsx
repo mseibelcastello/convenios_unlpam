@@ -8,7 +8,8 @@ import { TIPOS } from "@/lib/tipos";
 
 
 // Todos los campos del convenio, agrupados en las secciones en que se muestran
-const CAMPOS = [
+// Exportado: la pantalla de conflictos usa las mismas etiquetas
+export const CAMPOS = [
   { nombre: "codigo", etiqueta: "Código", tipo: "texto", obligatorio: true, grupo: "principal", info: "Código con el que se identifica el convenio. Formato CONV-AAAA-NNN, por ejemplo: CONV-2026-001." },
   { nombre: "tipo", etiqueta: "Tipo", tipo: "tipo", obligatorio: true, grupo: "principal" },
   { nombre: "titulo", etiqueta: "Título", tipo: "texto", obligatorio: true, grupo: "principal", ancho: true },
@@ -99,8 +100,27 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
   const [modo, setModo] = useState<"pdf" | "formulario">("pdf");
   const conPdf = esAlta && modo === "pdf";
 
+  // La lista se guarda para poder editar sin conexión (sin ella, "Unidad" quedaría vacía y no deja guardar)
   useEffect(() => {
-    api.get("/unidades").then((r) => setUnidades(r.data));
+    api
+      .get("/unidades")
+      .then((r) => {
+        setUnidades(r.data);
+        try {
+          localStorage.setItem("unidades", JSON.stringify(r.data));
+        } catch {}
+      })
+      .catch(() => {
+        let guardadas: Unidad[] = [];
+        try {
+          guardadas = JSON.parse(localStorage.getItem("unidades") ?? "[]");
+        } catch {}
+        // Si nunca se cargó la lista, al menos la unidad del propio convenio (viene en la copia de la ficha)
+        const propia = inicial?.unidad as Unidad | undefined;
+        setUnidades(guardadas.length > 0 ? guardadas : propia ? [propia] : []);
+      });
+    // Solo al montar: la lista no depende de los valores del formulario
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function cambiar(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {

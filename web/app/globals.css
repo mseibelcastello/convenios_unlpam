@@ -682,3 +682,22 @@ p.aviso-observaciones { margin: 0 0 1rem; }
 .aviso-sin-conexion p { display: flex; flex-direction: column; gap: 0.15rem; margin: 0; }
 .aviso-sin-conexion span { font-size: var(--texto-chico); color: var(--color-texto-suave); }
 .aviso-pendientes { margin: 0 0 1rem; padding: 0.6rem 0.9rem; border-radius: 10px; background: var(--color-aviso-fondo); color: var(--color-aviso); font-size: var(--texto-chico); }
+
+/* ---- Sincronización y conflictos de cambios hechos sin conexión ---- */
+.sincronizador { position: fixed; right: 1rem; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); z-index: 50; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; max-width: min(26rem, calc(100vw - 2rem)); pointer-events: none; }
+.sincronizador-aviso { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.7rem 1rem; border-radius: 12px; background: #fff; border: 1px solid rgba(46, 21, 25, 0.15); box-shadow: var(--sombra-vidrio); color: var(--color-texto); font-size: var(--texto-chico); pointer-events: auto; }
+.sincronizador-conflicto { border-left: 5px solid var(--color-aviso); background: var(--color-aviso-fondo); color: var(--color-aviso); font-weight: 600; }
+.sincronizador-conflicto a { padding: 0.3rem 0.8rem; border-radius: 8px; background: var(--color-aviso); color: #fff; text-decoration: none; }
+.sincronizador-espera { color: var(--color-texto-suave); }
+
+.conflicto { display: flex; flex-direction: column; gap: 0.8rem; }
+.conflicto-cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 0.5rem 1rem; }
+.panel .conflicto-cabecera h2 { margin: 0.15rem 0 0; }
+.conflicto-cabecera .codigo { font-family: var(--fuente-titulo); font-size: 0.8rem; font-weight: 600; color: #b8420a; text-decoration: none; }
+.conflicto-motivo { margin: 0; }
+.tabla-conflicto { min-width: 34rem; }
+.tabla-conflicto th[scope="row"] { font-weight: 600; white-space: nowrap; }
+.tabla-conflicto td { white-space: pre-wrap; overflow-wrap: anywhere; vertical-align: top; }
+.tabla-conflicto tr.distinto td { background: rgba(232, 106, 4, 0.08); }
+.conflicto-botones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.panel .conflicto .boton-texto { align-self: flex-start; }

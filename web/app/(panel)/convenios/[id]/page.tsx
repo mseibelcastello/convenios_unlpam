@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icono } from "@/components/Iconos";
 import { useAuth } from "@/lib/auth";
-import { cambiosPendientesDe, useConCopiaLocal } from "@/lib/local";
+import { useCola, useConCopiaLocal } from "@/lib/local";
 import { ESTADOS } from "@/lib/estados";
 import { diasHasta, fechaLarga } from "@/lib/fechas";
 import { PARTES, ROLES_PARTE, ROLES_PERSONA, TIPOS, VINCULOS } from "@/lib/tipos";
@@ -67,16 +67,20 @@ export default function Ficha() {
   const convenio = lectura.datos;
   const antecedentes = vinculos.datos?.antecedentes ?? [];
   const derivados = vinculos.datos?.derivados ?? [];
-  // Ediciones hechas sin conexión que todavía no se mandaron
-  const [cambiosPendientes, setCambiosPendientes] = useState(0);
+  // Ediciones hechas sin conexión que todavía no se mandaron (se actualiza sola cuando se envían)
+  const { pendientes: cola } = useCola();
+  const cambiosPendientes = cola.filter((c) => c.convenio_id === convenioId).length;
+  const anteriores = useRef(cambiosPendientes);
   // Observaciones sin resolver; las informa la sección de observaciones
   const [pendientes, setPendientes] = useState(0);
   // Confirmación después de aprobar o devolver (la sección de revisión ya no se muestra)
   const [avisoRevision, setAvisoRevision] = useState("");
 
+  // Cuando se envían los cambios de este convenio, se vuelve a pedir para mostrar cómo quedó
   useEffect(() => {
-    cambiosPendientesDe(convenioId).then((lista) => setCambiosPendientes(lista.length));
-  }, [convenioId, recarga]);
+    if (cambiosPendientes < anteriores.current) setRecarga((n) => n + 1);
+    anteriores.current = cambiosPendientes;
+  }, [cambiosPendientes]);
 
   if (lectura.error === 404) {
     return (
