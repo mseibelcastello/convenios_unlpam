@@ -1,6 +1,8 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import axios from 'axios';
+import * as DocumentPicker from 'expo-document-picker';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { type ReactNode, useCallback, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cliente } from '@/api/cliente';
@@ -8,6 +10,7 @@ import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
 import { ErrorView } from '@/components/molecules/ErrorView';
+import { Opciones } from '@/components/molecules/Opciones';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
@@ -34,10 +37,27 @@ type Convenio = {
   fecha_vencimiento: string | null;
   unidad: { nombre: string; sigla: string };
   partes: Parte[];
+  // Solo viene si el convenio está firmado (y el usuario no es de Consulta)
+  firma?: {
+    usuario: { nombre: string } | null;
+    fecha: string;
+    latitud: number;
+    longitud: number;
+    imagen: string | null;
+  } | null;
 };
 
 type Documento = { id: number; tipo: string; nombre_original: string; version: number };
 type Padre = { id: number; codigo: string; titulo: string };
+
+// Tipos de documento que se pueden subir (los mismos que acepta la API)
+const TIPOS_DOCUMENTO = [
+  { valor: 'principal', texto: 'Principal' },
+  { valor: 'anexo', texto: 'Anexo' },
+  { valor: 'dictamen', texto: 'Dictamen' },
+  { valor: 'resolucion', texto: 'Resolución' },
+  { valor: 'otro', texto: 'Otro' },
+];
 
 // La API manda "2025-11-10"; se muestra "10/11/2025"
 function fecha(f: string | null) {
@@ -80,27 +100,76 @@ export default function FichaConvenio() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(false);
 
+  // Para subir documentos
+  const [rol, setRol] = useState('');
+  const [tipoDoc, setTipoDoc] = useState('principal');
+  const [subiendo, setSubiendo] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [mensajeEsError, setMensajeEsError] = useState(false);
+
   async function cargar() {
     setCargando(true);
     setError(false);
     try {
-      const [c, vinculos, docs] = await Promise.all([
+      const [c, vinculos, docs, yo] = await Promise.all([
         cliente.get(`/agreements/${id}`),
         cliente.get(`/agreements/${id}/links`),
         cliente.get(`/agreements/${id}/documents`),
+        cliente.get('/auth/me'),
       ]);
       setConvenio(c.data);
       setPadres(vinculos.data.antecedentes); // los convenios en los que este se apoya
       setDocumentos(docs.data.data);
+      setRol(yo.data.user.rol);
+      // Revisión solo puede subir dictámenes
+      setTipoDoc(yo.data.user.rol === 'revision' ? 'dictamen' : 'principal');
     } catch {
       setError(true);
     }
     setCargando(false);
   }
 
-  useEffect(() => {
-    cargar();
-  }, [id]);
+  // Se vuelve a cargar cada vez que se entra o se vuelve a esta pantalla (por ejemplo, después de firmar)
+  useFocusEffect(
+    useCallback(() => {
+      cargar();
+    }, [id]),
+  );
+
+  function avisar(texto: string, esError: boolean) {
+    setMensaje(texto);
+    setMensajeEsError(esError);
+  }
+
+  // Elige un PDF del celular y lo sube al convenio
+  async function subirDocumento() {
+    if (subiendo) return;
+    avisar('', false);
+    if (!tipoDoc) return avisar('Elegí el tipo de documento.', true);
+
+    const elegido = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
+    if (elegido.canceled) return;
+    const archivo = elegido.assets[0];
+
+    setSubiendo(true);
+    try {
+      const formulario = new FormData();
+      formulario.append('tipo', tipoDoc);
+      // En React Native un archivo se manda como { uri, name, type }
+      formulario.append('archivo', { uri: archivo.uri, name: archivo.name, type: 'application/pdf' } as unknown as Blob);
+
+      await cliente.post(`/agreements/${id}/documents`, formulario, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000, // un PDF grande tarda más que los 10 segundos de siempre
+      });
+      await cargar(); // trae la lista de documentos de nuevo
+      avisar('Documento subido.', false);
+    } catch (e) {
+      const datos = axios.isAxiosError(e) ? e.response?.data : null;
+      avisar(datos?.errors?.archivo?.[0] ?? datos?.message ?? 'No se pudo subir el documento.', true);
+    }
+    setSubiendo(false);
+  }
 
   function contenido() {
     if (cargando) return <LoadingView />;
@@ -158,6 +227,21 @@ export default function FichaConvenio() {
           />
         </Seccion>
 
+        {convenio.firma && (
+          <Seccion titulo="Firma">
+            <Dato etiqueta="Firmado por" valor={convenio.firma.usuario?.nombre ?? 'Sin dato'} />
+            <Dato etiqueta="Fecha" valor={fecha(convenio.firma.fecha.slice(0, 10))} />
+            <Dato etiqueta="Hora" valor={`${convenio.firma.fecha.slice(11, 19)} hs`} />
+            <Dato etiqueta="Latitud" valor={String(convenio.firma.latitud)} />
+            <Dato etiqueta="Longitud" valor={String(convenio.firma.longitud)} />
+            {convenio.firma.imagen && (
+              <View style={styles.firmaDibujada}>
+                <Image source={{ uri: convenio.firma.imagen }} style={styles.imagenFirma} resizeMode="contain" />
+              </View>
+            )}
+          </Seccion>
+        )}
+
         {padres.length > 0 && (
           <Seccion titulo="Convenio padre">
             {padres.map((p) => (
@@ -179,7 +263,7 @@ export default function FichaConvenio() {
           {documentos.map((d) => (
             <Pressable
               key={d.id}
-              onPress={() => router.push(`/documento/${d.id}`)}
+              onPress={() => router.push(`/documento/${d.id}?convenio=${convenio.id}`)}
               accessibilityRole="button"
               accessibilityLabel={`Abrir ${d.nombre_original}`}
               style={styles.dato}>
@@ -189,6 +273,28 @@ export default function FichaConvenio() {
               </ThemedText>
             </Pressable>
           ))}
+
+          {/* Consulta no sube documentos */}
+          {['administracion', 'gestion', 'revision'].includes(rol) && (
+            <View style={styles.subida}>
+              <Opciones
+                titulo="Subir un documento"
+                opciones={rol === 'revision' ? TIPOS_DOCUMENTO.filter((t) => t.valor === 'dictamen') : TIPOS_DOCUMENTO}
+                valor={tipoDoc}
+                onElegir={setTipoDoc}
+              />
+              <Button
+                titulo={subiendo ? 'Subiendo…' : 'Elegir PDF y subir'}
+                variante="secundario"
+                onPress={subirDocumento}
+              />
+              {mensaje !== '' && (
+                <ThemedText type="small" themeColor={mensajeEsError ? 'error' : 'success'}>
+                  {mensaje}
+                </ThemedText>
+              )}
+            </View>
+          )}
         </Seccion>
       </ScrollView>
     );
@@ -214,4 +320,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
   },
   dato: { gap: Spacing.half },
+  subida: { gap: Spacing.two, marginTop: Spacing.two },
+  firmaDibujada: { backgroundColor: '#ffffff', borderRadius: Radius.small, padding: Spacing.two },
+  imagenFirma: { width: '100%', height: 120 },
 });

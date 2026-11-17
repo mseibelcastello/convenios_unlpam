@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cliente } from '@/api/cliente';
@@ -8,6 +8,7 @@ import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
+import { Opciones } from '@/components/molecules/Opciones';
 import { SearchBar } from '@/components/molecules/SearchBar';
 import { ConvenioArbol } from '@/components/organisms/ConvenioArbol';
 import { ThemedText } from '@/components/themed-text';
@@ -30,45 +31,6 @@ const ESTADOS = (Object.keys(Estados) as EstadoConvenio[]).map((e) => ({
   valor: e,
   texto: Estados[e].label,
 }));
-
-// Fila de opciones para filtrar. Tocar la opción elegida la saca ("Todos").
-function Opciones(props: {
-  titulo: string;
-  opciones: { valor: string; texto: string }[];
-  valor: string;
-  onElegir: (valor: string) => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={styles.grupo}>
-      <ThemedText type="smallBold">{props.titulo}</ThemedText>
-      <View style={styles.opciones}>
-        {props.opciones.map((o) => {
-          const elegida = props.valor === o.valor;
-          return (
-            <Pressable
-              key={o.valor}
-              onPress={() => props.onElegir(elegida ? '' : o.valor)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: elegida }}
-              style={[
-                styles.opcion,
-                {
-                  backgroundColor: elegida ? theme.primary : theme.backgroundElement,
-                  borderColor: elegida ? theme.primary : theme.border,
-                },
-              ]}>
-              <ThemedText type="small" style={{ color: elegida ? theme.onPrimary : theme.text }}>
-                {o.texto}
-              </ThemedText>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
 
 export default function Buscar() {
   const theme = useTheme();
@@ -257,13 +219,6 @@ const styles = StyleSheet.create({
     paddingBottom: BottomTabInset + Spacing.three,
   },
   grupo: { gap: Spacing.two },
-  opciones: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  opcion: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderWidth: 1,
-    borderRadius: Radius.large,
-  },
   input: {
     minHeight: 44,
     paddingHorizontal: Spacing.three,
