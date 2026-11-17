@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cerrarSesion } from '@/api/auth';
 import { Button } from '@/components/atoms/Button';
+import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -17,6 +18,7 @@ export default function Perfil() {
   return (
     <ThemedView style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
+        <HeaderBuscador />
         <ScrollView contentContainerStyle={styles.contenido}>
           <ThemedText type="subtitle">Perfil</ThemedText>
           <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
