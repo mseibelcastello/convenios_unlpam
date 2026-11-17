@@ -35,6 +35,7 @@ export default function RootLayout() {
           <Stack.Screen name="codigo" />
           <Stack.Screen name="estados" />
           <Stack.Screen name="identidad" />
+          <Stack.Screen name="alertas" />
         </Stack>
       </ThemeProvider>
     </PreferenciasProvider>

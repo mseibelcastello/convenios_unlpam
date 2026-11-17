@@ -17,6 +17,8 @@ type Preferencias = {
   tamano: TamanoLetra;
   escala: number; // lo que se multiplica a todos los tamaños de texto
   miniatura: string | null; // dirección de la foto en miniatura
+  noLeidas: number; // alertas sin leer (número de la campana)
+  actualizarNoLeidas: () => Promise<void>;
   cargarDelServidor: () => Promise<void>;
   guardar: (modo: Modo, tamano: TamanoLetra) => Promise<void>;
   subirFoto: (foto: { uri: string; fileName?: string | null; mimeType?: string | null }) => Promise<void>;
@@ -41,6 +43,7 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
   const [modo, setModo] = useState<Modo>('claro');
   const [tamano, setTamano] = useState<TamanoLetra>('mediana');
   const [miniatura, setMiniatura] = useState<string | null>(null);
+  const [noLeidas, setNoLeidas] = useState(0);
 
   // Al abrir la app: lo último que se guardó en el celular
   useEffect(() => {
@@ -73,6 +76,14 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
     } catch {}
   }
 
+  // Pide solo la cantidad de alertas sin leer (meta.no_leidas de GET /alerts)
+  async function actualizarNoLeidas() {
+    try {
+      const { data } = await cliente.get('/alerts', { params: { no_leidas: 1 } });
+      setNoLeidas(data.meta.no_leidas);
+    } catch {}
+  }
+
   // Cambia en el momento (se ve en toda la app) y después lo guarda en la API
   async function guardar(nuevoModo: Modo, nuevoTamano: TamanoLetra) {
     setModo(nuevoModo);
@@ -99,7 +110,7 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
 
   return (
     <Contexto.Provider
-      value={{ modo, tamano, escala: EscalaLetra[tamano], miniatura, cargarDelServidor, guardar, subirFoto }}>
+      value={{ modo, tamano, escala: EscalaLetra[tamano], miniatura, noLeidas, actualizarNoLeidas, cargarDelServidor, guardar, subirFoto }}>
       {children}
     </Contexto.Provider>
   );
