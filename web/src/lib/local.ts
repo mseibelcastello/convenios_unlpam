@@ -9,7 +9,7 @@ import { api } from "./api";
 // Se borra entera al cerrar sesión: en una compu compartida no queda nada del usuario anterior.
 
 // Cada parte de la ficha se pide por separado, así que se guarda por separado
-type Seccion = "datos" | "vinculos" | "documentos" | "observaciones";
+type Seccion = "datos" | "vinculos" | "documentos" | "observaciones" | "lineaDeVida";
 
 export type ConvenioGuardado = {
   id: number;

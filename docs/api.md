@@ -132,6 +132,28 @@ Reglas (422 si no se cumplen):
 - Un convenio específico se vincula a uno o más marcos del mismo tipo (colaboración o pasantía).
 - Cada elemento de la respuesta lleva `{id, codigo, titulo, tipo, estado, tipo_vinculo}`, para armar el árbol padre, hijo, resoluciones y documentos que pide la app.
 
+#### Línea de vida: GET /agreements/{id}/lifeline
+`/links` devuelve solo el primer nivel. La línea de vida devuelve **toda la cadena** a la que pertenece el convenio: por ejemplo, el marco, su renovación, sus específicos y las adendas de esos específicos. Se puede pedir desde cualquier convenio de la cadena.
+
+| Método y ruta | Quién | OK | Errores |
+|---|---|---|---|
+| GET /agreements/{id}/lifeline | Todos, según alcance | 200 `{convenio_id, hoy, resumen, tramos: [...]}` | 401, 404 |
+
+- `tramos` viene **ordenado por fecha**: por la de inicio, o la de firma si no tiene. Los que todavía no tienen fechas (en trámite) van al final.
+- Cada tramo trae `tipo` (el tipo de instrumento), `codigo`, `titulo`, `estado`, `unidad`, `fecha_firma`, `fecha_inicio`, `fecha_vencimiento`, `situacion`, `dias_para_vencer` (negativo si ya venció), `es_el_consultado` y `vinculos`.
+- `vinculos` dice con qué otros tramos se relaciona cada uno: `{tipo_vinculo, relacion: "antecedente"|"derivado", convenio_id, codigo}`.
+- `situacion` usa la misma regla que los avisos de vencimiento (`deadlines:check`):
+
+  | Valor | Cuándo |
+  |---|---|
+  | `vigente` | Firmado, antes del preaviso (o sin vencimiento) |
+  | `proximo_a_vencer` | Firmado, ya dentro del período de preaviso |
+  | `vencido` | Firmado, con el vencimiento ya pasado |
+  | `en_tramite` | Borrador, revisión o aprobado: todavía no rige |
+  | `rescindido`, `archivado` | Terminado |
+- `resumen` cuenta los tramos por situación.
+- **Alcance**: la cadena solo pasa por convenios que el usuario puede ver. Un convenio de otra unidad no aparece y tampoco sirve de puente para llegar a otros.
+
 ### 2.9 /dashboard
 Las estadísticas, con cantidades por estado, tipo, unidad y año, y convenios firmados y vigentes. También genera la exportación en PDF.
 

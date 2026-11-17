@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 use App\Support\Avisos;
+use App\Support\CambiarEstado;
 use Illuminate\Support\Facades\DB;
 
 class Agreement extends Model
@@ -73,6 +74,36 @@ class Agreement extends Model
         Avisos::datosModificados($actualizado, $usuario);
 
         return ['aplicado', $actualizado];
+    }
+
+    /**
+     * En qué situación está el plazo del convenio hoy ($hoy en "AAAA-MM-DD", hora de Argentina).
+     * Solo un firmado está vigente; los demás estados dicen por qué no:
+     *  - vigente, proximo_a_vencer (ya entró en el preaviso) o vencido (pasó el vencimiento y sigue firmado)
+     *  - en_tramite (borrador, revisión o aprobado: todavía no rige), rescindido o archivado
+     * La usan el comando deadlines:check (avisos) y la línea de vida, así las dos dicen lo mismo.
+     */
+    public function situacion(string $hoy): string
+    {
+        if ($this->estado !== 'firmado') {
+            return in_array($this->estado, ['rescindido', 'archivado'], true) ? $this->estado : 'en_tramite';
+        }
+
+        // Firmado sin vencimiento: rige hasta que se rescinda
+        if ($this->fecha_vencimiento === null) {
+            return 'vigente';
+        }
+
+        $vence = $this->fecha_vencimiento->toDateString();
+        if ($vence < $hoy) {
+            return 'vencido';
+        }
+
+        // Sin fecha de preaviso cargada, la regla general (los mismos días que al firmar)
+        $preaviso = $this->fecha_preaviso?->toDateString()
+            ?? $this->fecha_vencimiento->copy()->subDays(CambiarEstado::DIAS_PREAVISO)->toDateString();
+
+        return $preaviso <= $hoy ? 'proximo_a_vencer' : 'vigente';
     }
 
     public function observaciones(): HasMany

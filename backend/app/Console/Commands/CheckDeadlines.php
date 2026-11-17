@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\Agreement;
 use App\Models\Notification;
 use App\Support\Avisos;
-use App\Support\CambiarEstado;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -53,19 +52,13 @@ class CheckDeadlines extends Command
         return self::SUCCESS;
     }
 
-    /** 'vencido' si el vencimiento ya pasó, 'preaviso' si hoy está entre el preaviso y el vencimiento, null si falta */
+    /** 'vencido', 'preaviso' o null si todavía falta. La regla está en Agreement::situacion (la comparte la línea de vida). */
     private function tipoDeAviso(Agreement $convenio, string $hoy): ?string
     {
-        $vence = $convenio->fecha_vencimiento->toDateString();
-
-        if ($vence < $hoy) {
-            return 'vencido';
-        }
-
-        // Si no tiene fecha de preaviso cargada, se usa la regla general (60 días antes)
-        $preaviso = $convenio->fecha_preaviso?->toDateString()
-            ?? $convenio->fecha_vencimiento->copy()->subDays(CambiarEstado::DIAS_PREAVISO)->toDateString();
-
-        return $preaviso <= $hoy ? 'preaviso' : null;
+        return match ($convenio->situacion($hoy)) {
+            'vencido' => 'vencido',
+            'proximo_a_vencer' => 'preaviso',
+            default => null,
+        };
     }
 }
