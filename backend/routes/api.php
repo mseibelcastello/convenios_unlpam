@@ -22,6 +22,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\SyncController;
+use App\Http\Controllers\QrController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -41,6 +42,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Avisos: cada usuario ve y marca solo los suyos (todos los roles)
     Route::get('/alerts', [AlertController::class, 'index']);
     Route::post('/alerts/{id}/read', [AlertController::class, 'read'])->whereNumber('id');
+
+    // QR de la ficha: todos los roles, pero solo abre convenios de su alcance (si no, 404)
+    Route::get('/qr/{token}', [QrController::class, 'abrir'])->middleware('throttle:60,1');
 
     // Cambios hechos sin conexión; el rol se controla por cada cambio dentro del controlador
     Route::post('/sync', SyncController::class)->middleware('throttle:30,1');
@@ -96,6 +100,7 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Escritura: solo administración y gestión
     Route::middleware('role:gestion,administracion')->group(function () {
         Route::post('/agreements', [AgreementController::class, 'store']);
+        Route::post('/agreements/{id}/qr', [QrController::class, 'generar'])->whereNumber('id');
         Route::put('/agreements/{id}', [AgreementController::class, 'update'])->whereNumber('id');
 
         Route::post('/parties', [PartyController::class, 'store']);

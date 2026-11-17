@@ -65,6 +65,8 @@ class AgreementController extends Controller
         }
 
         $datos = $convenio->toArray();
+        // null si todavía no se generó el QR de la ficha
+        $datos['qr_token'] = $convenio->qr_token;
 
         if ($interno) {
             $datos['observaciones'] = Observation::listaDe($convenio->id);

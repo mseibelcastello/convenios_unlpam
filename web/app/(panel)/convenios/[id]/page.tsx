@@ -15,6 +15,7 @@ import AgregarVinculo from "./AgregarVinculo";
 import Dictamen from "./Dictamen";
 import Documentos from "./Documentos";
 import Observaciones from "./Observaciones";
+import QrFicha from "./QrFicha";
 
 type Convenio = {
   codigo: string;
@@ -41,6 +42,8 @@ type Convenio = {
   }[];
   // Consulta no recibe las personas
   personas?: { id: number; nombre: string; pivot: { rol: string; desde: string | null; hasta: string | null } }[];
+  // Token del QR de la ficha (null si todavía no se generó)
+  qr_token: string | null;
 };
 
 //lista de elementos ed antecedentes y derivados
@@ -317,6 +320,14 @@ export default function Ficha() {
               </li>
             </ol>
           </section>
+
+          <QrFicha
+            convenioId={convenioId}
+            codigo={convenio.codigo}
+            token={convenio.qr_token ?? null}
+            puedeGenerar={puedeAgregar}
+            alGenerar={() => setRecarga(recarga + 1)}
+          />
 
           <section className="ficha-seccion">
             <h2>

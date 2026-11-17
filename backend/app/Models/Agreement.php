@@ -23,6 +23,9 @@ class Agreement extends Model
         'fecha_vencimiento', 'fecha_preaviso', 'estado', 'version',
     ];
 
+    // El token del QR solo sale en la ficha (show), no en listados ni en otras respuestas
+    protected $hidden = ['qr_token'];
+
     protected function casts(): array
     {
         return [

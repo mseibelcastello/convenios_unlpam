@@ -723,3 +723,9 @@ p.aviso-observaciones { margin: 0 0 1rem; }
 .campana-texto { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; overflow-wrap: anywhere; font-size: var(--texto-chico); line-height: 1.4; }
 .campana-texto small { color: var(--color-texto-suave); }
 @media (max-width: 40rem) { .campana-lista { position: fixed; top: calc(4.2rem + env(safe-area-inset-top, 0px)); left: 1rem; right: 1rem; width: auto; } }
+
+/* ---- QR de la ficha ---- */
+.qr-ficha { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+.qr-imagen { align-self: center; width: min(11rem, 100%); padding: 0.5rem; border-radius: 12px; background: #fff; border: 1px solid rgba(46, 21, 25, 0.12); }
+.qr-imagen canvas { display: block; width: 100% !important; height: auto !important; }
+.qr-nota { margin: 0; font-size: var(--texto-chico); color: var(--color-texto-suave); }
