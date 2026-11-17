@@ -6,6 +6,7 @@ import { cliente } from '@/api/cliente';
 import { LoadingView } from '@/components/atoms/LoadingView';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
+import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
@@ -115,7 +116,10 @@ export default function Inicio() {
   return (
     <ThemedView style={styles.contenedor}>
       {/* SafeAreaView evita que el contenido quede tapado por las barras */}
-      <SafeAreaView style={styles.area}>{contenido()}</SafeAreaView>
+      <SafeAreaView style={styles.area}>
+        <HeaderBuscador />
+        {contenido()}
+      </SafeAreaView>
     </ThemedView>
   );
 }
