@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use App\Models\AuditLog;
 use App\Models\Observation;
 use App\Models\Signature;
+use App\Support\Avisos;
 
 class AgreementController extends Controller
 {
@@ -24,11 +25,16 @@ class AgreementController extends Controller
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $pagina = Agreement::visiblesPara($request->user())
+        $consulta = Agreement::visiblesPara($request->user())
             ->filtrar($filtros)
-            ->with('unidad')
-            ->orderBy('codigo')
-            ->paginate(15);
+            ->with('unidad');
+
+        // Consulta no ve observaciones internas; los demás reciben cuántas quedan sin resolver
+        if ($request->user()->rol !== 'consulta') {
+            $consulta->withCount(['observaciones as observaciones_pendientes' => fn ($q) => $q->where('resuelta', false)]);
+        }
+
+        $pagina = $consulta->orderBy('codigo')->paginate(15);
 
         return $this->lista($pagina);
     }
@@ -77,7 +83,12 @@ class AgreementController extends Controller
             return response()->json(['message' => 'Sin permiso'], 403);
         }
 
-        $convenio = Agreement::create($datos + ['estado' => 'borrador', 'version' => 1]);
+        $convenio = DB::transaction(function () use ($datos, $request) {
+            $convenio = Agreement::create($datos + ['estado' => 'borrador', 'version' => 1]);
+            Avisos::convenioCreado($convenio, $request->user());
+
+            return $convenio;
+        });
 
         return response()->json($convenio->load('unidad'), 201);
     }
@@ -99,35 +110,15 @@ class AgreementController extends Controller
             return $this->noEsBorrador();
         }
 
-        $version = $datos['version'];
-        $campos = Arr::except($datos, ['version']);
+        [$resultado, $convenio] = Agreement::editarConVersion($usuario, $id, Arr::except($datos, ['version']), $datos['version']);
 
-        // Un solo UPDATE condicionado a la versión y al estado: si otra persona editó antes
-        // (o el convenio ya salió de borrador), no toca ninguna fila
-        $filas = Agreement::where('id', $id)
-            ->where('version', $version)
-            ->where('estado', 'borrador')
-            ->update($campos + ['version' => DB::raw('version + 1')]);
-
-        if ($filas === 0) {
-            $actual = Agreement::visiblesPara($usuario)->with('unidad')->find($id);
-
-            if (! $actual) {
-                return response()->json(['message' => 'No encontrado'], 404);
-            }
-
-            if ($actual->estado !== 'borrador') {
-                return $this->noEsBorrador();
-            }
-
+        return match ($resultado) {
+            'aplicado' => response()->json($convenio),
+            'no_encontrado' => response()->json(['message' => 'No encontrado'], 404),
+            'no_borrador' => $this->noEsBorrador(),
             // La versión que mandó el cliente ya quedó vieja: se le devuelve cómo está hoy
-            return response()->json([
-                'message' => 'Conflicto de versión',
-                'actual' => $actual,
-            ], 409);
-        }
-
-        return response()->json(Agreement::with('unidad')->findOrFail($id));
+            'conflicto' => response()->json(['message' => 'Conflicto de versión', 'actual' => $convenio], 409),
+        };
     }
 
     private function noEsBorrador(): JsonResponse

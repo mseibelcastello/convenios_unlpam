@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agreement;
-use App\Models\AuditLog;
 use App\Models\Comment;
-use App\Support\FiltroOfensivo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
@@ -40,41 +37,14 @@ class CommentController extends Controller
             'contenido' => ['required', 'string', 'max:2000'],
         ]);
 
-        // Con una palabra de la lista se guarda solo el aviso: el texto original no queda en ningún lado
-        $ofensivo = FiltroOfensivo::esOfensivo($datos['contenido']);
-        $contenido = $ofensivo ? config('moderacion.texto_reemplazo') : $datos['contenido'];
+        // Filtro de palabras ofensivas, auditoría y avisos: en Comment::publicar (lo comparte POST /sync)
+        $comentario = Comment::publicar($convenio, $usuario, $datos['contenido']);
 
-        $comentario = DB::transaction(function () use ($convenio, $usuario, $contenido, $ofensivo) {
-            $comentario = Comment::create([
-                'convenio_id' => $convenio->id,
-                'usuario_id' => $usuario->id,
-                'contenido' => $contenido,
-            ]);
-
-            AuditLog::create([
-                'usuario_id' => $usuario->id,
-                'accion' => 'crear',
-                'entidad' => 'comentarios',
-                'entidad_id' => $comentario->id,
-                'fundamento' => $ofensivo ? 'Comentario filtrado por palabras ofensivas' : null,
-            ]);
-
-            return $comentario;
-        });
-
-        return response()->json($this->elemento($comentario->fresh('usuario')), 201);
+        return response()->json($comentario->paraApi(), 201);
     }
 
     private function elemento(Comment $comentario): array
     {
-        return [
-            'id' => $comentario->id,
-            'convenio_id' => $comentario->convenio_id,
-            'contenido' => $comentario->contenido,
-            'usuario' => $comentario->usuario
-                ? ['id' => $comentario->usuario->id, 'nombre' => $comentario->usuario->name]
-                : null,
-            'fecha' => $comentario->fecha?->toIso8601String(),
-        ];
+        return $comentario->paraApi();
     }
 }

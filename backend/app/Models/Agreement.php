@@ -5,8 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use App\Support\Avisos;
+use Illuminate\Support\Facades\DB;
 
 class Agreement extends Model
 {
@@ -38,6 +41,40 @@ class Agreement extends Model
     public function unidad(): BelongsTo
     {
         return $this->belongsTo(Unidad::class, 'unidad_id');
+    }
+
+    /**
+     * Edición con control optimista: un solo UPDATE condicionado a la versión y al estado.
+     * Si otra persona editó antes (o el convenio ya salió de borrador) no toca ninguna fila.
+     * Devuelve [resultado, convenio]: 'aplicado' con el convenio nuevo; 'conflicto' o 'no_borrador'
+     * con el convenio como está hoy; 'no_encontrado' con null. Lo usan PUT /agreements/{id} y POST /sync.
+     */
+    public static function editarConVersion(User $usuario, int $id, array $campos, int $version): array
+    {
+        $filas = static::where('id', $id)
+            ->where('version', $version)
+            ->where('estado', 'borrador')
+            ->update($campos + ['version' => DB::raw('version + 1')]);
+
+        if ($filas === 0) {
+            $actual = static::visiblesPara($usuario)->with('unidad')->find($id);
+
+            if (! $actual) {
+                return ['no_encontrado', null];
+            }
+
+            return [$actual->estado !== 'borrador' ? 'no_borrador' : 'conflicto', $actual];
+        }
+
+        $actualizado = static::with('unidad')->findOrFail($id);
+        Avisos::datosModificados($actualizado, $usuario);
+
+        return ['aplicado', $actualizado];
+    }
+
+    public function observaciones(): HasMany
+    {
+        return $this->hasMany(Observation::class, 'convenio_id');
     }
 
     public function partes(): BelongsToMany
