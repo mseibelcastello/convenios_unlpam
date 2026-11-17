@@ -21,6 +21,7 @@ use App\Http\Controllers\IdentityController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AlertController;
+use App\Http\Controllers\SyncController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -40,6 +41,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Avisos: cada usuario ve y marca solo los suyos (todos los roles)
     Route::get('/alerts', [AlertController::class, 'index']);
     Route::post('/alerts/{id}/read', [AlertController::class, 'read'])->whereNumber('id');
+
+    // Cambios hechos sin conexión; el rol se controla por cada cambio dentro del controlador
+    Route::post('/sync', SyncController::class)->middleware('throttle:30,1');
 
     Route::get('/agreements/export', AgreementExportController::class);
 

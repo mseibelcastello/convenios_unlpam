@@ -110,38 +110,15 @@ class AgreementController extends Controller
             return $this->noEsBorrador();
         }
 
-        $version = $datos['version'];
-        $campos = Arr::except($datos, ['version']);
+        [$resultado, $convenio] = Agreement::editarConVersion($usuario, $id, Arr::except($datos, ['version']), $datos['version']);
 
-        // Un solo UPDATE condicionado a la versión y al estado: si otra persona editó antes
-        // (o el convenio ya salió de borrador), no toca ninguna fila
-        $filas = Agreement::where('id', $id)
-            ->where('version', $version)
-            ->where('estado', 'borrador')
-            ->update($campos + ['version' => DB::raw('version + 1')]);
-
-        if ($filas === 0) {
-            $actual = Agreement::visiblesPara($usuario)->with('unidad')->find($id);
-
-            if (! $actual) {
-                return response()->json(['message' => 'No encontrado'], 404);
-            }
-
-            if ($actual->estado !== 'borrador') {
-                return $this->noEsBorrador();
-            }
-
+        return match ($resultado) {
+            'aplicado' => response()->json($convenio),
+            'no_encontrado' => response()->json(['message' => 'No encontrado'], 404),
+            'no_borrador' => $this->noEsBorrador(),
             // La versión que mandó el cliente ya quedó vieja: se le devuelve cómo está hoy
-            return response()->json([
-                'message' => 'Conflicto de versión',
-                'actual' => $actual,
-            ], 409);
-        }
-
-        $actualizado = Agreement::with('unidad')->findOrFail($id);
-        Avisos::datosModificados($actualizado, $usuario);
-
-        return response()->json($actualizado);
+            'conflicto' => response()->json(['message' => 'Conflicto de versión', 'actual' => $convenio], 409),
+        };
     }
 
     private function noEsBorrador(): JsonResponse

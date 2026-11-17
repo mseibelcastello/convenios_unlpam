@@ -15,11 +15,21 @@ class AgreementRequest extends FormRequest
 
     public function rules(): array
     {
-        $esEdicion = $this->isMethod('PUT');
+        return self::reglas($this->isMethod('PUT') ? (int) $this->route('id') : null, $this->all());
+    }
+
+    /**
+     * Reglas de un convenio. $editandoId es el convenio que se edita (null al crear) y $datos lo que llegó.
+     * Las usa también POST /sync para validar las ediciones hechas sin conexión.
+     */
+    public static function reglas(?int $editandoId, array $datos): array
+    {
+        $esEdicion = $editandoId !== null;
+        $lleno = fn (string $campo) => isset($datos[$campo]) && trim((string) $datos[$campo]) !== '';
 
         $codigoUnico = Rule::unique('convenios', 'codigo');
         if ($esEdicion) {
-            $codigoUnico = $codigoUnico->ignore($this->route('id'));
+            $codigoUnico = $codigoUnico->ignore($editandoId);
         }
 
         $reglas = [
@@ -42,11 +52,11 @@ class AgreementRequest extends FormRequest
             // Fechas coherentes: firma <= inicio < vencimiento, y preaviso <= vencimiento
             'fecha_firma' => ['nullable', 'date_format:Y-m-d'],
             'fecha_inicio' => ['nullable', 'date_format:Y-m-d',
-                Rule::when($this->filled('fecha_firma'), 'after_or_equal:fecha_firma')],
+                Rule::when($lleno('fecha_firma'), 'after_or_equal:fecha_firma')],
             'fecha_vencimiento' => ['nullable', 'date_format:Y-m-d',
-                Rule::when($this->filled('fecha_inicio'), 'after:fecha_inicio')],
+                Rule::when($lleno('fecha_inicio'), 'after:fecha_inicio')],
             'fecha_preaviso' => ['nullable', 'date_format:Y-m-d',
-                Rule::when($this->filled('fecha_vencimiento'), 'before_or_equal:fecha_vencimiento')],
+                Rule::when($lleno('fecha_vencimiento'), 'before_or_equal:fecha_vencimiento')],
         ];
 
         // Al editar, el cliente manda la versión que leyó
