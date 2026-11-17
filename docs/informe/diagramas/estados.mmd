@@ -1,0 +1,11 @@
+stateDiagram-v2
+  direction LR
+  [*] --> borrador: Gestión o Administración<br/>crea el convenio
+  borrador --> revision: Gestión (su unidad)<br/>envía a revisión
+  revision --> borrador: Revisión (su unidad) devuelve<br/>* exige fundamento<br/>(queda como observación)
+  revision --> aprobado: Revisión (su unidad) aprueba<br/>sin observaciones abiertas, 2 partes,<br/>PDF principal y marco vigente
+  aprobado --> firmado: Administración firma<br/>(fechas y coordenadas)
+  firmado --> rescindido: Administración rescinde<br/>* exige fundamento
+  firmado --> archivado: Administración archiva<br/>(o automático al firmarse su renovación)
+  rescindido --> archivado: Administración archiva
+  archivado --> [*]

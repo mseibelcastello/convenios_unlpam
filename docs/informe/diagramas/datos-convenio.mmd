@@ -1,0 +1,78 @@
+erDiagram
+  unidades ||--o{ convenios : "es responsable de"
+  convenios ||--o{ convenio_parte : "incluye"
+  partes ||--o{ convenio_parte : "firma"
+  convenios ||--o{ convenio_persona : "vincula"
+  personas ||--o{ convenio_persona : "participa"
+  convenios ||--o{ vinculos_convenio : "origen (el nuevo)"
+  convenios ||--o{ vinculos_convenio : "destino (antecedente)"
+  convenios ||--o{ documentos : "tiene"
+
+  unidades {
+    bigint id PK
+    varchar nombre
+    varchar sigla UK
+  }
+  convenios {
+    bigint id PK
+    varchar codigo UK "CONV-AAAA-NNN"
+    varchar titulo
+    enum tipo "marco, especifico, pasantia, adenda, renovacion, sustitucion"
+    bigint unidad_id FK
+    text objeto_alcance_obligaciones "y rescision, marco legal, renovacion, confidencialidad, notas"
+    varchar resolucion
+    varchar expediente
+    date fecha_firma
+    date fecha_inicio
+    date fecha_vencimiento
+    date fecha_preaviso
+    enum estado "borrador, revision, aprobado, firmado, rescindido, archivado"
+    int version "control de concurrencia (409)"
+    char qr_token UK "referencia del QR"
+  }
+  partes {
+    bigint id PK
+    varchar nombre
+    enum tipo "universidad, organismo_publico, empresa, asociacion, otra"
+    varchar representante
+    varchar cargo_representante
+  }
+  convenio_parte {
+    bigint convenio_id PK,FK
+    bigint parte_id PK,FK
+    varchar rol_parte "UNLPam, contraparte, otro"
+  }
+  personas {
+    bigint id PK
+    varchar nombre
+    varchar legajo UK "LEG-NNNN"
+  }
+  convenio_persona {
+    bigint convenio_id PK,FK
+    bigint persona_id PK,FK
+    enum rol PK "representante, responsable, docente_guia, tutor, pasante"
+    date desde
+    date hasta
+    varchar carrera "solo pasantia"
+    varchar tutor "solo pasantia"
+    tinyint carga_horaria "1 a 20 h"
+    decimal asignacion
+    varchar seguro
+  }
+  vinculos_convenio {
+    bigint id PK
+    bigint convenio_origen_id FK
+    bigint convenio_destino_id FK
+    enum tipo_vinculo "se_apoya_en, adenda, renovacion, sustitucion"
+  }
+  documentos {
+    bigint id PK
+    bigint convenio_id FK
+    enum tipo "principal, anexo, dictamen, resolucion, otro"
+    int version "sube 1 por convenio y tipo"
+    varchar ruta_privada "fuera de public"
+    bigint tamano_bytes "hasta 20 MB"
+    char sha256 "se recalcula al descargar"
+    json marca "usuario, convenio, fecha"
+    bigint subido_por FK
+  }

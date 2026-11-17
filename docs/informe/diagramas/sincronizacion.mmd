@@ -1,0 +1,36 @@
+sequenceDiagram
+  autonumber
+  actor P as Persona (gestión)
+  participant W as Web (Next.js)
+  participant L as IndexedDB (Dexie)
+  participant A as API (POST /sync)
+  participant B as MySQL
+
+  Note over W,A: Sin conexión
+  P->>W: Abre la ficha (ya vista antes)
+  W->>L: Lee la copia guardada
+  P->>W: Edita y guarda
+  W->>L: Encola {tipo: edicion, convenio_id, version: 3, datos}
+  W-->>P: "Guardado sin conexión"
+
+  Note over W,A: Vuelve la red (evento online)
+  W->>L: Lee la cola pendiente
+  W->>A: POST /sync {cambios: [...]}
+  A->>B: UPDATE ... WHERE id = ? AND version = 3 AND estado = borrador
+  alt Nadie lo editó (versión 3 sigue siendo la actual)
+    B-->>A: 1 fila → versión 4
+    A-->>W: resultado: aplicado
+    W->>L: Saca el cambio de la cola
+    W-->>P: "Se envió 1 cambio"
+  else Otra persona guardó antes (el servidor ya tiene la versión 4)
+    B-->>A: 0 filas
+    A-->>W: resultado: conflicto + convenio actual
+    W->>L: Marca el cambio como conflicto
+    W-->>P: Pantalla /conflictos: lo mío vs. lo del servidor
+    alt Elige "Quedarme con lo mío"
+      W->>A: POST /sync con version: 4 (la nueva)
+      A-->>W: aplicado (versión 5)
+    else Elige "Quedarme con lo del servidor"
+      W->>L: Descarta su cambio
+    end
+  end

@@ -1,0 +1,82 @@
+erDiagram
+  unidades ||--o{ users : "tiene"
+  users ||--o| identidades : "registra"
+  users ||--o{ observaciones : "escribe, responde y resuelve"
+  convenios ||--o{ observaciones : "recibe"
+  users ||--o{ comentarios : "escribe"
+  convenios ||--o{ comentarios : "tiene"
+  users ||--o{ firmas : "firma"
+  convenios ||--o| firmas : "se firma con"
+  users ||--o{ notificaciones : "recibe"
+  convenios ||--o{ notificaciones : "origina"
+  users ||--o{ auditoria : "genera"
+
+  unidades {
+    bigint id PK
+  }
+  convenios {
+    bigint id PK
+  }
+  users {
+    bigint id PK
+    varchar name
+    varchar email UK
+    varchar password "hash bcrypt"
+    enum rol "administracion, gestion, revision, consulta"
+    bigint unidad_id FK "null = alcance global"
+    text mfa_secreto "cifrado con APP_KEY"
+    bool mfa_activado
+    varchar mfa_codigo_hash "codigo por mail, vence a los 5 min"
+    enum tamano_letra "chica, mediana, grande"
+    enum modo "claro, oscuro"
+    varchar miniatura_ruta "foto de perfil"
+  }
+  identidades {
+    bigint id PK
+    bigint usuario_id FK,UK
+    varchar firma_ruta "carpeta privada"
+    varchar rostro_ruta "carpeta privada"
+    char huella_hash "HMAC, nunca el valor"
+  }
+  observaciones {
+    bigint id PK
+    bigint convenio_id FK
+    bigint autor_id FK
+    text contenido
+    text respuesta
+    bigint respondida_por FK
+    bool resuelta
+    bigint resuelta_por FK
+  }
+  comentarios {
+    bigint id PK
+    bigint convenio_id FK
+    bigint usuario_id FK
+    text contenido "filtro de palabras ofensivas"
+  }
+  firmas {
+    bigint id PK
+    bigint convenio_id FK,UK
+    bigint usuario_id FK
+    decimal latitud
+    decimal longitud
+    mediumtext imagen "firma dibujada (PNG)"
+  }
+  notificaciones {
+    bigint id PK
+    bigint usuario_id FK
+    bigint convenio_id FK
+    varchar tipo "cambio_estado, preaviso, vencido..."
+    varchar texto
+    bool leida
+  }
+  auditoria {
+    bigint id PK
+    bigint usuario_id FK
+    varchar accion
+    varchar entidad
+    bigint entidad_id
+    varchar estado_anterior
+    varchar estado_nuevo
+    text fundamento
+  }

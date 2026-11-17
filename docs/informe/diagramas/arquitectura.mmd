@@ -1,0 +1,49 @@
+flowchart TB
+  subgraph Clientes[" "]
+    direction LR
+    subgraph Navegador["Navegador (escritorio, tableta o celular)"]
+      direction TB
+      WEB["<b>Cliente web</b><br/>Next.js 16 · React 19 · axios"]
+      IDB[("<b>IndexedDB</b> (Dexie)<br/>convenios consultados<br/>cola de cambios sin conexión")]
+      WEB <--> IDB
+    end
+    subgraph Celular["Celular Android / iOS"]
+      direction TB
+      APP["<b>App móvil</b><br/>React Native · Expo 58<br/>expo-router · Atomic Design"]
+      LOC[("<b>SQLite</b>: convenios por firmar<br/><b>SecureStore</b>: token y preferencias")]
+      APP <--> LOC
+    end
+  end
+
+  subgraph Servidor["Servidor"]
+    direction TB
+    API["<b>API REST · Laravel 13 · PHP 8.3</b><br/>Sanctum (token Bearer) · rol + alcance por unidad<br/>validación · auditoría · avisos"]
+    CRON["<b>Tarea diaria</b> deadlines:check<br/>preaviso y vencidos"]
+    subgraph Datos[" "]
+      direction LR
+      DB[("<b>MySQL</b><br/>16 tablas")]
+      PRIV[("<b>storage/app/private</b><br/>PDF con SHA-256<br/>archivos de identidad")]
+      PUB[("<b>storage/app/public</b><br/>fotos de perfil")]
+    end
+    API <--> DB
+    API <--> PRIV
+    API --> PUB
+    CRON --> DB
+  end
+
+  WEB == "HTTPS · JSON · Authorization: Bearer<br/>(POST /sync al volver la red)" ==> API
+  APP == "HTTPS · JSON · Authorization: Bearer" ==> API
+  API -. "código MFA por mail (SMTP)" .-> MAIL["Correo del usuario"]
+
+  classDef cliente fill:#fff4e6,stroke:#c2410c,color:#2e1519
+  classDef local fill:#fdf2f8,stroke:#9d174d,color:#2e1519
+  classDef servidor fill:#e8f0fb,stroke:#1e4f8a,color:#14243a
+  classDef datos fill:#eef7ee,stroke:#1e6b3a,color:#173b22
+  classDef externo fill:#f3f3f3,stroke:#777,color:#333
+  class WEB,APP cliente
+  class IDB,LOC local
+  class API,CRON servidor
+  class DB,PRIV,PUB datos
+  class MAIL externo
+  style Clientes fill:none,stroke:none
+  style Datos fill:none,stroke:none
