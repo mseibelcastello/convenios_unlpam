@@ -142,6 +142,7 @@ export default function Perfil() {
             </ThemedText>
           )}
 
+          <Button titulo="Registrar mi identidad" variante="secundario" onPress={() => router.push('/identidad')} />
           <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
           <Button titulo="Cerrar sesión" variante="secundario" onPress={salir} />
         </ScrollView>
