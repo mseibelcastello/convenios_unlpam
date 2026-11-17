@@ -24,6 +24,7 @@ use App\Http\Controllers\AlertController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\QrController;
 use App\Http\Controllers\LifelineController;
+use App\Http\Controllers\UserController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -82,6 +83,12 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::middleware('role:administracion')->group(function () {
         // Auditoría: solo administración (los demás roles reciben 403)
         Route::get('/audit', [AuditController::class, 'index']);
+
+        // Usuarios y unidades: solo administración
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{id}', [UserController::class, 'update'])->whereNumber('id');
+        Route::post('/unidades', [UnidadController::class, 'store']);
 
         Route::get('/agreements/to-sign', [AgreementSignatureController::class, 'pending']);
         Route::post('/agreements/{id}/sign', [AgreementSignatureController::class, 'store'])->whereNumber('id');

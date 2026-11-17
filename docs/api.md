@@ -36,13 +36,20 @@ El segundo paso (MFA) se resuelve con un código de 6 dígitos de **Google Authe
 ### 2.2 /users
 Las personas que usan el sistema, cada una con su rol (administración, gestión, revisión o consulta) y su unidad. Solo Administración los crea y edita.
 
-> **Pendiente: no implementado.** Hoy estas rutas responden 404 y los usuarios se cargan con los seeders. Falta decidir si se implementan o se quitan del contrato (ver [pruebas-api.md](pruebas-api.md), fallo 1).
-
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| GET /users | Administración | query: `page` | 200 lista | 401, 403 |
-| POST /users | Administración | `{nombre, correo, clave, rol, unidad_id}` | 201 | 401, 403, 422 |
-| PUT /users/{id} | Administración | campos a cambiar | 200 | 401, 403, 404, 422 |
+| GET /users | Administración | query: `q` (nombre o correo), `rol`, `unidad_id`, `page` | 200 `{data, meta}` (15 por página) | 401, 403 |
+| POST /users | Administración | `{nombre, correo, clave, rol, unidad_id}` | 201 usuario | 401, 403, 422 |
+| PUT /users/{id} | Administración | campos a cambiar (los mismos) | 200 usuario | 401, 403, 404, 422 |
+
+Cada usuario: `{id, name, email, rol, unidad_id, unidad, mfa_activado, created_at}`. Nunca se devuelven la clave ni los datos del MFA.
+
+Reglas (422 si no se cumplen):
+- `correo` único. `clave` de al menos 8 caracteres; se guarda con hash (bcrypt).
+- Gestión y revisión **exigen `unidad_id`**: trabajan sobre su unidad, y sin unidad verían todas. Administración y consulta pueden no tenerla (globales).
+- Nadie puede cambiarse **su propio rol**, y el sistema no puede quedarse sin ningún usuario de administración.
+- Si se cambia la clave, se cierran todas las sesiones abiertas de ese usuario.
+- Crear y editar queda en `auditoria`.
 
 
 ### 2.3 /unidades
@@ -51,9 +58,9 @@ Las facultades y secretarías de la UNLPam. Definen el alcance "su unidad" de lo
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
 | GET /unidades | Todos | — | 200 lista `[{id, nombre, sigla}]` | 401 |
-| POST /unidades | Administración | `{nombre, sigla}` | 201 | 401, 403, 422 |
+| POST /unidades | Administración | `{nombre, sigla}` (los dos únicos; la sigla solo con letras, hasta 20) | 201 `{id, nombre, sigla}` | 401, 403, 422 |
 
-> **`POST /unidades` pendiente: no implementado** (hoy responde 405; las unidades salen del seeder). Ver [pruebas-api.md](pruebas-api.md), fallo 2.
+Crear una unidad queda en `auditoria`.
 
 
 ### 2.4 /agreements

@@ -9,6 +9,9 @@ Prueba de cada endpoint contra el contrato de [api.md](api.md). Por cada uno se 
 |---|---|---|---|---|---|
 | 1.ª | `api.md` como estaba | 107 | 182 | 171 | **11** |
 | 2.ª | `api.md` corregido con lo que salió de la 1.ª | 106 | 180 | 172 | **8**: solo `/users` y `POST /unidades`, que quedaron como pendientes |
+| 3.ª (tarea 5.2) | Con `/users` y `POST /unidades` implementados, y sus casos de error agregados | 111 | 193 | **193** | **0** |
+
+**La colección pasa completa.** Lo que no se pudo probar automáticamente, y las limitaciones que quedan, están en [limitaciones.md](limitaciones.md).
 
 ## Resultado de la primera corrida
 
@@ -42,8 +45,8 @@ Estado después de la primera corrida:
 
 | # | Fallo | Estado |
 |---|---|---|
-| 1 | `/users` no implementado | **Pendiente**: quedó marcado así en `api.md`. Es una decisión del equipo implementarlo o quitarlo |
-| 2 | `POST /unidades` no implementado | **Pendiente**, igual que el 1 |
+| 1 | `/users` no implementado | **Corregido en la API (5.2)**: `GET`, `POST` y `PUT /users`, solo administración, con resguardos (gestión y revisión exigen unidad, nadie se cambia su propio rol, cambiar la clave cierra las sesiones) |
+| 2 | `POST /unidades` no implementado | **Corregido en la API (5.2)**: solo administración, con nombre y sigla únicos |
 | 3 | `/dashboard/export` no existe | **Corregido en el contrato**: la exportación figura en `GET /agreements/export` (api.md 2.4) |
 | 4 | `/alerts` con otro formato | **Corregido en el contrato**: api.md 2.10 describe los avisos implementados y suma `POST /alerts/{id}/read` |
 | 5 | El 405 sale en inglés y con detalle interno | **Corregido en la API**: `bootstrap/app.php` lo responde como los demás errores, con `{"message": "Método no permitido"}` y el encabezado `Allow`. Agregado a la tabla de errores de api.md |

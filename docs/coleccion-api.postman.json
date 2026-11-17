@@ -495,7 +495,7 @@
     },
     {
       "name": "02 · Usuarios y unidades",
-      "description": "GET/POST/PUT /users y POST /unidades están en el contrato como PENDIENTES (no implementados): sus tests fallan a propósito hasta que se implementen.",
+      "description": "Solo administración. Crea un usuario de prueba (prueba.api.NNN@demo.test) y una unidad de prueba (sigla PRUEBA…).",
       "item": [
         {
           "name": "GET /users · admin",
@@ -512,12 +512,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users",
+              "raw": "{{baseUrl}}/users?rol=gestion",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "users"
+              ],
+              "query": [
+                {
+                  "key": "rol",
+                  "value": "gestion"
+                }
               ]
             },
             "description": "Contrato: GET /users → 200. Token: tokenAdmin."
@@ -528,7 +534,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sin clave ni secretos del MFA\", () => { const u = pm.response.json().data[0]; pm.expect(u).to.not.have.property(\"password\"); pm.expect(u).to.not.have.property(\"mfa_secreto\"); });"
                 ]
               }
             }
@@ -602,7 +609,7 @@
             "description": "Contrato: POST /users → 201. Token: tokenAdmin.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Usuario de prueba API\",\n  \"correo\": \"prueba.api@demo.test\",\n  \"clave\": \"password123\",\n  \"rol\": \"consulta\",\n  \"unidad_id\": 3\n}",
+              "raw": "{\n  \"nombre\": \"Usuario de prueba API\",\n  \"correo\": \"{{correoNuevo}}\",\n  \"clave\": \"password123\",\n  \"rol\": \"revision\",\n  \"unidad_id\": 3\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -616,7 +623,121 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Creado con su rol y unidad, sin la clave\", () => { pm.expect(j.rol).to.eql(\"revision\"); pm.expect(j.unidad_id).to.eql(3); pm.expect(j).to.not.have.property(\"password\"); });",
+                  "pm.collectionVariables.set(\"usuarioNuevo\", j.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"correoNuevo\", \"prueba.api.\" + Date.now() + \"@demo.test\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /users · gestión sin unidad → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Contrato: POST /users → 422. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"x\",\n  \"correo\": \"otro.api@demo.test\",\n  \"clave\": \"password123\",\n  \"rol\": \"gestion\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /users · clave corta → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Contrato: POST /users → 422. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"x\",\n  \"correo\": \"otro.api@demo.test\",\n  \"clave\": \"123\",\n  \"rol\": \"consulta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
                 ]
               }
             }
@@ -641,19 +762,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/users/4",
+              "raw": "{{baseUrl}}/users/{{usuarioNuevo}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "users",
-                "4"
+                "{{usuarioNuevo}}"
               ]
             },
-            "description": "Contrato: PUT /users/4 → 200. Token: tokenAdmin.",
+            "description": "Contrato: PUT /users/{{usuarioNuevo}} → 200. Token: tokenAdmin.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Consulta Demo\"\n}",
+              "raw": "{\n  \"nombre\": \"Usuario de prueba API (editado)\",\n  \"rol\": \"consulta\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -667,7 +788,112 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Cambió nombre y rol\", () => { const j = pm.response.json(); pm.expect(j.name).to.eql(\"Usuario de prueba API (editado)\"); pm.expect(j.rol).to.eql(\"consulta\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/{id} · cambiarse el propio rol → 422",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "1"
+              ]
+            },
+            "description": "Contrato: PUT /users/1 → 422. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rol\": \"consulta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/{id} · no existe → 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "999999"
+              ]
+            },
+            "description": "Contrato: PUT /users/999999 → 404. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
                 ]
               }
             }
@@ -775,7 +1001,7 @@
             "description": "Contrato: POST /unidades → 201. Token: tokenAdmin.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Unidad de prueba API\",\n  \"sigla\": \"UPA\"\n}",
+              "raw": "{\n  \"nombre\": \"Unidad de prueba API {{siglaNueva}}\",\n  \"sigla\": \"{{siglaNueva}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -790,6 +1016,66 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const letras = Array.from({ length: 6 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join(\"\"); pm.collectionVariables.set(\"siglaNueva\", \"PRUEBA\" + letras);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /unidades · sigla repetida → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/unidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unidades"
+              ]
+            },
+            "description": "Contrato: POST /unidades → 422. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Otra unidad\",\n  \"sigla\": \"FI\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
                 ]
               }
             }
