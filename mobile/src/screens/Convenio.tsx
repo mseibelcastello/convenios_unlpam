@@ -5,6 +5,7 @@ import { type ReactNode, useCallback, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Plegable } from '@/components/molecules/Plegable';
 import { cliente } from '@/api/cliente';
 import { compartirDocumento } from '@/api/compartir';
 import { Badge } from '@/components/atoms/Badge';
@@ -13,6 +14,7 @@ import { LoadingView } from '@/components/atoms/LoadingView';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { Opciones } from '@/components/molecules/Opciones';
 import { Comentarios } from '@/components/organisms/Comentarios';
+import { LineaDeVida } from '@/components/organisms/LineaDeVida';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
@@ -49,7 +51,14 @@ type Convenio = {
   } | null;
 };
 
-type Documento = { id: number; tipo: string; nombre_original: string; version: number };
+// La marca la pone el servidor al recibir el PDF (la app no la manda). La fecha viene con la hora de Argentina.
+type Marca = { usuario: string; convenio: string; fecha: string };
+type Documento = { id: number; tipo: string; nombre_original: string; version: number; marca?: Marca | null };
+
+// 2026-11-17T19:07:07-03:00 → "17/11/2026 19:07 hs"
+function fechaDeMarca(iso: string) {
+  return `${iso.slice(0, 10).split('-').reverse().join('/')} ${iso.slice(11, 16)} hs`;
+}
 type Padre = { id: number; codigo: string; titulo: string };
 
 // Tipos de documento que se pueden subir (los mismos que acepta la API)
@@ -67,16 +76,11 @@ function fecha(f: string | null) {
 }
 
 // Cada bloque de la ficha: caja con título, siempre igual
-function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
-  const theme = useTheme();
-
+function Seccion({ titulo, abierta, children }: { titulo: string; abierta?: boolean; children: ReactNode }) {
   return (
-    <View style={[styles.seccion, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {titulo}
-      </ThemedText>
-      {children}
-    </View>
+    <Plegable titulo={titulo} abierta={abierta}>
+      <View style={styles.seccion}>{children}</View>
+    </Plegable>
   );
 }
 
@@ -174,12 +178,12 @@ export default function FichaConvenio() {
       // En React Native un archivo se manda como { uri, name, type }
       formulario.append('archivo', { uri: archivo.uri, name: archivo.name, type: 'application/pdf' } as unknown as Blob);
 
-      await cliente.post(`/agreements/${id}/documents`, formulario, {
+      const { data: subido } = await cliente.post<Documento>(`/agreements/${id}/documents`, formulario, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 60000, // un PDF grande tarda más que los 10 segundos de siempre
       });
       await cargar(); // trae la lista de documentos de nuevo
-      avisar('Documento subido.', false);
+      avisar(subido.marca ? `Documento subido. Marca puesta por el servidor: ${subido.marca.usuario}, ${subido.marca.convenio}, ${fechaDeMarca(subido.marca.fecha)}.` : 'Documento subido.', false);
     } catch (e) {
       const datos = axios.isAxiosError(e) ? e.response?.data : null;
       avisar(datos?.errors?.archivo?.[0] ?? datos?.message ?? 'No se pudo subir el documento.', true);
@@ -195,7 +199,7 @@ export default function FichaConvenio() {
 
     return (
       <ScrollView contentContainerStyle={styles.contenido}>
-        <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+        <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
 
         {/* Encabezado: lo primero que se ve */}
         <View style={styles.encabezado}>
@@ -234,7 +238,7 @@ export default function FichaConvenio() {
           ))}
         </Seccion>
 
-        <Seccion titulo="Fechas">
+        <Seccion titulo="Fechas" abierta>
           <Dato etiqueta="Firma" valor={fecha(convenio.fecha_firma)} />
           <Dato etiqueta="Inicio" valor={fecha(convenio.fecha_inicio)} />
           <Dato
@@ -244,7 +248,7 @@ export default function FichaConvenio() {
         </Seccion>
 
         {convenio.firma && (
-          <Seccion titulo="Firma">
+          <Seccion titulo="Firma" abierta>
             <Dato etiqueta="Firmado por" valor={convenio.firma.usuario?.nombre ?? 'Sin dato'} />
             <Dato etiqueta="Fecha" valor={fecha(convenio.firma.fecha.slice(0, 10))} />
             <Dato etiqueta="Hora" valor={`${convenio.firma.fecha.slice(11, 19)} hs`} />
@@ -274,7 +278,11 @@ export default function FichaConvenio() {
           </Seccion>
         )}
 
-        <Seccion titulo="Documentos">
+        <Seccion titulo="Línea de vida">
+          <LineaDeVida convenioId={convenio.id} />
+        </Seccion>
+
+        <Seccion titulo="Documentos" abierta>
           {documentos.length === 0 && <ThemedText themeColor="textSecondary">Sin documentos.</ThemedText>}
           {documentos.map((d) => (
             <View key={d.id} style={styles.documento}>
@@ -287,11 +295,21 @@ export default function FichaConvenio() {
                 accessibilityRole="button"
                 accessibilityLabel={`Abrir ${d.nombre_original}`}
                 style={styles.dato}>
-                <ThemedText type="link">📄 {d.nombre_original}</ThemedText>
+                <ThemedText type="link">{d.nombre_original}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   {d.tipo} · versión {d.version} · tocá para leerlo
                 </ThemedText>
               </Pressable>
+              {/* La marca la puso el servidor al guardar el PDF */}
+              {d.marca ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Marca del servidor: {d.marca.usuario} · {d.marca.convenio} · {fechaDeMarca(d.marca.fecha)}
+                </ThemedText>
+              ) : (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Sin marca registrada.
+                </ThemedText>
+              )}
               <Button
                 titulo={compartiendoId === d.id ? 'Preparando…' : 'Compartir'}
                 variante="secundario"
@@ -310,7 +328,7 @@ export default function FichaConvenio() {
                 onElegir={setTipoDoc}
               />
               <Button
-                titulo={subiendo ? 'Subiendo…' : 'Elegir PDF y subir'}
+                titulo={subiendo ? 'Subiendo…' : 'Adjuntar PDF'}
                 variante="secundario"
                 onPress={subirDocumento}
               />
@@ -336,7 +354,7 @@ export default function FichaConvenio() {
   }
 
   return (
-    <ThemedView style={[styles.contenedor, { backgroundColor: theme.background }]}>
+    <ThemedView conFondo style={[styles.contenedor, { backgroundColor: theme.background }]}>
       <SafeAreaView style={styles.area}>{contenido()}</SafeAreaView>
     </ThemedView>
   );
@@ -348,12 +366,7 @@ const styles = StyleSheet.create({
   contenido: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
   encabezado: { gap: Spacing.one },
   estado: { flexDirection: 'row', marginTop: Spacing.one },
-  seccion: {
-    gap: Spacing.two,
-    padding: Spacing.three,
-    borderWidth: 1,
-    borderRadius: Radius.medium,
-  },
+  seccion: { gap: Spacing.two, paddingBottom: Spacing.two },
   dato: { gap: Spacing.half },
   documento: { gap: Spacing.two },
   subida: { gap: Spacing.two, marginTop: Spacing.two },

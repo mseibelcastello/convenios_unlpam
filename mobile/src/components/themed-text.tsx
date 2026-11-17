@@ -20,35 +20,37 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
 const styles = StyleSheet.create({
   small: {
+    fontFamily: 'OpenSans_400Regular',
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: 500,
   },
   smallBold: {
+    fontFamily: 'OpenSans_600SemiBold',
     fontSize: 14,
     lineHeight: 20,
-    fontWeight: 700,
   },
   default: {
+    fontFamily: 'OpenSans_400Regular',
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: 500,
   },
   title: {
+    fontFamily: 'Montserrat_700Bold',
     fontSize: 48,
-    fontWeight: 600,
     lineHeight: 52,
   },
   subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
-    fontWeight: 600,
+    fontFamily: 'Montserrat_600SemiBold',
+    fontSize: 28,
+    lineHeight: 38,
   },
   link: {
+    fontFamily: 'OpenSans_600SemiBold',
     lineHeight: 30,
     fontSize: 14,
   },
   linkPrimary: {
+    fontFamily: 'OpenSans_600SemiBold',
     lineHeight: 30,
     fontSize: 14,
     color: '#3c87f7',

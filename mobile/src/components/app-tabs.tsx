@@ -10,13 +10,14 @@ export default function AppTabs() {
 
   return (
     <NativeTabs
-      backgroundColor={colors.background}
+      backgroundColor={scheme === 'dark' ? '#2A181B' : '#FFF8F5'}
+      tintColor={colors.primary}
       indicatorColor={colors.backgroundSelected}
-      labelStyle={{ selected: { color: colors.text } }}>
+      labelStyle={{ selected: { color: colors.primary } }}>
       {RUTAS.map((ruta) => (
         <NativeTabs.Trigger key={ruta.nombre} name={ruta.nombre}>
           <NativeTabs.Trigger.Label>{ruta.titulo}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon src={ruta.icono} renderingMode="template" />
+          <NativeTabs.Trigger.Icon sf={ruta.sf} md={ruta.md} />
         </NativeTabs.Trigger>
       ))}
     </NativeTabs>

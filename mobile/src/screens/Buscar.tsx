@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
+import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
 import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
@@ -161,10 +162,10 @@ export default function Buscar() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
-          <ThemedText type="subtitle">Buscar</ThemedText>
+          <TituloConAyuda titulo="Buscar" seccion="buscar" />
           {sinConexion ? (
             <AvisoSinConexion completo />
           ) : (
@@ -172,13 +173,18 @@ export default function Buscar() {
               {/* key: si llega un texto nuevo desde el header, la barra se arma de nuevo con ese texto */}
               <SearchBar key={qParam} valorInicial={qParam ?? ''} onBuscar={setQ} />
 
-              <Button titulo="Escanear código QR" variante="secundario" onPress={() => router.push('/qr')} />
-
-              <Button
-                titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
-                variante="secundario"
-                onPress={abrirFiltros}
-              />
+              <View style={styles.acciones}>
+                <View style={styles.accion}>
+                  <Button
+                    titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
+                    variante="secundario"
+                    onPress={abrirFiltros}
+                  />
+                </View>
+                <View style={styles.accion}>
+                  <Button titulo="Escanear QR" variante="secundario" onPress={() => router.push('/qr')} />
+                </View>
+              </View>
 
               {resultados()}
             </>
@@ -204,7 +210,12 @@ export default function Buscar() {
                   accessibilityLabel="Año"
                   style={[
                     styles.input,
-                    { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border, fontSize: 16 * escala },
+                    {
+                      color: theme.text,
+                      backgroundColor: theme.backgroundElement,
+                      borderColor: theme.border,
+                      fontSize: 16 * escala,
+                    },
                   ]}
                 />
               </View>
@@ -236,6 +247,8 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingBottom: BottomTabInset + Spacing.three,
   },
+  acciones: { flexDirection: 'row', gap: Spacing.two },
+  accion: { flex: 1 },
   grupo: { gap: Spacing.two },
   input: {
     minHeight: 44,

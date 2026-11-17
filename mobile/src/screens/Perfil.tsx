@@ -1,15 +1,21 @@
+import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { type ReactNode, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { type ComponentProps, type ReactNode, useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
+import { Plegable } from '@/components/molecules/Plegable';
 import { cerrarSesion } from '@/api/auth';
+import { borrarPin } from '@/api/bloqueo';
 import { borrarPorFirmar } from '@/api/porFirmarLocal';
 import { cancelarRecordatorios, probarNotificaciones } from '@/api/recordatorios';
 import { Button } from '@/components/atoms/Button';
+import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
 import { Opciones } from '@/components/molecules/Opciones';
+import { BloqueoPerfil } from '@/components/organisms/BloqueoPerfil';
 import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -28,17 +34,33 @@ const MODOS = [
   { valor: 'oscuro', texto: 'Oscuro' },
 ];
 
-// Cada opción de Mi Perfil: caja con título
-function Caja({ titulo, children }: { titulo: string; children: ReactNode }) {
+// Cada opción de Mi Perfil: caja con título que se abre al tocarla
+function Caja({ titulo, abierta, children }: { titulo: string; abierta?: boolean; children: ReactNode }) {
+  return (
+    <Plegable titulo={titulo} abierta={abierta}>
+      <View style={styles.contenidoCaja}>{children}</View>
+    </Plegable>
+  );
+}
+
+// Un acceso de la lista: ícono, texto y flecha
+function Fila({
+  icono,
+  texto,
+  onPress,
+}: {
+  icono: ComponentProps<typeof Ionicons>['name'];
+  texto: string;
+  onPress: () => void;
+}) {
   const theme = useTheme();
 
   return (
-    <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {titulo}
-      </ThemedText>
-      {children}
-    </View>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={texto} style={styles.fila}>
+      <Ionicons name={icono} size={22} color={theme.primary} />
+      <ThemedText style={styles.filaTexto}>{texto}</ThemedText>
+      <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+    </Pressable>
   );
 }
 
@@ -88,6 +110,7 @@ export default function Perfil() {
   }
 
   async function salir() {
+    await borrarPin().catch(() => {}); // el PIN es de esta sesión: otra persona no lo hereda
     await cancelarRecordatorios().catch(() => {});
     await borrarPorFirmar().catch(() => {}); // no queda nada de la persona en el teléfono
     await cerrarSesion();
@@ -95,24 +118,21 @@ export default function Perfil() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <HeaderBuscador />
         <ScrollView contentContainerStyle={styles.contenido}>
-          <ThemedText type="subtitle">Perfil</ThemedText>
+          <TituloConAyuda titulo="Perfil" seccion="perfil" />
 
-          <Caja titulo="Tamaño de letra">
+          <Caja titulo="Apariencia" abierta>
             <Opciones
-              titulo=""
+              titulo="Tamaño de letra"
               opciones={TAMANOS}
               valor={tamano}
               onElegir={(valor) => valor && cambiar(modo, valor as TamanoLetra)}
             />
-          </Caja>
-
-          <Caja titulo="Modo">
             <Opciones
-              titulo=""
+              titulo="Modo"
               opciones={MODOS}
               valor={modo}
               onElegir={(valor) => valor && cambiar(valor as Modo, tamano)}
@@ -140,15 +160,45 @@ export default function Perfil() {
             </View>
           </Caja>
 
+          <BloqueoPerfil />
+
           {mensaje !== '' && (
             <ThemedText type="small" themeColor={mensajeEsError ? 'error' : 'success'}>
               {mensaje}
             </ThemedText>
           )}
 
-          <Button titulo="Probar notificaciones (prueba)" variante="secundario" onPress={async () => avisar(await probarNotificaciones(), false)} />
-          <Button titulo="Registrar mi identidad" variante="secundario" onPress={() => router.push('/identidad')} />
-          <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
+          <Tarjeta acento="#e86a04" style={styles.lista}>
+            <Fila
+              icono="person-circle-outline"
+              texto="Registrar mi identidad"
+              onPress={() => router.push('/identidad')}
+            />
+            <Fila
+              icono="help-circle-outline"
+              texto="Ayuda: manual de usuario"
+              onPress={() => router.push('/ayuda')}
+            />
+            <Fila
+              icono="trending-up-outline"
+              texto="Qué ahorra este sistema"
+              onPress={() => router.push('/valor')}
+            />
+          </Tarjeta>
+
+          <Caja titulo="Herramientas de prueba">
+            <Button
+              titulo="Probar notificaciones"
+              variante="secundario"
+              onPress={async () => avisar(await probarNotificaciones(), false)}
+            />
+            <Button
+              titulo="Ver pantallas de estado"
+              variante="secundario"
+              onPress={() => router.push('/estados')}
+            />
+          </Caja>
+
           <Button titulo="Cerrar sesión" variante="secundario" onPress={salir} />
         </ScrollView>
       </SafeAreaView>
@@ -164,7 +214,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingBottom: BottomTabInset + Spacing.three,
   },
-  caja: { gap: Spacing.two, padding: Spacing.three, borderWidth: 1, borderRadius: Radius.medium },
+  contenidoCaja: { gap: Spacing.three, paddingBottom: Spacing.two },
+  lista: { paddingHorizontal: Spacing.three },
+  fila: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  filaTexto: { flex: 1 },
   fotoFila: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   fotoBoton: { flex: 1 },
   foto: { width: 80, height: 80, borderRadius: 40 },

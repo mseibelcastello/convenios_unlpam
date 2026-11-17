@@ -17,7 +17,7 @@ export default function PruebaEstados() {
   const [estado, setEstado] = useState<Estado>('cargando');
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <ThemedText type="subtitle" style={styles.titulo}>
           Pantallas de estado

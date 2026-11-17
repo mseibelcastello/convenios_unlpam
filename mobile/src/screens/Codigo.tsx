@@ -54,7 +54,7 @@ export default function Codigo() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
           <ThemedText type="subtitle">Verificá tu identidad</ThemedText>
