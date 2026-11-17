@@ -95,10 +95,10 @@ export default function LectorQr() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <View style={styles.barra}>
-          <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+          <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
         </View>
         {contenido()}
       </SafeAreaView>

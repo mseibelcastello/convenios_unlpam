@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -14,10 +15,10 @@ export default function Ayuda() {
   const theme = useTheme();
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.contenedor}>
         <View style={styles.barra}>
-          <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+          <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
         </View>
 
         <ScrollView contentContainerStyle={styles.contenido}>
@@ -29,15 +30,13 @@ export default function Ayuda() {
               <ThemedText type="smallBold">{guia.titulo}</ThemedText>
 
               {guia.pasos.map((paso, i) => (
-                <View
-                  key={paso.texto}
-                  style={[styles.paso, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+                <Tarjeta key={paso.texto} acento="#e86a04" style={styles.paso}>
                   <ThemedText type="smallBold" themeColor="textSecondary">
                     Paso {i + 1}
                   </ThemedText>
                   <ThemedText>{paso.texto}</ThemedText>
                   {paso.imagen && <Image source={paso.imagen} style={styles.captura} resizeMode="contain" />}
-                </View>
+                </Tarjeta>
               ))}
             </View>
           ))}

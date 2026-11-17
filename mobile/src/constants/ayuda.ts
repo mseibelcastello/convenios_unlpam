@@ -40,7 +40,7 @@ export const MANUAL: { titulo: string; pasos: PasoManual[] }[] = [
       { texto: 'Firma: tocá "Dibujar firma", firmá con el dedo en el recuadro y tocá "Guardar firma".' },
       { texto: 'Rostro: tocá "Sacar foto", aceptá el permiso de la cámara, mirá de frente y tocá "Tomar foto".' },
       { texto: 'Huella: tocá "Verificar huella" y apoyá el dedo en el sensor del celular.' },
-      { texto: 'Cuando los tres pasos tengan la marca verde "✓ Registrada", tu identidad está completa.' },
+      { texto: 'Cuando los tres pasos tengan la marca verde "Registrada", tu identidad está completa.' },
     ],
   },
   {

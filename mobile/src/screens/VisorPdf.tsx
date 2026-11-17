@@ -7,6 +7,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { cliente } from '@/api/cliente';
 import { compartirDocumento } from '@/api/compartir';
 import { actualizarRecordatorioFirma } from '@/api/recordatorios';
@@ -195,12 +196,12 @@ export default function VisorPdf() {
             <Badge estado="firmado" />
           </View>
 
-          <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+          <Tarjeta acento="#e86a04" style={styles.caja}>
             <Fila etiqueta="Fecha" valor={iso.slice(0, 10).split('-').reverse().join('/')} />
             <Fila etiqueta="Hora" valor={`${iso.slice(11, 19)} hs`} />
             <Fila etiqueta="Latitud" valor={String(firmado.firma.latitud)} />
             <Fila etiqueta="Longitud" valor={String(firmado.firma.longitud)} />
-          </View>
+          </Tarjeta>
 
           <View style={[styles.caja, { backgroundColor: '#ffffff', borderColor: theme.border }]}>
             <ThemedText type="small" style={styles.etiquetaFirma}>
@@ -233,12 +234,12 @@ export default function VisorPdf() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <View style={styles.barra}>
           <View style={styles.botones}>
             <View style={styles.boton}>
-              <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+              <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
             </View>
             <View style={styles.boton}>
               <Button

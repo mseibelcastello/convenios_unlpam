@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { cliente } from '@/api/cliente';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
@@ -81,7 +83,7 @@ export function ConvenioArbol({ convenio }: ConvenioArbolProps) {
         )}
         {resoluciones.map((d) => (
           <ThemedText key={d.id} type="small">
-            📄 {d.nombre_original} (v{d.version})
+            {d.nombre_original} (v{d.version})
           </ThemedText>
         ))}
 
@@ -89,7 +91,7 @@ export function ConvenioArbol({ convenio }: ConvenioArbolProps) {
         {otros.length === 0 && <ThemedText type="small" themeColor="textSecondary">Sin documentos.</ThemedText>}
         {otros.map((d) => (
           <ThemedText key={d.id} type="small">
-            📄 {d.nombre_original} · {d.tipo} (v{d.version})
+            {d.nombre_original} · {d.tipo} (v{d.version})
           </ThemedText>
         ))}
       </>
@@ -97,14 +99,14 @@ export function ConvenioArbol({ convenio }: ConvenioArbolProps) {
   }
 
   return (
-    <View style={[styles.nodo, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+    <Tarjeta acento="#e86a04" style={styles.nodo}>
       <Pressable
         onPress={tocar}
         accessibilityRole="button"
         accessibilityState={{ expanded: abierto }}
         accessibilityLabel={`${convenio.codigo} ${convenio.titulo}`}
         style={styles.cabecera}>
-        <ThemedText type="smallBold">{abierto ? '▼' : '▶'}</ThemedText>
+        <Ionicons name={abierto ? 'chevron-down' : 'chevron-forward'} size={20} color={theme.textSecondary} />
         <View style={styles.datos}>
           <ThemedText type="smallBold" themeColor="textSecondary">
             {convenio.codigo} · {textoDelTipo(convenio.tipo)}
@@ -124,7 +126,7 @@ export function ConvenioArbol({ convenio }: ConvenioArbolProps) {
           {contenido()}
         </View>
       )}
-    </View>
+    </Tarjeta>
   );
 }
 

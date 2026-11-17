@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -26,8 +27,9 @@ export function Badge({ estado }: BadgeProps) {
           borderStyle: dashed ? 'dashed' : 'solid',
         },
       ]}>
+      <Ionicons name={icon} size={16} color={colores.text} />
       <ThemedText type="smallBold" style={{ color: colores.text }}>
-        {icon} {label}
+        {label}
       </ThemedText>
     </View>
   );
@@ -36,6 +38,9 @@ export function Badge({ estado }: BadgeProps) {
 const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
     borderRadius: Radius.large,

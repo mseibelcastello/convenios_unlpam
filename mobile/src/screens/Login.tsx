@@ -47,7 +47,7 @@ export default function Login() {
   };
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
           <ThemedText type="subtitle">Iniciar sesión</ThemedText>

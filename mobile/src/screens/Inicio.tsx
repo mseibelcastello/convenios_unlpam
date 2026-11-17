@@ -10,6 +10,8 @@ import { ErrorView } from '@/components/molecules/ErrorView';
 import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
 import { MiSede } from '@/components/organisms/MiSede';
 import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
+import { Button } from '@/components/atoms/Button';
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
@@ -63,6 +65,9 @@ export default function Inicio() {
     cargar();
   }, []);
 
+  // Al principio se ven solo los 3 últimos movimientos
+  const [verTodos, setVerTodos] = useState(false);
+
   function contenido() {
     if (cargando) return <LoadingView />;
     if (error || !datos) {
@@ -85,14 +90,12 @@ export default function Inicio() {
 
         <View style={styles.cajas}>
           {cajas.map((c) => (
-            <View
-              key={c.titulo}
-              style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+            <Tarjeta key={c.titulo} acento="#e86a04" style={styles.caja}>
               <ThemedText type="subtitle">{c.numero}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {c.titulo}
               </ThemedText>
-            </View>
+            </Tarjeta>
           ))}
         </View>
 
@@ -101,29 +104,37 @@ export default function Inicio() {
           <EmptyView titulo="Sin movimientos" mensaje="Todavía no hay movimientos para mostrar." />
         ) : (
           // El backend ya manda máximo 10, del más reciente al más antiguo
-          datos.ultimos_movimientos.slice(0, 10).map((m, i) => (
+          datos.ultimos_movimientos.slice(0, verTodos ? 10 : 3).map((m, i) => (
             <Pressable
               key={i}
               onPress={() => router.push(`/convenio/${m.convenio_id}`)}
               accessibilityRole="button"
               accessibilityLabel={`Abrir ${m.codigo}`}
-              style={[styles.movimiento, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-              <ThemedText type="smallBold">
-                {m.codigo} · {m.titulo}
-              </ThemedText>
-              <ThemedText type="small">{describir(m)}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {new Date(m.fecha).toLocaleString('es-AR')}
-              </ThemedText>
+            >
+              <Tarjeta acento="#e86a04" style={styles.movimiento}>
+                <ThemedText type="smallBold" numberOfLines={1}>
+                  {m.codigo} · {m.titulo}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+                  {new Date(m.fecha).toLocaleDateString('es-AR')} · {describir(m)}
+                </ThemedText>
+              </Tarjeta>
             </Pressable>
           ))
+        )}
+        {datos.ultimos_movimientos.length > 3 && (
+          <Button
+            titulo={verTodos ? 'Ver menos' : 'Ver más movimientos'}
+            variante="secundario"
+            onPress={() => setVerTodos(!verTodos)}
+          />
         )}
       </ScrollView>
     );
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       {/* SafeAreaView evita que el contenido quede tapado por las barras */}
       <SafeAreaView style={styles.area}>
         <HeaderBuscador />
@@ -145,9 +156,9 @@ const styles = StyleSheet.create({
   caja: {
     width: '48%',
     gap: Spacing.one,
-    padding: Spacing.three,
-    borderWidth: 1,
-    borderRadius: Radius.large,
+    paddingVertical: Spacing.three,
+    paddingLeft: Spacing.three + 4,
+    paddingRight: Spacing.three,
   },
   movimiento: {
     gap: Spacing.one,

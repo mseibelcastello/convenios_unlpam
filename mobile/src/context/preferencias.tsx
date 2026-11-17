@@ -17,6 +17,7 @@ type Preferencias = {
   tamano: TamanoLetra;
   escala: number; // lo que se multiplica a todos los tamaños de texto
   miniatura: string | null; // dirección de la foto en miniatura
+  nombre: string; // nombre de la persona con la sesión iniciada
   noLeidas: number; // alertas sin leer (número de la campana)
   actualizarNoLeidas: () => Promise<void>;
   cargarDelServidor: () => Promise<void>;
@@ -43,6 +44,7 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
   const [modo, setModo] = useState<Modo>('claro');
   const [tamano, setTamano] = useState<TamanoLetra>('mediana');
   const [miniatura, setMiniatura] = useState<string | null>(null);
+  const [nombre, setNombre] = useState('');
   const [noLeidas, setNoLeidas] = useState(0);
 
   // Al abrir la app: lo último que se guardó en el celular
@@ -62,7 +64,9 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
 
   // Aplica el modo a toda la app: todos los useColorScheme() pasan a devolver este valor
   useEffect(() => {
-    Appearance.setColorScheme(modo === 'oscuro' ? 'dark' : 'light');
+    try {
+      Appearance.setColorScheme(modo === 'oscuro' ? 'dark' : 'light');
+    } catch {} // en la versión web no existe
   }, [modo]);
 
   // Con la sesión iniciada: trae las preferencias y la foto de la API (GET /auth/me)
@@ -72,6 +76,7 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
       setModo(data.user.modo);
       setTamano(data.user.tamano_letra);
       setMiniatura(direccionDeLaApp(data.user.miniatura_url));
+      setNombre(data.user.name ?? '');
       await guardarEnElCelular(data.user.modo, data.user.tamano_letra);
     } catch {}
   }
@@ -110,7 +115,7 @@ export function PreferenciasProvider({ children }: { children: ReactNode }) {
 
   return (
     <Contexto.Provider
-      value={{ modo, tamano, escala: EscalaLetra[tamano], miniatura, noLeidas, actualizarNoLeidas, cargarDelServidor, guardar, subirFoto }}>
+      value={{ modo, tamano, escala: EscalaLetra[tamano], miniatura, nombre, noLeidas, actualizarNoLeidas, cargarDelServidor, guardar, subirFoto }}>
       {children}
     </Contexto.Provider>
   );
