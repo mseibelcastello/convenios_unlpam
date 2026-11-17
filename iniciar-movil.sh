@@ -40,6 +40,9 @@ if ! puerto_en_uso 3306; then
   exit 1
 fi
 
+# Migraciones pendientes (por ejemplo, la tabla de firmas), igual que en iniciar-web.sh
+(cd "$RAIZ/backend" && php artisan migrate --force)
+
 # Backend: tiene que escuchar en toda la red (0.0.0.0) para que el celular llegue
 if puerto_en_uso 8000; then
   echo "El backend ya está andando en el puerto 8000."

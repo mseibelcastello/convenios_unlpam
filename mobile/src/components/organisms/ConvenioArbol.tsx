@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -117,7 +118,12 @@ export function ConvenioArbol({ convenio }: ConvenioArbolProps) {
         </View>
       </Pressable>
 
-      {abierto && <View style={styles.cuerpo}>{contenido()}</View>}
+      {abierto && (
+        <View style={styles.cuerpo}>
+          <Button titulo="Ver ficha" onPress={() => router.push(`/convenio/${convenio.id}`)} />
+          {contenido()}
+        </View>
+      )}
     </View>
   );
 }

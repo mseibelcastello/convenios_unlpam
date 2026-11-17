@@ -13,7 +13,7 @@ class Signature extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['convenio_id', 'usuario_id', 'latitud', 'longitud'];
+    protected $fillable = ['convenio_id', 'usuario_id', 'latitud', 'longitud', 'imagen'];
 
     protected function casts(): array
     {
@@ -43,6 +43,7 @@ class Signature extends Model
             'fecha' => $firma->firmado_en?->copy()->setTimezone(self::ZONA)->toIso8601String(),
             'latitud' => $firma->latitud,
             'longitud' => $firma->longitud,
+            'imagen' => $firma->imagen,
         ];
     }
 }
