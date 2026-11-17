@@ -19,6 +19,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AgreementSignatureController;
 use App\Http\Controllers\IdentityController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AuditController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -61,6 +62,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::get('/dashboard', DashboardController::class);
 
     Route::middleware('role:administracion')->group(function () {
+        // Auditoría: solo administración (los demás roles reciben 403)
+        Route::get('/audit', [AuditController::class, 'index']);
+
         Route::get('/agreements/to-sign', [AgreementSignatureController::class, 'pending']);
         Route::post('/agreements/{id}/sign', [AgreementSignatureController::class, 'store'])->whereNumber('id');
     });

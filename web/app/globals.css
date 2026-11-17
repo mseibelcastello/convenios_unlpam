@@ -652,3 +652,15 @@ html { scrollbar-gutter: stable; }
 .obs-nueva { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--linea); }
 .obs-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
 .obs-acciones .campo-error { flex: 1 1 12rem; }
+
+/* ---- Auditoría ---- */
+.lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.tabla-desplazable { overflow-x: auto; border-radius: 14px; }
+.tabla-auditoria { min-width: 46rem; }
+.tabla-auditoria td { vertical-align: top; }
+.tabla-auditoria td strong, .tabla-auditoria td small { display: block; }
+.tabla-auditoria td small { color: var(--color-texto-suave); font-size: var(--texto-chico); }
+.auditoria-fecha { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.auditoria-transicion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.auditoria-transicion small { flex-basis: 100%; }
+.filtros select[name="convenio_id"] { max-width: 100%; min-width: 0; flex: 1 1 16rem; }

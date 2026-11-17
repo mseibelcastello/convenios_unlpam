@@ -27,6 +27,7 @@ const MENU: ItemMenu[] = [
   { href: "/vencimientos", texto: "Vencimientos", icono: "vencimientos", grupo: "Principal", roles: "todos" },
   { href: "/convenios/nuevo", texto: "Nuevo convenio", icono: "nuevo", grupo: "Gestión", roles: ["administracion", "gestion"] },
   { href: "/usuarios", texto: "Usuarios", icono: "usuarios", grupo: "Administración", roles: ["administracion"] },
+  { href: "/auditoria", texto: "Auditoría", icono: "auditoria", grupo: "Administración", roles: ["administracion"] },
 ];
 
 export function menuPara(rol: Rol) {
