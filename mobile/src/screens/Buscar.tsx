@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -166,6 +166,8 @@ export default function Buscar() {
             <>
               {/* key: si llega un texto nuevo desde el header, la barra se arma de nuevo con ese texto */}
               <SearchBar key={qParam} valorInicial={qParam ?? ''} onBuscar={setQ} />
+
+              <Button titulo="Escanear código QR" variante="secundario" onPress={() => router.push('/qr')} />
 
               <Button
                 titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
