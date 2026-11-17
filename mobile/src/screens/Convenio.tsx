@@ -6,6 +6,7 @@ import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cliente } from '@/api/cliente';
+import { compartirDocumento } from '@/api/compartir';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
@@ -106,6 +107,7 @@ export default function FichaConvenio() {
   const [subiendo, setSubiendo] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [mensajeEsError, setMensajeEsError] = useState(false);
+  const [compartiendoId, setCompartiendoId] = useState<number | null>(null); // documento que se está preparando
 
   async function cargar() {
     setCargando(true);
@@ -139,6 +141,19 @@ export default function FichaConvenio() {
   function avisar(texto: string, esError: boolean) {
     setMensaje(texto);
     setMensajeEsError(esError);
+  }
+
+  // Descarga el PDF y abre el menú de compartir
+  async function compartir(d: Documento) {
+    if (compartiendoId !== null) return;
+    avisar('', false);
+    setCompartiendoId(d.id);
+    try {
+      await compartirDocumento(d.id, d.nombre_original);
+    } catch (e) {
+      avisar(e instanceof Error ? e.message : 'No se pudo compartir.', true);
+    }
+    setCompartiendoId(null);
   }
 
   // Elige un PDF del celular y lo sube al convenio
@@ -261,17 +276,27 @@ export default function FichaConvenio() {
         <Seccion titulo="Documentos">
           {documentos.length === 0 && <ThemedText themeColor="textSecondary">Sin documentos.</ThemedText>}
           {documentos.map((d) => (
-            <Pressable
-              key={d.id}
-              onPress={() => router.push(`/documento/${d.id}?convenio=${convenio.id}`)}
-              accessibilityRole="button"
-              accessibilityLabel={`Abrir ${d.nombre_original}`}
-              style={styles.dato}>
-              <ThemedText type="link">📄 {d.nombre_original}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {d.tipo} · versión {d.version} · tocá para leerlo
-              </ThemedText>
-            </Pressable>
+            <View key={d.id} style={styles.documento}>
+              <Pressable
+                onPress={() =>
+                  router.push(
+                    `/documento/${d.id}?convenio=${convenio.id}&nombre=${encodeURIComponent(d.nombre_original)}`,
+                  )
+                }
+                accessibilityRole="button"
+                accessibilityLabel={`Abrir ${d.nombre_original}`}
+                style={styles.dato}>
+                <ThemedText type="link">📄 {d.nombre_original}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {d.tipo} · versión {d.version} · tocá para leerlo
+                </ThemedText>
+              </Pressable>
+              <Button
+                titulo={compartiendoId === d.id ? 'Preparando…' : 'Compartir'}
+                variante="secundario"
+                onPress={() => compartir(d)}
+              />
+            </View>
           ))}
 
           {/* Consulta no sube documentos */}
@@ -288,12 +313,14 @@ export default function FichaConvenio() {
                 variante="secundario"
                 onPress={subirDocumento}
               />
-              {mensaje !== '' && (
-                <ThemedText type="small" themeColor={mensajeEsError ? 'error' : 'success'}>
-                  {mensaje}
-                </ThemedText>
-              )}
             </View>
+          )}
+
+          {/* Mensajes de subir o compartir: los ven todos los roles */}
+          {mensaje !== '' && (
+            <ThemedText type="small" themeColor={mensajeEsError ? 'error' : 'success'}>
+              {mensaje}
+            </ThemedText>
           )}
         </Seccion>
       </ScrollView>
@@ -320,6 +347,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
   },
   dato: { gap: Spacing.half },
+  documento: { gap: Spacing.two },
   subida: { gap: Spacing.two, marginTop: Spacing.two },
   firmaDibujada: { backgroundColor: '#ffffff', borderRadius: Radius.small, padding: Spacing.two },
   imagenFirma: { width: '100%', height: 120 },

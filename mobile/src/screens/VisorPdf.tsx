@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
 import { cliente } from '@/api/cliente';
+import { compartirDocumento } from '@/api/compartir';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
@@ -48,7 +49,7 @@ function Fila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 export default function VisorPdf() {
   const theme = useTheme();
   // id: el documento. convenio: el convenio al que pertenece (lo manda la ficha)
-  const { id, convenio: convenioId } = useLocalSearchParams<{ id: string; convenio?: string }>();
+  const { id, convenio: convenioId, nombre } = useLocalSearchParams<{ id: string; convenio?: string; nombre?: string }>();
 
   const [html, setHtml] = useState<string | null>(null);
   const [convenio, setConvenio] = useState<Convenio | null>(null);
@@ -63,6 +64,10 @@ export default function VisorPdf() {
   const [mensaje, setMensaje] = useState('');
   const [firmado, setFirmado] = useState<ConvenioFirmado | null>(null);
   const [imagenFirma, setImagenFirma] = useState('');
+
+  // Para compartir
+  const [compartiendo, setCompartiendo] = useState(false);
+  const [errorCompartir, setErrorCompartir] = useState('');
 
   async function cargar() {
     setCargando(true);
@@ -87,6 +92,19 @@ export default function VisorPdf() {
   useEffect(() => {
     cargar();
   }, [id]);
+
+  // Descarga el PDF y abre el menú de compartir
+  async function compartir() {
+    if (compartiendo) return;
+    setErrorCompartir('');
+    setCompartiendo(true);
+    try {
+      await compartirDocumento(id, nombre ?? `documento-${id}.pdf`);
+    } catch (e) {
+      setErrorCompartir(e instanceof Error ? e.message : 'No se pudo compartir.');
+    }
+    setCompartiendo(false);
+  }
 
   // Paso 1: al tocar Firmar. Revisa que se pueda y pide la huella.
   async function firmar() {
@@ -209,7 +227,23 @@ export default function VisorPdf() {
     <ThemedView style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <View style={styles.barra}>
-          <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+          <View style={styles.botones}>
+            <View style={styles.boton}>
+              <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+            </View>
+            <View style={styles.boton}>
+              <Button
+                titulo={compartiendo ? 'Preparando…' : 'Compartir'}
+                variante="secundario"
+                onPress={compartir}
+              />
+            </View>
+          </View>
+          {errorCompartir !== '' && (
+            <ThemedText type="small" themeColor="error">
+              {errorCompartir}
+            </ThemedText>
+          )}
         </View>
 
         {contenido()}
@@ -240,6 +274,8 @@ const styles = StyleSheet.create({
   contenedor: { flex: 1 },
   area: { flex: 1 },
   barra: { padding: Spacing.three, gap: Spacing.two },
+  botones: { flexDirection: 'row', gap: Spacing.two },
+  boton: { flex: 1 },
   visor: { flex: 1 },
   resultado: { padding: Spacing.three, gap: Spacing.three },
   titulo: { fontWeight: '700' },
