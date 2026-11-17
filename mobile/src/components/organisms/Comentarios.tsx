@@ -6,6 +6,7 @@ import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
+import { usePreferencias } from '@/context/preferencias';
 import { useTheme } from '@/hooks/use-theme';
 
 // Comentarios de un convenio: la lista y un campo para escribir.
@@ -21,6 +22,7 @@ type Comentario = {
 
 export function Comentarios({ convenioId }: { convenioId: number }) {
   const theme = useTheme();
+  const { escala } = usePreferencias();
   const [lista, setLista] = useState<Comentario[]>([]);
   const [pagina, setPagina] = useState(1);
   const [ultimaPagina, setUltimaPagina] = useState(1);
@@ -108,7 +110,7 @@ export function Comentarios({ convenioId }: { convenioId: number }) {
         maxLength={2000}
         style={[
           styles.campo,
-          { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+          { color: theme.text, backgroundColor: theme.background, borderColor: theme.border, fontSize: 16 * escala },
         ]}
       />
       <Button titulo={enviando ? 'Enviando…' : 'Enviar comentario'} onPress={enviar} />

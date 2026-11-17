@@ -41,7 +41,8 @@ if ! puerto_en_uso 3306; then
 fi
 
 # Migraciones pendientes (por ejemplo, la tabla de firmas), igual que en iniciar-web.sh
-(cd "$RAIZ/backend" && php artisan migrate --force)
+(cd "$RAIZ/backend" && composer install --no-interaction && php artisan migrate --force)
+(cd "$RAIZ/backend" && php artisan storage:link 2>/dev/null || true) # enlace para las fotos de perfil
 
 # Backend: tiene que escuchar en toda la red (0.0.0.0) para que el celular llegue
 if puerto_en_uso 8000; then

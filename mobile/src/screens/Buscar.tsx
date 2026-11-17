@@ -15,6 +15,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Estados, Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
 import { TIPOS } from '@/constants/tipos';
+import { usePreferencias } from '@/context/preferencias';
 import { useTheme } from '@/hooks/use-theme';
 
 type Convenio = {
@@ -34,6 +35,7 @@ const ESTADOS = (Object.keys(Estados) as EstadoConvenio[]).map((e) => ({
 
 export default function Buscar() {
   const theme = useTheme();
+  const { escala } = usePreferencias();
   // Si se buscó desde el header de otra pantalla, el texto llega como parámetro
   const { q: qParam } = useLocalSearchParams<{ q?: string }>();
 
@@ -186,7 +188,7 @@ export default function Buscar() {
                   accessibilityLabel="Año"
                   style={[
                     styles.input,
-                    { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                    { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border, fontSize: 16 * escala },
                   ]}
                 />
               </View>
