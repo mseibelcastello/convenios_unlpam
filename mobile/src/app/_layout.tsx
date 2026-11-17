@@ -6,6 +6,7 @@ import { useColorScheme } from 'react-native';
 import { sesionVigente } from '@/api/auth';
 import { leerToken } from '@/api/sesion';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { BloqueoProvider } from '@/context/bloqueo';
 import { PreferenciasProvider } from '@/context/preferencias';
 
 SplashScreen.preventAutoHideAsync();
@@ -28,16 +29,18 @@ export default function RootLayout() {
   return (
     <PreferenciasProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="codigo" />
-          <Stack.Screen name="estados" />
-          <Stack.Screen name="identidad" />
-          <Stack.Screen name="alertas" />
-          <Stack.Screen name="qr" />
-        </Stack>
+        <BloqueoProvider>
+          <AnimatedSplashOverlay />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="codigo" />
+            <Stack.Screen name="estados" />
+            <Stack.Screen name="identidad" />
+            <Stack.Screen name="alertas" />
+            <Stack.Screen name="qr" />
+          </Stack>
+        </BloqueoProvider>
       </ThemeProvider>
     </PreferenciasProvider>
   );

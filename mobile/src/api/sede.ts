@@ -1,6 +1,6 @@
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from 'expo-secure-store';
 
-import { RADIO_KM, SEDES } from "@/constants/sedes";
+import { RADIO_KM, SEDES } from '@/constants/sedes';
 
 // Sede o unidad de la persona. Solo se guarda cuál eligió (o cuál se reconoció), nunca las coordenadas.
 
@@ -11,16 +11,14 @@ export type SedeElegida = {
   porUbicacion: boolean;
 };
 
-const CLAVE = "sede-elegida";
+const CLAVE = 'sede-elegida';
 
 // Distancia en km entre dos puntos (fórmula de haversine)
 function distanciaKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const aRad = (g: number) => (g * Math.PI) / 180;
   const dLat = aRad(lat2 - lat1);
   const dLng = aRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(aRad(lat1)) * Math.cos(aRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(aRad(lat1)) * Math.cos(aRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 6371 * 2 * Math.asin(Math.sqrt(a));
 }
 
