@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\Exceptions\MissingAbilityException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -46,6 +47,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => 'No encontrado'], 404);
+            }
+        });
+
+        // Ruta que existe pero con otro método (por ejemplo POST a una que solo acepta GET).
+        // Como los demás errores: mensaje en castellano y sin el detalle interno de la excepción.
+        // Se mantiene el encabezado Allow, que dice qué métodos sí acepta.
+        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Método no permitido'], 405, $e->getHeaders());
             }
         });
     })->create();

@@ -1,17 +1,21 @@
 ## 1. Convenciones generales
 - URL base: `/api`
 - Formato: JSON (`Content-Type: application/json`). Exportaciones en PDF.
-- Autenticación: `Authorization: Bearer <token>` en todas las rutas salvo `/auth/login`. `/auth/mfa/verify` usa el token limitado que devuelve el login.
+- Autenticación: `Authorization: Bearer <token>` en todas las rutas salvo `/auth/login` y `/health`. `/auth/mfa/verify` y `/auth/mfa/send-code` usan el token limitado que devuelve el login; ese token no sirve para el resto de la API (403).
+- `GET /health` responde `{"ok": true}` sin token. Sirve para saber si el backend está andando.
 - Fechas: `AAAA-MM-DD`. Fecha y hora: ISO 8601 con zona horaria.
+- Seguridad (CORS, límites de intentos, filtrado por unidad): ver [seguridad.md](seguridad.md). Pruebas de este contrato: ver [pruebas-api.md](pruebas-api.md).
 
 ### Errores
 | Código | Cuándo | Cuerpo |
 |---|---|---|
 | 401 | Sin sesión o token vencido | `{"message": "No autenticado"}` |
-| 403 | Sin permiso por rol o unidad | `{"message": "Sin permiso"}` |
-| 404 | No existe o está fuera de tu alcance | `{"message": "No encontrado"}` |
-| 409 | Versión desactualizada | `{"message": "Conflicto de versión"}` |
+| 403 | El **rol** no alcanza, o se usa el token limitado del login | `{"message": "Sin permiso"}` |
+| 404 | No existe **o está fuera de tu unidad** (no se distingue, para no revelar qué hay en otras unidades) | `{"message": "No encontrado"}` |
+| 409 | Conflicto: versión desactualizada al editar, o dato repetido (parte o vínculo ya asociados) | `{"message": "Conflicto de versión"}` y `actual` con el convenio de hoy, o el motivo del repetido |
+| 405 | La ruta existe pero no con ese método (por ejemplo, POST a una que solo acepta GET) | `{"message": "Método no permitido"}` y encabezado `Allow` con los métodos que sí acepta |
 | 422 | Validación | `{"message": "...", "errors": {"campo": ["..."]}}` |
+| 429 | Demasiados pedidos (login: 5 por minuto; código MFA por mail: 5 por minuto) | `{"message": "..."}` y encabezado `Retry-After` |
 
 
 ## 2. Recursos
@@ -22,15 +26,17 @@ El segundo paso (MFA) se resuelve con un código de 6 dígitos de **Google Authe
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| POST /auth/login | Público | `{email, password}` | 200 `{token, mfa_required: true, mfa_activado, unidad}` (`unidad` es `{nombre, sigla}` o `null` si el usuario no tiene; token limitado, solo sirve para verificar el código). Si `mfa_activado` es false, trae además `otpauth_uri` (para el código QR) y `clave_manual` | 401, 422 |
+| POST /auth/login | Público (5 intentos por minuto por correo e IP) | `{email, password}` | 200 `{token, mfa_required: true, mfa_activado, unidad}` (`unidad` es `{nombre, sigla}` o `null` si el usuario no tiene; token limitado, solo sirve para verificar el código). Si `mfa_activado` es false, trae además `otpauth_uri` (para el código QR) y `clave_manual` | 401, 422 |
 | POST /auth/mfa/send-code | Token limitado | — | 200 (manda un código de 6 dígitos al mail del usuario; vale 5 minutos) | 401, 429, 502 |
 | POST /auth/mfa/verify | Token limitado | `{codigo}` | 200 `{token, user}` (token completo) | 401, 422, 429 |
 | POST /auth/logout | Autenticado | — | 200 | 401 |
-| GET /auth/me | Autenticado | — | 200 `{user}` | 401 |
+| GET /auth/me | Autenticado | — | 200 `{user}`: incluye `tamano_letra`, `modo` y `miniatura_url` (ver 2.13) | 401, 403 (token limitado) |
 
 
 ### 2.2 /users
 Las personas que usan el sistema, cada una con su rol (administración, gestión, revisión o consulta) y su unidad. Solo Administración los crea y edita.
+
+> **Pendiente: no implementado.** Hoy estas rutas responden 404 y los usuarios se cargan con los seeders. Falta decidir si se implementan o se quitan del contrato (ver [pruebas-api.md](pruebas-api.md), fallo 1).
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
@@ -44,8 +50,10 @@ Las facultades y secretarías de la UNLPam. Definen el alcance "su unidad" de lo
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| GET /unidades | Todos | — | 200 lista | 401 |
+| GET /unidades | Todos | — | 200 lista `[{id, nombre, sigla}]` | 401 |
 | POST /unidades | Administración | `{nombre, sigla}` | 201 | 401, 403, 422 |
+
+> **`POST /unidades` pendiente: no implementado** (hoy responde 405; las unidades salen del seeder). Ver [pruebas-api.md](pruebas-api.md), fallo 2.
 
 
 ### 2.4 /agreements
@@ -53,11 +61,28 @@ El recurso central, los convenios. Cubre crear, buscar, ver la ficha, editar y c
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| GET /agreements | Todos, según alcance | query: `q, tipo, estado, unidad_id, anio, page` | 200 lista | 401, 403 |
-| GET /agreements/{id} | Todos, según alcance | — | 200 ficha | 401, 403, 404 |
-| POST /agreements | Administración; Gestión de su unidad | ficha | 201 | 401, 403, 422 |
-| PUT /agreements/{id} | Administración; Gestión de su unidad | ficha + `version` | 200 | 401, 403, 404, 409, 422 |
+| GET /agreements | Todos, según alcance | query: `q, tipo, estado, unidad_id, anio, page` | 200 `{data, meta}` (15 por página) | 401 |
+| GET /agreements/{id} | Todos, según alcance | — | 200 ficha | 401, 404 |
+| POST /agreements | Administración; Gestión de su unidad | ficha | 201 (nace en `borrador`, `version` 1) | 401, 403, 422 |
+| PUT /agreements/{id} | Administración; Gestión de su unidad | ficha + `version` | 200 (`version` sube 1) | 401, 403, 404, 409, 422 |
 | POST /agreements/{id}/transition | según la transición | `{estado, fundamento}` | 200 | 401, 403, 404, 422 |
+| GET /agreements/export | Todos, según alcance | mismos filtros que `GET /agreements` + `formato` (`pdf` por defecto, o `csv`) | 200 `application/pdf` o `text/csv` | 401, 422 |
+
+Detalles de las respuestas:
+- En el listado, los roles internos (no consulta) reciben además `observaciones_pendientes` de cada convenio.
+- La ficha trae `unidad`, `partes`, `qr_token` (null si no se generó el QR) y, para los roles internos, `personas`, `observaciones` y `firma`. Consultar una ficha con personas queda auditado.
+- La exportación queda registrada en `auditoria`.
+
+Transiciones (quién, y qué exige):
+
+| De → a | Quién | Exige |
+|---|---|---|
+| borrador → revision | Gestión | — |
+| revision → borrador (devolver) | Revisión | `fundamento`, que además queda como **observación** para que gestión la responda |
+| revision → aprobado | Revisión | Ninguna observación sin resolver, al menos 2 partes, PDF principal y, en específicos y pasantías, el marco firmado y vigente |
+| aprobado → firmado | Administración (ver 2.12, firma) | Fechas de firma e inicio |
+| firmado → rescindido | Administración | `fundamento` |
+| firmado o rescindido → archivado | Administración | — |
 
 
 ### 2.5 /parties
@@ -155,22 +180,88 @@ Reglas (422 si no se cumplen):
 - **Alcance**: la cadena solo pasa por convenios que el usuario puede ver. Un convenio de otra unidad no aparece y tampoco sirve de puente para llegar a otros.
 
 ### 2.9 /dashboard
-Las estadísticas, con cantidades por estado, tipo, unidad y año, y convenios firmados y vigentes. También genera la exportación en PDF.
+Las estadísticas, con cantidades por estado, tipo, unidad y año, convenios firmados y vigentes, y las listas de **próximos a vencer** (30 días) y **vencidos**. La exportación del listado está en `GET /agreements/export` (2.4).
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| GET /dashboard | Todos, según alcance | query: `unidad_id?`, `anio?` | 200 estadísticas | 401, 403 |
-| GET /dashboard/export | Administración; Gestión y Revisión de su unidad; Consulta de su unidad (sin datos personales) | mismos filtros que `GET /agreements` | 200 `text/csv` | 401, 403 |
+| GET /dashboard | Todos, según alcance | query: `unidad_id?`, `anio?` | 200 estadísticas | 401 |
 
-La exportación se registra en `auditoria`.
+Pedir `unidad_id` de otra unidad no da error: devuelve todo en cero (el filtro por unidad se aplica igual).
 
 ### 2.10 /alerts
-Los avisos de vencimiento, con convenios por vencer, en preaviso o ya vencidos. Calculados desde `fecha_vencimiento` y `fecha_preaviso`.
+Los avisos de cada usuario (tabla `notificaciones`). Se crean solos cuando pasa algo en un convenio que el usuario puede ver; quien hizo la acción no se avisa a sí mismo.
 
 | Método y ruta | Quién | Cuerpo | OK | Errores |
 |---|---|---|---|---|
-| GET /alerts | Todos, según alcance | query: `dias?` (por defecto 30), `page` | 200 lista | 401, 403 |
+| GET /alerts | Autenticado (solo los suyos) | query: `no_leidas?` (1 = solo los no leídos), `page` | 200 `{data, meta}`; `meta.no_leidas` es el número de la campana | 401 |
+| POST /alerts/{id}/read | Autenticado (solo los suyos) | — | 200 aviso | 401, 404 (no existe o es de otro usuario) |
 
-Cada elemento: `{convenio_id, codigo, titulo, tipo, estado, fecha_vencimiento, fecha_preaviso, situacion}`.
-`situacion`: `en_preaviso`, `por_vencer` o `vencido`.
-Los convenios sin `fecha_vencimiento` no aparecen y se muestran como "sin vencimiento registrado" en la ficha.
+Cada elemento: `{id, tipo, texto, leida, fecha, convenio: {id, codigo, titulo, estado, fecha_vencimiento}, enlace}`. `enlace` es la ruta de la ficha en la web (`/convenios/{id}`).
+
+| `tipo` | Cuándo | A quién |
+|---|---|---|
+| `convenio_creado` | Se crea un convenio | Administración y gestión |
+| `datos_modificados`, `comentario` | Se editan los datos o se comenta | Administración, gestión y revisión |
+| `revision_asignada` | Pasa a revisión | Revisión (administración y gestión reciben `cambio_estado`) |
+| `cambio_estado` | Cualquier otro cambio de estado | Administración, gestión y revisión |
+| `rescindido` | Se rescinde | Todos los que lo ven, consulta incluida |
+| `preaviso`, `vencido` | Lo detecta el comando diario `deadlines:check` (una sola vez por convenio) | Administración y gestión |
+
+### 2.11 Observaciones y comentarios
+Las **observaciones** son el ida y vuelta de la revisión: revisión anota, gestión responde una vez y revisión la da por resuelta. Con alguna sin resolver, el convenio no se aprueba. Los **comentarios** son notas internas libres; si tienen una palabra ofensiva, se guarda solo el aviso "comentario ofensivo" y el texto original no queda en ningún lado.
+
+| Método y ruta | Quién | Cuerpo | OK | Errores |
+|---|---|---|---|---|
+| GET /agreements/{id}/observations | Administración; Gestión y Revisión de su unidad | — | 200 `{data, meta}` | 401, 403, 404 |
+| POST /agreements/{id}/observations | Revisión, con el convenio en revisión | `{contenido}` | 201 observación | 401, 403, 404, 422 |
+| POST /observations/{id}/reply | Gestión, Administración (convenio en borrador o revisión) | `{respuesta}` | 200 | 401, 403, 404, 422 (ya respondida o resuelta) |
+| POST /observations/{id}/resolve | Revisión (convenio en revisión) | — | 200 | 401, 403, 404, 422 (ya resuelta) |
+| GET /agreements/{id}/comments | Administración; Gestión y Revisión de su unidad | query: `page` | 200 `{data, meta}` | 401, 403, 404 |
+| POST /agreements/{id}/comments | Administración; Gestión y Revisión de su unidad | `{contenido}` (hasta 2000) | 201 comentario | 401, 403, 404, 422 |
+
+Observación: `{id, contenido, autor, fecha, respuesta, respondida_por, respondida_en, resuelta, resuelta_por, resuelta_en}`.
+
+### 2.12 Firma
+Administración firma un convenio aprobado. Queda guardado quién, cuándo, dónde (coordenadas) y, si se manda, la imagen de la firma dibujada.
+
+| Método y ruta | Quién | Cuerpo | OK | Errores |
+|---|---|---|---|---|
+| GET /agreements/to-sign | Administración | — | 200 `{data, meta}`: los aprobados pendientes de firma (hasta 10, los más recientes; `meta.total` cuenta todos) | 401, 403 |
+| POST /agreements/{id}/sign | Administración | `{latitud, longitud, fecha_firma?, fecha_inicio?, fecha_vencimiento?, firma_imagen?}` (`firma_imagen`: PNG en base64) | 200 convenio firmado + `firma` | 401, 403, 404, 422 |
+
+Sin fechas, se firma hoy y el convenio empieza hoy. El preaviso se calcula 60 días antes del vencimiento.
+
+### 2.13 Mi cuenta: identidad y perfil
+
+| Método y ruta | Quién | Cuerpo | OK | Errores |
+|---|---|---|---|---|
+| GET /me/identity | Autenticado | — | 200 `{firma, rostro, huella, completa}` (cada una `{registrada, fecha}`) | 401 |
+| POST /me/identity | Autenticado | `multipart/form-data`: `firma` y `rostro` (PNG o JPG, de 50 a 4096 px), `huella` (identificador del dispositivo, 8 a 128 caracteres). Al menos uno | 200 mismo formato que el GET | 401, 422 |
+| PUT /me/preferences | Autenticado | `{tamano_letra: chica\|mediana\|grande, modo: claro\|oscuro}` | 200 | 401, 422 |
+| POST /me/photo | Autenticado | `multipart/form-data`: `foto` (PNG o JPG, de 100 a 4096 px, hasta 5 MB) | 200 `{miniatura_url}` (150×150) | 401, 422 |
+
+Los archivos de identidad se guardan en la carpeta privada y no se pueden descargar. De la huella se guarda solo un hash. Las preferencias y la miniatura vuelven en `GET /auth/me`.
+
+### 2.14 QR de la ficha
+El QR lleva solo una referencia aleatoria, no datos del convenio. Abrirlo exige sesión y permiso sobre el convenio.
+
+| Método y ruta | Quién | Cuerpo | OK | Errores |
+|---|---|---|---|---|
+| POST /agreements/{id}/qr | Administración; Gestión de su unidad | — | 200 `{token, ruta}` (token de 32 caracteres; si ya existía, el mismo) | 401, 403, 404 |
+| GET /qr/{token} | Todos, según alcance (60 por minuto) | — | 200 la misma respuesta que `GET /agreements/{id}` | 401, 404 (no existe o sin permiso) |
+
+### 2.15 Sincronización (cambios hechos sin conexión)
+
+| Método y ruta | Quién | Cuerpo | OK | Errores |
+|---|---|---|---|---|
+| POST /sync | Autenticado; cada cambio con las reglas de su acción (30 por minuto) | `{cambios: [{id_cliente, tipo: edicion\|comentario, convenio_id, version, datos? , contenido?}]}` (1 a 50) | 200 `{resumen: {aplicados, conflictos, rechazados}, resultados: [...]}` | 401, 422 |
+
+Regla de conflictos: una **edición** se aplica solo si `version` es la del servidor y el convenio sigue en borrador. Si no, vuelve como `conflicto` con el convenio `actual` y no se pisa nada. Un **comentario** se aplica siempre. Cada cambio es independiente.
+
+### 2.16 Auditoría
+
+| Método y ruta | Quién | Cuerpo | OK | Errores |
+|---|---|---|---|---|
+| GET /audit | Administración | query: `convenio_id?`, `accion?`, `page` | 200 `{data, meta, filtros}` (25 por página) | 401, 403, 422 |
+
+Cada registro: `{id, fecha, usuario: {id, nombre, rol}, accion, entidad, entidad_id, convenio, estado_anterior, estado_nuevo, fundamento}`. `filtros` trae las acciones y convenios que aparecen, para armar los filtros.

@@ -1,0 +1,4968 @@
+{
+  "info": {
+    "name": "Convenios UNLPam · API",
+    "description": "Una petición por endpoint de docs/api.md: el caso correcto y al menos un error (401, 403, 404, 409 o 422).\nCada petición tiene tests que comparan la respuesta con el contrato. Los resultados y la lista de fallos están en docs/pruebas-api.md.\n\nAntes de correrla:\n1. Backend andando (php artisan serve) con los seeders cargados.\n2. Completar las variables de la colección tokenAdmin, tokenGestion, tokenRevision, tokenConsulta, tokenOtraUnidad y tokenLogout\n   con tokens completos (login + código MFA) de admin@, gestion@, revision@, consulta@ y gestion.fa@demo.test. tokenLogout se cierra durante la corrida: usar uno aparte.\n3. Correr las carpetas en orden: las primeras crean los datos (CONV-2099-…) que usan las siguientes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api"
+    },
+    {
+      "key": "tokenAdmin",
+      "value": ""
+    },
+    {
+      "key": "tokenGestion",
+      "value": ""
+    },
+    {
+      "key": "tokenRevision",
+      "value": ""
+    },
+    {
+      "key": "tokenConsulta",
+      "value": ""
+    },
+    {
+      "key": "tokenOtraUnidad",
+      "value": ""
+    },
+    {
+      "key": "tokenLogout",
+      "value": ""
+    },
+    {
+      "key": "convenioMarco",
+      "value": "1"
+    },
+    {
+      "key": "convenioOtraUnidad",
+      "value": "30"
+    },
+    {
+      "key": "documentoAprobado",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 · Salud",
+      "description": "No pide token: la usa el script del móvil para saber si llega al backend.",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Contrato: GET /health → 200. Token: ninguno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok: true\", () => pm.expect(pm.response.json().ok).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 · Auth",
+      "description": "Login en dos pasos (correo + clave, después código MFA). El envío real del código por mail no se prueba: manda un correo de verdad.",
+      "item": [
+        {
+          "name": "POST /auth/login · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Contrato: POST /auth/login → 200. Token: ninguno.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"consulta.fi@demo.test\",\n  \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Trae token limitado, mfa_required, mfa_activado y unidad\", () => { pm.expect(j.token).to.be.a(\"string\"); pm.expect(j.mfa_required).to.eql(true); pm.expect(j).to.have.property(\"mfa_activado\"); pm.expect(j).to.have.property(\"unidad\"); });",
+                  "pm.collectionVariables.set(\"tokenMfa\", j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login · clave incorrecta → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Contrato: POST /auth/login → 401. Token: ninguno.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"consulta.fi@demo.test\",\n  \"password\": \"incorrecta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Mensaje\", () => pm.expect(pm.response.json().message).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login · sin datos → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Contrato: POST /auth/login → 422. Token: ninguno.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/mfa/verify · código incorrecto → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenMfa}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mfa",
+                "verify"
+              ]
+            },
+            "description": "Contrato: POST /auth/mfa/verify → 401. Token: tokenMfa.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/mfa/verify · sin código → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenMfa}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mfa",
+                "verify"
+              ]
+            },
+            "description": "Contrato: POST /auth/mfa/verify → 422. Token: tokenMfa.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/mfa/send-code · sin token → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/send-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mfa",
+                "send-code"
+              ]
+            },
+            "description": "El caso correcto manda un mail real: se prueba a mano."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/me · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Contrato: GET /auth/me → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trae user sin la clave\", () => { const u = pm.response.json().user; pm.expect(u.email).to.eql(\"gestion@demo.test\"); pm.expect(u).to.not.have.property(\"password\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/me · token limitado del MFA → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenMfa}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "El token del primer paso no sirve para la API."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/me · sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Contrato: GET /auth/me → 401. Token: ninguno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Usuarios y unidades",
+      "description": "GET/POST/PUT /users y POST /unidades están en el contrato como PENDIENTES (no implementados): sus tests fallan a propósito hasta que se implementen.",
+      "item": [
+        {
+          "name": "GET /users · admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Contrato: GET /users → 200. Token: tokenAdmin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /users · gestión → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Contrato: GET /users → 403. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /users · admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "Contrato: POST /users → 201. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Usuario de prueba API\",\n  \"correo\": \"prueba.api@demo.test\",\n  \"clave\": \"password123\",\n  \"rol\": \"consulta\",\n  \"unidad_id\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/{id} · admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "4"
+              ]
+            },
+            "description": "Contrato: PUT /users/4 → 200. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Consulta Demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /unidades · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/unidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unidades"
+              ]
+            },
+            "description": "Contrato: GET /unidades → 200. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lista de unidades con sigla\", () => pm.expect(pm.response.json()[0]).to.have.property(\"sigla\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /unidades · sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/unidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unidades"
+              ]
+            },
+            "description": "Contrato: GET /unidades → 401. Token: ninguno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /unidades · admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/unidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unidades"
+              ]
+            },
+            "description": "Contrato: POST /unidades → 201. Token: tokenAdmin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Unidad de prueba API\",\n  \"sigla\": \"UPA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /unidades · gestión → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/unidades",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "unidades"
+              ]
+            },
+            "description": "Contrato: POST /unidades → 403. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"x\",\n  \"sigla\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · Convenios",
+      "description": "Crea un convenio de prueba CONV-2099-NNN (específico, FCEyN) que usan las carpetas siguientes.",
+      "item": [
+        {
+          "name": "GET /agreements · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements?q=CONV&page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "CONV"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Contrato: GET /agreements → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"data + meta\", () => { const j = pm.response.json(); pm.expect(j.data).to.be.an(\"array\"); pm.expect(j.meta).to.have.property(\"total\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements · sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements"
+              ]
+            },
+            "description": "Contrato: GET /agreements → 401. Token: ninguno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id} · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioMarco}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioMarco}}"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioMarco}} → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ficha con código, partes y versión\", () => { const j = pm.response.json(); pm.expect(j.codigo).to.be.a(\"string\"); pm.expect(j.partes).to.be.an(\"array\"); pm.expect(j).to.have.property(\"version\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id} · no existe → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "999999"
+              ]
+            },
+            "description": "Contrato: GET /agreements/999999 → 404. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id} · de otra unidad → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioOtraUnidad}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioOtraUnidad}}"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioOtraUnidad}} → 404. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements"
+              ]
+            },
+            "description": "Contrato: POST /agreements → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoNuevo}}\",\n  \"titulo\": \"Convenio de prueba API\",\n  \"tipo\": \"especifico\",\n  \"unidad_id\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Nace en borrador, versión 1\", () => { pm.expect(j.estado).to.eql(\"borrador\"); pm.expect(j.version).to.eql(1); });",
+                  "pm.collectionVariables.set(\"convenioNuevo\", j.id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"codigoNuevo\", \"CONV-2099-\" + (100 + Math.floor(Math.random() * 900)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements · código mal → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements"
+              ]
+            },
+            "description": "Contrato: POST /agreements → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"MAL\",\n  \"titulo\": \"x\",\n  \"tipo\": \"marco\",\n  \"unidad_id\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements · consulta → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements"
+              ]
+            },
+            "description": "Contrato: POST /agreements → 403. Token: tokenConsulta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"CONV-2099-001\",\n  \"titulo\": \"x\",\n  \"tipo\": \"marco\",\n  \"unidad_id\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /agreements/{id} · correcto (versión 1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}"
+              ]
+            },
+            "description": "Contrato: PUT /agreements/{{convenioNuevo}} → 200. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoNuevo}}\",\n  \"titulo\": \"Convenio de prueba API (editado)\",\n  \"tipo\": \"especifico\",\n  \"unidad_id\": 3,\n  \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sube a versión 2\", () => pm.expect(pm.response.json().version).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /agreements/{id} · versión vieja → 409",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}"
+              ]
+            },
+            "description": "Contrato: PUT /agreements/{{convenioNuevo}} → 409. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoNuevo}}\",\n  \"titulo\": \"Otro título\",\n  \"tipo\": \"especifico\",\n  \"unidad_id\": 3,\n  \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409 (según el contrato)\", () => pm.response.to.have.status(409));",
+                  "pm.test('{\"message\": \"Conflicto de versión\"} y el convenio actual', () => { const j = pm.response.json(); pm.expect(j.message).to.eql(\"Conflicto de versión\"); pm.expect(j.actual.version).to.eql(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /agreements/{id} · sin título → 422",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}"
+              ]
+            },
+            "description": "Contrato: PUT /agreements/{{convenioNuevo}} → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoNuevo}}\",\n  \"tipo\": \"especifico\",\n  \"unidad_id\": 3,\n  \"version\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 · Partes",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /parties · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties?tipo=universidad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "universidad"
+                }
+              ]
+            },
+            "description": "Contrato: GET /parties → 200. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /parties/{id} · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties",
+                "1"
+              ]
+            },
+            "description": "Contrato: GET /parties/1 → 200. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /parties/{id} · no existe → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties",
+                "999999"
+              ]
+            },
+            "description": "Contrato: GET /parties/999999 → 404. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /parties · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties"
+              ]
+            },
+            "description": "Contrato: POST /parties → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Parte de prueba API\",\n  \"tipo\": \"empresa\",\n  \"representante\": \"Persona Ficticia\",\n  \"cargo_representante\": \"Gerente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"parteNueva\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /parties · sin nombre → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties"
+              ]
+            },
+            "description": "Contrato: POST /parties → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"empresa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /parties · consulta → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties"
+              ]
+            },
+            "description": "Contrato: POST /parties → 403. Token: tokenConsulta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"x\",\n  \"tipo\": \"empresa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /parties/{id} · correcto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/parties/{{parteNueva}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "parties",
+                "{{parteNueva}}"
+              ]
+            },
+            "description": "Contrato: PUT /parties/{{parteNueva}} → 200. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Parte de prueba API\",\n  \"tipo\": \"empresa\",\n  \"representante\": \"Otra Persona\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/parties · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/parties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "parties"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/parties → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parte_id\": \"{{parteNueva}}\",\n  \"rol_parte\": \"contraparte\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/parties · repetida → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/parties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "parties"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/parties → 409. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parte_id\": \"{{parteNueva}}\",\n  \"rol_parte\": \"contraparte\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409 (según el contrato)\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/parties · rol inválido → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/parties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "parties"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/parties → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"parte_id\": 1,\n  \"rol_parte\": \"jefe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /agreements/{id}/parties/{parte} · otra unidad → 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtraUnidad}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/parties/{{parteNueva}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "parties",
+                "{{parteNueva}}"
+              ]
+            },
+            "description": "Contrato: DELETE /agreements/{{convenioNuevo}}/parties/{{parteNueva}} → 404. Token: tokenOtraUnidad."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 · Personas",
+      "description": "La consulta de datos personales queda auditada.",
+      "item": [
+        {
+          "name": "GET /people · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people?q=a",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "a"
+                }
+              ]
+            },
+            "description": "Contrato: GET /people → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /people · consulta → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people"
+              ]
+            },
+            "description": "Contrato: GET /people → 403. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /people · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people"
+              ]
+            },
+            "description": "Contrato: POST /people → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Persona de prueba API\",\n  \"legajo\": \"{{legajoNuevo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"personaNueva\", pm.response.json().id);"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"legajoNuevo\", \"LEG-9\" + (100 + Math.floor(Math.random() * 900)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /people · legajo mal → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "people"
+              ]
+            },
+            "description": "Contrato: POST /people → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"x\",\n  \"legajo\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/people · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "people"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/people → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"persona_id\": \"{{personaNueva}}\",\n  \"rol\": \"representante\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/people · pasante sin datos → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "people"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/people → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"persona_id\": \"{{personaNueva}}\",\n  \"rol\": \"pasante\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/people · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "people"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/people → 200. Token: tokenRevision."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/people · consulta → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/people",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "people"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/people → 403. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /agreements/{id}/people/{persona} · correcto",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/people/{{personaNueva}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "people",
+                "{{personaNueva}}"
+              ]
+            },
+            "description": "Contrato: DELETE /agreements/{{convenioNuevo}}/people/{{personaNueva}} → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /agreements/{id}/people/{persona} · ya quitada → 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/people/{{personaNueva}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "people",
+                "{{personaNueva}}"
+              ]
+            },
+            "description": "Contrato: DELETE /agreements/{{convenioNuevo}}/people/{{personaNueva}} → 404. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 · Documentos",
+      "description": "Sube archivos de la carpeta archivos-de-prueba/ del repositorio.",
+      "item": [
+        {
+          "name": "POST /agreements/{id}/documents · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "documents"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/documents → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "principal",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "archivos-de-prueba/convenio-de-prueba.pdf"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"sha256, versión 1 y marca\", () => { pm.expect(j.sha256).to.have.lengthOf(64); pm.expect(j.version).to.eql(1); pm.expect(j).to.have.property(\"marca\"); });",
+                  "pm.collectionVariables.set(\"documentoNuevo\", j.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/documents · no es PDF → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "documents"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/documents → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "anexo",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "archivos-de-prueba/campos-para-cargar-convenio.txt"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/documents · revisión sube principal → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "documents"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/documents → 403. Token: tokenRevision.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "tipo",
+                  "value": "principal",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "archivos-de-prueba/convenio-de-prueba.pdf"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/documents · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "documents"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/documents → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /documents/{id} · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentoNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentoNuevo}}"
+              ]
+            },
+            "description": "Contrato: GET /documents/{{documentoNuevo}} → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve la marca\", () => pm.expect(pm.response.json()).to.have.property(\"marca\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /documents/{id} · otra unidad → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtraUnidad}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentoNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentoNuevo}}"
+              ]
+            },
+            "description": "Contrato: GET /documents/{{documentoNuevo}} → 404. Token: tokenOtraUnidad."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /documents/{id}/download · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentoNuevo}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentoNuevo}}",
+                "download"
+              ]
+            },
+            "description": "Contrato: GET /documents/{{documentoNuevo}}/download → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"application/pdf\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/pdf\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /documents/{id}/download · consulta, convenio no firmado → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentoAprobado}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentoAprobado}}",
+                "download"
+              ]
+            },
+            "description": "Contrato: GET /documents/{{documentoAprobado}}/download → 403. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 · Vínculos y línea de vida",
+      "description": "El convenio de prueba (específico) se apoya en el marco CONV-2026-001.",
+      "item": [
+        {
+          "name": "POST /agreements/{id}/links · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "links"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/links → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"convenio_destino_id\": \"{{convenioMarco}}\",\n  \"tipo_vinculo\": \"se_apoya_en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"vinculoNuevo\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/links · repetido → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "links"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/links → 409. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"convenio_destino_id\": \"{{convenioMarco}}\",\n  \"tipo_vinculo\": \"se_apoya_en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409 (según el contrato)\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/links · consigo mismo → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "links"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/links → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"convenio_destino_id\": \"{{convenioNuevo}}\",\n  \"tipo_vinculo\": \"se_apoya_en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/links · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/links",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "links"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/links → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"antecedentes con el marco\", () => pm.expect(pm.response.json().antecedentes.map((a) => a.codigo)).to.include(\"CONV-2026-001\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/lifeline · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioMarco}}/lifeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioMarco}}",
+                "lifeline"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioMarco}}/lifeline → 200. Token: tokenAdmin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Cadena con el marco y el convenio de prueba\", () => { const c = j.tramos.map((t) => t.codigo); pm.expect(c).to.include(\"CONV-2026-001\"); pm.expect(c).to.include(pm.collectionVariables.get(\"codigoNuevo\")); });",
+                  "pm.test(\"Ordenada por fecha (los sin fecha al final)\", () => { const f = j.tramos.map((t) => t.fecha_inicio || t.fecha_firma || \"9999\"); pm.expect(f).to.eql([...f].sort()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/lifeline · otra unidad → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtraUnidad}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioMarco}}/lifeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioMarco}}",
+                "lifeline"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioMarco}}/lifeline → 404. Token: tokenOtraUnidad."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /agreements/{id}/links/{link} · correcto",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/links/{{vinculoNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "links",
+                "{{vinculoNuevo}}"
+              ]
+            },
+            "description": "Contrato: DELETE /agreements/{{convenioNuevo}}/links/{{vinculoNuevo}} → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /agreements/{id}/links/{link} · revisión → 403",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/links/{{vinculoNuevo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "links",
+                "{{vinculoNuevo}}"
+              ]
+            },
+            "description": "Contrato: DELETE /agreements/{{convenioNuevo}}/links/{{vinculoNuevo}} → 403. Token: tokenRevision."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 · Estados y observaciones",
+      "description": "Circuito borrador → revisión → (observación) → borrador. Contrato: api.md 2.4 y 2.11.",
+      "item": [
+        {
+          "name": "POST /agreements/{id}/transition · consulta → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/transition",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "transition"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/transition → 403. Token: tokenConsulta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"revision\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/transition · borrador → revisión",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/transition",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "transition"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/transition → 200. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"revision\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Queda en revisión\", () => pm.expect(pm.response.json().estado).to.eql(\"revision\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/transition · aprobar con 1 parte → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/transition",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "transition"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/transition → 422. Token: tokenRevision.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/observations · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/observations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "observations"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/observations → 201. Token: tokenRevision.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Falta el anexo (prueba API)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"observacionNueva\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/observations · gestión → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/observations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "observations"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/observations → 403. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/observations · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/observations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "observations"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/observations → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /observations/{id}/reply · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/observations/{{observacionNueva}}/reply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "observations",
+                "{{observacionNueva}}",
+                "reply"
+              ]
+            },
+            "description": "Contrato: POST /observations/{{observacionNueva}}/reply → 200. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuesta\": \"Se agregó (prueba API)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /observations/{id}/reply · segunda respuesta → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/observations/{{observacionNueva}}/reply",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "observations",
+                "{{observacionNueva}}",
+                "reply"
+              ]
+            },
+            "description": "Contrato: POST /observations/{{observacionNueva}}/reply → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuesta\": \"otra\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /observations/{id}/resolve · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/observations/{{observacionNueva}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "observations",
+                "{{observacionNueva}}",
+                "resolve"
+              ]
+            },
+            "description": "Contrato: POST /observations/{{observacionNueva}}/resolve → 200. Token: tokenRevision."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /observations/{id}/resolve · gestión → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/observations/{{observacionNueva}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "observations",
+                "{{observacionNueva}}",
+                "resolve"
+              ]
+            },
+            "description": "Contrato: POST /observations/{{observacionNueva}}/resolve → 403. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/transition · devolver sin fundamento → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/transition",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "transition"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/transition → 422. Token: tokenRevision.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"borrador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/transition · devolver a borrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/transition",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "transition"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/transition → 200. Token: tokenRevision.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"borrador\",\n  \"fundamento\": \"Corregir la cláusula 2 (prueba API)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/comments · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "comments"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/comments → 201. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contenido\": \"Comentario de prueba API\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201 (según el contrato)\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/comments · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "comments"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/comments → 200. Token: tokenRevision."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/{id}/comments · consulta → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenConsulta}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "comments"
+              ]
+            },
+            "description": "Contrato: GET /agreements/{{convenioNuevo}}/comments → 403. Token: tokenConsulta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 · Estadísticas y exportación",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /dashboard · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard?anio=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "anio",
+                  "value": "2026"
+                }
+              ]
+            },
+            "description": "Contrato: GET /dashboard → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /dashboard · sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard"
+              ]
+            },
+            "description": "Contrato: GET /dashboard → 401. Token: ninguno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/export · CSV (ruta real)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/export?formato=csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "csv"
+                }
+              ]
+            },
+            "description": "Contrato: GET /agreements/export → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"text/csv\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/export · PDF (ruta real)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/export?formato=pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "pdf"
+                }
+              ]
+            },
+            "description": "Contrato: GET /agreements/export → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"application/pdf\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/pdf\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /agreements/export · formato inválido → 422",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/export?formato=xls",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "formato",
+                  "value": "xls"
+                }
+              ]
+            },
+            "description": "Contrato: GET /agreements/export → 422. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 · Avisos",
+      "description": "Contrato: api.md 2.10 (avisos de cada usuario).",
+      "item": [
+        {
+          "name": "GET /alerts · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts?page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Contrato: GET /alerts → 200. Token: tokenAdmin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Cada aviso con tipo, texto, leida, fecha, convenio y enlace; meta.no_leidas\", () => { pm.expect(j.data.length).to.be.above(0); const a = j.data[0]; [\"tipo\", \"texto\", \"leida\", \"fecha\", \"convenio\", \"enlace\"].forEach((k) => pm.expect(a).to.have.property(k)); pm.expect(j.meta).to.have.property(\"no_leidas\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /alerts · sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ]
+            },
+            "description": "Contrato: GET /alerts → 401. Token: ninguno."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /alerts/{id}/read · de otro usuario → 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts/999999/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "999999",
+                "read"
+              ]
+            },
+            "description": "Contrato: POST /alerts/999999/read → 404. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "11 · Auditoría, QR y sincronización",
+      "description": "Contrato: api.md 2.14, 2.15 y 2.16.",
+      "item": [
+        {
+          "name": "GET /audit · admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/audit?accion=descargar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "accion",
+                  "value": "descargar"
+                }
+              ]
+            },
+            "description": "Contrato: GET /audit → 200. Token: tokenAdmin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /audit · gestión → 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "audit"
+              ]
+            },
+            "description": "Contrato: GET /audit → 403. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/qr · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/qr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "qr"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/qr → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"Token de 32 caracteres\", () => pm.expect(j.token).to.have.lengthOf(32));",
+                  "pm.collectionVariables.set(\"qrToken\", j.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/qr · revisión → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenRevision}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/{{convenioNuevo}}/qr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "{{convenioNuevo}}",
+                "qr"
+              ]
+            },
+            "description": "Contrato: POST /agreements/{{convenioNuevo}}/qr → 403. Token: tokenRevision."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /qr/{token} · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/qr/{{qrToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "qr",
+                "{{qrToken}}"
+              ]
+            },
+            "description": "Contrato: GET /qr/{{qrToken}} → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /qr/{token} · otra unidad → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenOtraUnidad}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/qr/{{qrToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "qr",
+                "{{qrToken}}"
+              ]
+            },
+            "description": "Contrato: GET /qr/{{qrToken}} → 404. Token: tokenOtraUnidad."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404 (según el contrato)\", () => pm.response.to.have.status(404));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No encontrado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /sync · uno al día y uno viejo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sync",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sync"
+              ]
+            },
+            "description": "Contrato: POST /sync → 200. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cambios\": [\n    {\n      \"id_cliente\": \"al-dia\",\n      \"tipo\": \"edicion\",\n      \"convenio_id\": \"{{convenioNuevo}}\",\n      \"version\": \"{{versionActual}}\",\n      \"datos\": {\n        \"notas\": \"Editado sin conexión (prueba API)\"\n      }\n    },\n    {\n      \"id_cliente\": \"viejo\",\n      \"tipo\": \"edicion\",\n      \"convenio_id\": \"{{convenioNuevo}}\",\n      \"version\": 1,\n      \"datos\": {\n        \"notas\": \"Versión vieja\"\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json().resultados;",
+                  "pm.test(\"Aplica el actual y devuelve el viejo como conflicto\", () => { pm.expect(r.find((x) => x.id_cliente === \"al-dia\").estado).to.eql(\"aplicado\"); pm.expect(r.find((x) => x.id_cliente === \"viejo\").estado).to.eql(\"conflicto\"); });"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({ url: pm.variables.get(\"baseUrl\") + \"/agreements/\" + pm.variables.get(\"convenioNuevo\"), header: { Accept: \"application/json\", Authorization: \"Bearer \" + pm.variables.get(\"tokenGestion\") } }, (e, r) => pm.collectionVariables.set(\"versionActual\", r.json().version));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /sync · sin cambios → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sync",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sync"
+              ]
+            },
+            "description": "Contrato: POST /sync → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cambios\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 · Mi cuenta (identidad y perfil)",
+      "description": "Contrato: api.md 2.13.",
+      "item": [
+        {
+          "name": "GET /me/identity · correcto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/identity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "identity"
+              ]
+            },
+            "description": "Contrato: GET /me/identity → 200. Token: tokenGestion."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"firma, rostro, huella y completa\", () => [\"firma\", \"rostro\", \"huella\", \"completa\"].forEach((k) => pm.expect(pm.response.json()).to.have.property(k)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/identity · vacío → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/identity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "identity"
+              ]
+            },
+            "description": "Contrato: POST /me/identity → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /me/preferences · correcto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/preferences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "preferences"
+              ]
+            },
+            "description": "Contrato: PUT /me/preferences → 200. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tamano_letra\": \"mediana\",\n  \"modo\": \"claro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /me/preferences · valor inválido → 422",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/preferences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "preferences"
+              ]
+            },
+            "description": "Contrato: PUT /me/preferences → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tamano_letra\": \"enorme\",\n  \"modo\": \"claro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /me/photo · sin archivo → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "photo"
+              ]
+            },
+            "description": "Contrato: POST /me/photo → 422. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422 (según el contrato)\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"422 con objeto errors por campo\", () => pm.expect(pm.response.json().errors).to.be.an(\"object\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13 · Firma",
+      "description": "El caso correcto (administración, con latitud y longitud) deja firmado un convenio aprobado de los datos de prueba: se prueba a mano.",
+      "item": [
+        {
+          "name": "GET /agreements/to-sign · admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/to-sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "to-sign"
+              ]
+            },
+            "description": "Contrato: GET /agreements/to-sign → 200. Token: tokenAdmin."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /agreements/{id}/sign · gestión → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGestion}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agreements/2/sign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "agreements",
+                "2",
+                "sign"
+              ]
+            },
+            "description": "Contrato: POST /agreements/2/sign → 403. Token: tokenGestion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403 (según el contrato)\", () => pm.response.to.have.status(403));",
+                  "pm.test('Cuerpo del error: {\"message\": \"Sin permiso\"}', () => pm.expect(pm.response.json().message).to.eql(\"Sin permiso\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "14 · Cerrar sesión",
+      "description": "Va al final: invalida tokenLogout.",
+      "item": [
+        {
+          "name": "POST /auth/logout · correcto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenLogout}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Contrato: POST /auth/logout → 200. Token: tokenLogout."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200 (según el contrato)\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout · token ya cerrado → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenLogout}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Contrato: POST /auth/logout → 401. Token: tokenLogout."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401 (según el contrato)\", () => pm.response.to.have.status(401));",
+                  "pm.test('Cuerpo del error: {\"message\": \"No autenticado\"}', () => pm.expect(pm.response.json().message).to.eql(\"No autenticado\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
