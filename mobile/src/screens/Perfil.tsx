@@ -6,6 +6,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cerrarSesion } from '@/api/auth';
+import { cancelarRecordatorios, probarNotificaciones } from '@/api/recordatorios';
 import { Button } from '@/components/atoms/Button';
 import { Opciones } from '@/components/molecules/Opciones';
 import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
@@ -86,6 +87,7 @@ export default function Perfil() {
   }
 
   async function salir() {
+    await cancelarRecordatorios().catch(() => {});
     await cerrarSesion();
     router.replace('/login');
   }
@@ -142,6 +144,8 @@ export default function Perfil() {
             </ThemedText>
           )}
 
+          <Button titulo="Probar notificaciones (prueba)" variante="secundario" onPress={async () => avisar(await probarNotificaciones(), false)} />
+          <Button titulo="Registrar mi identidad" variante="secundario" onPress={() => router.push('/identidad')} />
           <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
           <Button titulo="Cerrar sesión" variante="secundario" onPress={salir} />
         </ScrollView>
