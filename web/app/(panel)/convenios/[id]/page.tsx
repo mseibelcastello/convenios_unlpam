@@ -15,6 +15,7 @@ import AgregarVinculo from "./AgregarVinculo";
 import Dictamen from "./Dictamen";
 import Documentos from "./Documentos";
 import Observaciones from "./Observaciones";
+import LineaDeVida from "./LineaDeVida";
 import QrFicha from "./QrFicha";
 
 type Convenio = {
@@ -214,6 +215,9 @@ export default function Ficha() {
           }}
         />
       )}
+
+      {/* A todo el ancho: la línea de tiempo es horizontal */}
+      <LineaDeVida convenioId={convenioId} recarga={recarga} />
 
       <div className="ficha-rejilla">
         <div className="ficha-columna">
