@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cliente } from '@/api/cliente';
@@ -14,6 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 // Lo que usamos de la respuesta de GET /dashboard
 type Movimiento = {
+  convenio_id: number;
   fecha: string;
   accion: string;
   usuario: string;
@@ -96,8 +98,11 @@ export default function Inicio() {
         ) : (
           // El backend ya manda máximo 10, del más reciente al más antiguo
           datos.ultimos_movimientos.slice(0, 10).map((m, i) => (
-            <View
+            <Pressable
               key={i}
+              onPress={() => router.push(`/convenio/${m.convenio_id}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Abrir ${m.codigo}`}
               style={[styles.movimiento, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
               <ThemedText type="smallBold">
                 {m.codigo} · {m.titulo}
@@ -106,7 +111,7 @@ export default function Inicio() {
               <ThemedText type="small" themeColor="textSecondary">
                 {new Date(m.fecha).toLocaleString('es-AR')}
               </ThemedText>
-            </View>
+            </Pressable>
           ))
         )}
       </ScrollView>
