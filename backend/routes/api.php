@@ -17,6 +17,8 @@ use App\Http\Controllers\AgreementExportController;
 use App\Http\Controllers\ObservationController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AgreementSignatureController;
+use App\Http\Controllers\IdentityController;
+use App\Http\Controllers\ProfileController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -109,4 +111,10 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
 
         Route::post('/agreements/{id}/comments', [CommentController::class, 'store'])
         ->whereNumber('id')->middleware('role:administracion,gestion,revision');
+
+        Route::get('/me/identity', [IdentityController::class, 'show']);
+        Route::post('/me/identity', [IdentityController::class, 'store']);
+
+        Route::put('/me/preferences', [ProfileController::class, 'preferences']);
+        Route::post('/me/photo', [ProfileController::class, 'photo']);
 });
