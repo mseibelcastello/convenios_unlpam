@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
@@ -21,8 +22,9 @@ export function TituloConAyuda({ titulo, seccion }: { titulo: string; seccion: S
         onPress={() => setAbierta(true)}
         accessibilityRole="button"
         accessibilityLabel={`Ayuda sobre ${ayuda.titulo}`}
-        style={[styles.icono, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>
-        <ThemedText type="smallBold">?</ThemedText>
+        hitSlop={8}
+        style={styles.icono}>
+        <Ionicons name="help-circle-outline" size={30} color={theme.primary} />
       </Pressable>
 
       <Modal visible={abierta} transparent animationType="fade" onRequestClose={() => setAbierta(false)}>
@@ -48,7 +50,7 @@ export function TituloConAyuda({ titulo, seccion }: { titulo: string; seccion: S
 
 const styles = StyleSheet.create({
   fila: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  icono: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  icono: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   fondo: { flex: 1, justifyContent: 'center', padding: Spacing.three, backgroundColor: 'rgba(0,0,0,0.5)' },
   dialogo: { gap: Spacing.three, padding: Spacing.four, borderWidth: 1, borderRadius: Radius.large },
 });

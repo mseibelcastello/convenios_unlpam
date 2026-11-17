@@ -5,6 +5,7 @@ import { type ReactNode, useCallback, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Plegable } from '@/components/molecules/Plegable';
 import { cliente } from '@/api/cliente';
 import { compartirDocumento } from '@/api/compartir';
 import { Badge } from '@/components/atoms/Badge';
@@ -75,16 +76,11 @@ function fecha(f: string | null) {
 }
 
 // Cada bloque de la ficha: caja con título, siempre igual
-function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
-  const theme = useTheme();
-
+function Seccion({ titulo, abierta, children }: { titulo: string; abierta?: boolean; children: ReactNode }) {
   return (
-    <View style={[styles.seccion, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        {titulo}
-      </ThemedText>
-      {children}
-    </View>
+    <Plegable titulo={titulo} abierta={abierta}>
+      <View style={styles.seccion}>{children}</View>
+    </Plegable>
   );
 }
 
@@ -203,7 +199,7 @@ export default function FichaConvenio() {
 
     return (
       <ScrollView contentContainerStyle={styles.contenido}>
-        <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+        <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
 
         {/* Encabezado: lo primero que se ve */}
         <View style={styles.encabezado}>
@@ -242,7 +238,7 @@ export default function FichaConvenio() {
           ))}
         </Seccion>
 
-        <Seccion titulo="Fechas">
+        <Seccion titulo="Fechas" abierta>
           <Dato etiqueta="Firma" valor={fecha(convenio.fecha_firma)} />
           <Dato etiqueta="Inicio" valor={fecha(convenio.fecha_inicio)} />
           <Dato
@@ -252,7 +248,7 @@ export default function FichaConvenio() {
         </Seccion>
 
         {convenio.firma && (
-          <Seccion titulo="Firma">
+          <Seccion titulo="Firma" abierta>
             <Dato etiqueta="Firmado por" valor={convenio.firma.usuario?.nombre ?? 'Sin dato'} />
             <Dato etiqueta="Fecha" valor={fecha(convenio.firma.fecha.slice(0, 10))} />
             <Dato etiqueta="Hora" valor={`${convenio.firma.fecha.slice(11, 19)} hs`} />
@@ -286,7 +282,7 @@ export default function FichaConvenio() {
           <LineaDeVida convenioId={convenio.id} />
         </Seccion>
 
-        <Seccion titulo="Documentos">
+        <Seccion titulo="Documentos" abierta>
           {documentos.length === 0 && <ThemedText themeColor="textSecondary">Sin documentos.</ThemedText>}
           {documentos.map((d) => (
             <View key={d.id} style={styles.documento}>
@@ -299,7 +295,7 @@ export default function FichaConvenio() {
                 accessibilityRole="button"
                 accessibilityLabel={`Abrir ${d.nombre_original}`}
                 style={styles.dato}>
-                <ThemedText type="link">📄 {d.nombre_original}</ThemedText>
+                <ThemedText type="link">{d.nombre_original}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
                   {d.tipo} · versión {d.version} · tocá para leerlo
                 </ThemedText>
@@ -358,7 +354,7 @@ export default function FichaConvenio() {
   }
 
   return (
-    <ThemedView style={[styles.contenedor, { backgroundColor: theme.background }]}>
+    <ThemedView conFondo style={[styles.contenedor, { backgroundColor: theme.background }]}>
       <SafeAreaView style={styles.area}>{contenido()}</SafeAreaView>
     </ThemedView>
   );
@@ -370,12 +366,7 @@ const styles = StyleSheet.create({
   contenido: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
   encabezado: { gap: Spacing.one },
   estado: { flexDirection: 'row', marginTop: Spacing.one },
-  seccion: {
-    gap: Spacing.two,
-    padding: Spacing.three,
-    borderWidth: 1,
-    borderRadius: Radius.medium,
-  },
+  seccion: { gap: Spacing.two, paddingBottom: Spacing.two },
   dato: { gap: Spacing.half },
   documento: { gap: Spacing.two },
   subida: { gap: Spacing.two, marginTop: Spacing.two },

@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
@@ -67,11 +69,11 @@ export default function Alertas() {
 
   function contenido() {
     if (cargando && avisos.length === 0) return <LoadingView />;
-    if (error) return <ErrorView mensaje="No se pudieron cargar las alertas." onReintentar={() => cargar(1)} />;
+    if (error)
+      return <ErrorView mensaje="No se pudieron cargar las alertas." onReintentar={() => cargar(1)} />;
 
     return (
       <ScrollView contentContainerStyle={styles.contenido}>
-        <ThemedText type="subtitle">Alertas</ThemedText>
         {mensaje !== '' && (
           <ThemedText type="small" themeColor="error">
             {mensaje}
@@ -80,21 +82,25 @@ export default function Alertas() {
         {avisos.length === 0 && <ThemedText themeColor="textSecondary">No tenés alertas.</ThemedText>}
 
         {avisos.map((a) => (
-          <Pressable
-            key={a.id}
-            onPress={() => abrir(a)}
-            accessibilityRole="button"
-            style={[
-              styles.aviso,
-              { backgroundColor: a.leida ? theme.background : theme.backgroundElement, borderColor: theme.border },
-            ]}>
-            <View style={styles.cabecera}>
-              {!a.leida && <View style={styles.punto} />}
-              <ThemedText type={a.leida ? 'small' : 'smallBold'} themeColor="textSecondary">
-                {a.convenio?.codigo ?? 'Aviso'} · {new Date(a.fecha).toLocaleString('es-AR')}
-              </ThemedText>
-            </View>
-            <ThemedText type={a.leida ? 'default' : 'smallBold'}>{a.texto}</ThemedText>
+          <Pressable key={a.id} onPress={() => abrir(a)} accessibilityRole="button">
+            {a.leida ? (
+              // Las leídas: solo texto, sin caja, para que se vean menos
+              <View style={styles.leida}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {a.convenio?.codigo ?? 'Aviso'} · {new Date(a.fecha).toLocaleDateString('es-AR')}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+                  {a.texto}
+                </ThemedText>
+              </View>
+            ) : (
+              <Tarjeta acento="#e86a04" style={styles.aviso}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {a.convenio?.codigo ?? 'Aviso'} · {new Date(a.fecha).toLocaleString('es-AR')}
+                </ThemedText>
+                <ThemedText type="smallBold">{a.texto}</ThemedText>
+              </Tarjeta>
+            )}
           </Pressable>
         ))}
 
@@ -106,10 +112,18 @@ export default function Alertas() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <View style={styles.barra}>
-          <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            style={styles.volver}
+          >
+            <Ionicons name="chevron-back" size={26} color={theme.text} />
+          </Pressable>
+          <ThemedText type="subtitle">Alertas</ThemedText>
         </View>
         {contenido()}
       </SafeAreaView>
@@ -120,7 +134,15 @@ export default function Alertas() {
 const styles = StyleSheet.create({
   contenedor: { flex: 1 },
   area: { flex: 1 },
-  barra: { padding: Spacing.three },
+  barra: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.three,
+    paddingBottom: 0,
+  },
+  volver: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  leida: { gap: Spacing.half, paddingHorizontal: Spacing.two, paddingVertical: Spacing.one },
   contenido: { padding: Spacing.three, gap: Spacing.two },
   aviso: { gap: Spacing.one, padding: Spacing.three, borderWidth: 1, borderRadius: Radius.medium },
   cabecera: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },

@@ -8,6 +8,7 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
@@ -29,19 +30,19 @@ function Caja({ titulo, texto, paso, children }: { titulo: string; texto: string
   const theme = useTheme();
 
   return (
-    <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+    <Tarjeta acento="#e86a04" style={styles.caja}>
       <ThemedText type="smallBold">{titulo}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {texto}
       </ThemedText>
       {paso?.registrada && (
         <ThemedText themeColor="success">
-          ✓ Registrada
+          Registrada
           {paso.fecha ? ` el ${paso.fecha.slice(0, 10).split('-').reverse().join('/')}` : ''}
         </ThemedText>
       )}
       {children}
-    </View>
+    </Tarjeta>
   );
 }
 
@@ -156,16 +157,16 @@ export default function Identidad() {
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <View style={styles.barra}>
-          <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+          <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
         </View>
 
         <ScrollView contentContainerStyle={styles.contenido}>
           <ThemedText type="subtitle">Registrar mi identidad</ThemedText>
           {sinConexion && <AvisoSinConexion completo />}
-          {estado?.completa && <ThemedText themeColor="success">✓ Tu identidad está completa.</ThemedText>}
+          {estado?.completa && <ThemedText themeColor="success">Tu identidad está completa.</ThemedText>}
 
           <Caja titulo="1. Firma" texto="Dibujá tu firma con el dedo." paso={estado?.firma}>
             <Button

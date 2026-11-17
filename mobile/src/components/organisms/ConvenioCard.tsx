@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
@@ -20,11 +21,7 @@ export function ConvenioCard({ titulo, codigo, unidad, estado, onVer }: Convenio
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.tarjeta,
-        { backgroundColor: theme.backgroundElement, borderColor: theme.border },
-      ]}>
+    <Tarjeta acento="#e86a04" style={styles.tarjeta}>
       <View style={styles.encabezado}>
         <ThemedText type="smallBold" themeColor="textSecondary">
           {codigo}
@@ -38,7 +35,7 @@ export function ConvenioCard({ titulo, codigo, unidad, estado, onVer }: Convenio
         {unidad}
       </ThemedText>
       <Button titulo="Ver" variante="secundario" onPress={onVer} />
-    </View>
+    </Tarjeta>
   );
 }
 

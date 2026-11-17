@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { leerPorFirmar, traerYGuardarPorFirmar, type PorFirmar as Pendiente } from '@/api/porFirmarLocal';
 import { LoadingView } from '@/components/atoms/LoadingView';
 import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
@@ -50,7 +51,8 @@ export default function PorFirmar() {
 
   function contenido() {
     if (cargando) return <LoadingView />;
-    if (error) return <ErrorView mensaje="No se pudieron cargar los convenios por firmar." onReintentar={cargar} />;
+    if (error)
+      return <ErrorView mensaje="No se pudieron cargar los convenios por firmar." onReintentar={cargar} />;
     if (lista.length === 0) {
       return <EmptyView titulo="Nada por firmar" mensaje="No hay convenios aprobados esperando la firma." />;
     }
@@ -62,22 +64,24 @@ export default function PorFirmar() {
         disabled={sinConexion}
         onPress={() => router.push(`/convenio/${c.id}`)}
         accessibilityRole="button"
-        style={[styles.tarjeta, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-        <ThemedText type="smallBold" themeColor="textSecondary">
-          {c.codigo}
-        </ThemedText>
-        <ThemedText type="smallBold">{c.titulo}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {textoDelTipo(c.tipo)}
-          {c.unidad ? ` · ${c.unidad.sigla}` : ''}
-          {c.fecha_vencimiento ? ` · vence ${c.fecha_vencimiento.split('-').reverse().join('/')}` : ''}
-        </ThemedText>
+      >
+        <Tarjeta acento="#e86a04" style={styles.tarjeta}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            {c.codigo}
+          </ThemedText>
+          <ThemedText type="smallBold">{c.titulo}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {textoDelTipo(c.tipo)}
+            {c.unidad ? ` · ${c.unidad.sigla}` : ''}
+            {c.fecha_vencimiento ? ` · vence ${c.fecha_vencimiento.split('-').reverse().join('/')}` : ''}
+          </ThemedText>
+        </Tarjeta>
       </Pressable>
     ));
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <HeaderBuscador />
         <ScrollView contentContainerStyle={styles.contenido}>

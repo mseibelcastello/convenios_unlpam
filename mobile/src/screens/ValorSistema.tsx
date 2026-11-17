@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
@@ -63,16 +64,16 @@ export default function ValorSistema() {
       <ScrollView contentContainerStyle={styles.contenido}>
         <ThemedText type="subtitle">Qué ahorra este sistema</ThemedText>
 
-        <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        <Tarjeta acento="#e86a04" style={styles.caja}>
           <ThemedText type="small" themeColor="textSecondary">
             Ahorro estimado en {anio}
           </ThemedText>
           <ThemedText type="subtitle">{numero(horas)} horas</ThemedText>
           <ThemedText themeColor="textSecondary">≈ ${numero(pesos)} de trabajo administrativo (ficticio)</ThemedText>
-        </View>
+        </Tarjeta>
 
         <ThemedText type="smallBold">El cálculo</ThemedText>
-        <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        <Tarjeta acento="#e86a04" style={styles.caja}>
           <ThemedText>
             {MINUTOS_SIN_SISTEMA} − {MINUTOS_CON_SISTEMA} = {ahorroPorConvenio} minutos ahorrados por convenio
           </ThemedText>
@@ -85,7 +86,7 @@ export default function ValorSistema() {
           <ThemedText>
             {numero(horas)} h × ${COSTO_HORA.toLocaleString('es-AR')} = ${numero(pesos)}
           </ThemedText>
-        </View>
+        </Tarjeta>
 
         <ThemedText type="smallBold">Supuestos usados</ThemedText>
         {SUPUESTOS.map((s) => (
@@ -94,22 +95,22 @@ export default function ValorSistema() {
           </ThemedText>
         ))}
 
-        <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        <Tarjeta acento="#e86a04" style={styles.caja}>
           <ThemedText type="smallBold">Aclaración</ThemedText>
           <ThemedText type="small">
             Este sistema no cobra nada a nadie: no hay cobros, precios ni pagos reales. Los valores son ejemplos
             inventados para mostrar cómo se calcularía el ahorro.
           </ThemedText>
-        </View>
+        </Tarjeta>
       </ScrollView>
     );
   }
 
   return (
-    <ThemedView style={styles.contenedor}>
+    <ThemedView conFondo style={styles.contenedor}>
       <SafeAreaView style={styles.contenedor}>
         <View style={styles.barra}>
-          <Button titulo="← Volver" variante="secundario" onPress={() => router.back()} />
+          <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
         </View>
         {contenido()}
       </SafeAreaView>

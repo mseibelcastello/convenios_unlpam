@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { borrarSede, guardarSede, leerSede, sedeCercana, type SedeElegida } from '@/api/sede';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
@@ -102,8 +103,6 @@ export function MiSede() {
     setPaso('preguntar');
   }
 
-  const caja = [styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }];
-
   return (
     <>
       <Modal visible={paso === 'preguntar' || paso === 'ubicando'} transparent animationType="fade">
@@ -126,7 +125,7 @@ export function MiSede() {
       </Modal>
 
       {paso === 'elegir' && (
-        <View style={caja}>
+        <Tarjeta acento="#e86a04" style={styles.caja}>
           <ThemedText type="smallBold">Elegí tu unidad</ThemedText>
           {mensaje !== '' && (
             <ThemedText type="small" themeColor="error">
@@ -145,11 +144,11 @@ export function MiSede() {
               if (u) elegir(u, false);
             }}
           />
-        </View>
+        </Tarjeta>
       )}
 
       {paso === 'listo' && sede && (
-        <View style={caja}>
+        <Tarjeta acento="#e86a04" style={styles.caja}>
           <ThemedText type="smallBold">
             {sede.porUbicacion ? `¡Te damos la bienvenida a ${sede.nombre}!` : `Tu unidad: ${sede.nombre}`}
           </ThemedText>
@@ -163,7 +162,7 @@ export function MiSede() {
             }
           />
           <Button titulo="Cambiar" variante="secundario" onPress={cambiar} />
-        </View>
+        </Tarjeta>
       )}
     </>
   );

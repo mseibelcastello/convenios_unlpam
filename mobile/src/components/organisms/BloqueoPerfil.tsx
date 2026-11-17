@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { Tarjeta } from '@/components/atoms/Tarjeta';
 import { borrarPin, guardarPin, pinConfigurado } from '@/api/bloqueo';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
@@ -56,7 +57,7 @@ export function BloqueoPerfil() {
   const soloNumeros = (t: string) => t.replace(/\D/g, '');
 
   return (
-    <View style={[styles.caja, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+    <Tarjeta acento="#e86a04" style={styles.caja}>
       <ThemedText type="smallBold" themeColor="textSecondary">
         Bloqueo de la app
       </ThemedText>
@@ -64,7 +65,7 @@ export function BloqueoPerfil() {
         Si salís de la app más de {SEGUNDOS_PARA_BLOQUEAR} segundos, al volver se pide el PIN, la huella o tu
         contraseña.
       </ThemedText>
-      <ThemedText>{hayPin ? '✓ PIN configurado' : 'Sin PIN configurado'}</ThemedText>
+      <ThemedText>{hayPin ? 'PIN configurado' : 'Sin PIN configurado'}</ThemedText>
 
       {editando ? (
         <>
@@ -129,7 +130,7 @@ export function BloqueoPerfil() {
           {mensaje}
         </ThemedText>
       )}
-    </View>
+    </Tarjeta>
   );
 }
 

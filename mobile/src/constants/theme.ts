@@ -19,10 +19,13 @@ export const Colors = {
   light: {
     text: '#2E1519',
     background: '#FAEDE8',
-    backgroundElement: '#FFF8F5',
+    backgroundElement: 'rgba(255,255,255,0.72)',
     backgroundSelected: '#F1DDD6',
     textSecondary: '#6B4A4E',
     border: '#8E6E70',
+    vidrio: 'rgba(255,255,255,0.72)',
+    vidrioBorde: 'rgba(232,106,4,0.3)',
+    sombra: '#963C14',
     header: '#2E1519',
     onHeader: '#FBEDE8',
     primary: '#C8181C',
@@ -42,6 +45,9 @@ export const Colors = {
     backgroundSelected: '#3A2226',
     textSecondary: '#CDB4B0',
     border: '#9A7F80',
+    vidrio: 'rgba(42,24,27,0.78)',
+    vidrioBorde: 'rgba(255,255,255,0.1)',
+    sombra: '#000000',
     header: '#2A181B',
     onHeader: '#FBEDE8',
     primary: '#E86A04',
@@ -63,6 +69,15 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
  * símbolo (icon), y el borrador además lleva borde punteado: el color nunca es lo único que
  * distingue el estado.
  */
+// Nombre del ícono (Ionicons) que acompaña a cada estado
+export type IconoEstado =
+  | 'create-outline'
+  | 'time-outline'
+  | 'checkmark-circle-outline'
+  | 'ribbon-outline'
+  | 'close-circle-outline'
+  | 'archive-outline';
+
 export type EstadoConvenio =
   | 'borrador'
   | 'revision'
@@ -75,7 +90,7 @@ export const Estados: Record<
   EstadoConvenio,
   {
     label: string;
-    icon: string;
+    icon: IconoEstado;
     dashed: boolean;
     light: { text: string; background: string };
     dark: { text: string; background: string };
@@ -83,42 +98,42 @@ export const Estados: Record<
 > = {
   borrador: {
     label: 'Borrador',
-    icon: '✎',
+    icon: 'create-outline',
     light: { text: '#6B4A4E', background: '#FFF8F5' },
     dark: { text: '#CDB4B0', background: '#2A181B' },
     dashed: true,
   },
   revision: {
     label: 'En revisión',
-    icon: '◐',
+    icon: 'time-outline',
     light: { text: '#8A4300', background: '#FCE3CB' },
     dark: { text: '#FFB866', background: '#43290C' },
     dashed: false,
   },
   aprobado: {
     label: 'Aprobado',
-    icon: '✓',
+    icon: 'checkmark-circle-outline',
     light: { text: '#1E6B3A', background: '#DDEFE2' },
     dark: { text: '#6FD08C', background: '#12331F' },
     dashed: false,
   },
   firmado: {
     label: 'Firmado',
-    icon: '✍',
+    icon: 'ribbon-outline',
     light: { text: '#FFFFFF', background: '#1E6B3A' },
     dark: { text: '#0F2A18', background: '#6FD08C' },
     dashed: false,
   },
   rescindido: {
     label: 'Rescindido',
-    icon: '✕',
+    icon: 'close-circle-outline',
     light: { text: '#A4001B', background: '#FBDADA' },
     dark: { text: '#FF8A8F', background: '#4A1B20' },
     dashed: false,
   },
   archivado: {
     label: 'Archivado',
-    icon: '▣',
+    icon: 'archive-outline',
     light: { text: '#FBEDE8', background: '#2E1519' },
     dark: { text: '#1B0F11', background: '#FBEDE8' },
     dashed: false,
