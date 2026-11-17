@@ -27,7 +27,8 @@ use App\Http\Controllers\QrController;
 
 Route::get('/health', fn () => ['ok' => true]);
 
-Route::post('/auth/login', [AuthController::class, 'login']);
+// Única ruta con datos que no pide token (además de /health). Límite de intentos en AppServiceProvider.
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 Route::middleware(['auth:sanctum', 'abilities:mfa'])
     ->post('/auth/mfa/verify', [AuthController::class, 'verificarMfa']);

@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Sin ruta /storage/{path} para este disco: los PDF y los archivos de identidad
+            // solo salen por controladores que controlan sesión, rol y unidad (docs/seguridad.md)
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],
