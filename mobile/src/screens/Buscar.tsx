@@ -9,30 +9,22 @@ import { LoadingView } from '@/components/atoms/LoadingView';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { SearchBar } from '@/components/molecules/SearchBar';
-import { ConvenioCard } from '@/components/organisms/ConvenioCard';
+import { ConvenioArbol } from '@/components/organisms/ConvenioArbol';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Estados, Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
+import { TIPOS } from '@/constants/tipos';
 import { useTheme } from '@/hooks/use-theme';
 
 type Convenio = {
   id: number;
   codigo: string;
   titulo: string;
+  tipo: string;
   estado: EstadoConvenio;
-  unidad?: { nombre: string } | null;
 };
 
 type Unidad = { id: number; nombre: string; sigla: string };
-
-const TIPOS = [
-  { valor: 'marco', texto: 'Marco' },
-  { valor: 'especifico', texto: 'Específico' },
-  { valor: 'pasantia', texto: 'Pasantía' },
-  { valor: 'adenda', texto: 'Adenda' },
-  { valor: 'renovacion', texto: 'Renovación' },
-  { valor: 'sustitucion', texto: 'Sustitución' },
-];
 
 const ESTADOS = (Object.keys(Estados) as EstadoConvenio[]).map((e) => ({
   valor: e,
@@ -190,14 +182,7 @@ export default function Buscar() {
           Mostrando {convenios.length} de {total}
         </ThemedText>
         {convenios.map((c) => (
-          <ConvenioCard
-            key={c.id}
-            titulo={c.titulo}
-            codigo={c.codigo}
-            unidad={c.unidad?.nombre ?? ''}
-            estado={c.estado}
-            onVer={() => {}}
-          />
+          <ConvenioArbol key={c.id} convenio={c} />
         ))}
       </>
     );
