@@ -1,6 +1,7 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import { Platform, StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
 
 import { Fonts, ThemeColor } from '@/constants/theme';
+import { usePreferencias } from '@/context/preferencias';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextProps = TextProps & {
@@ -10,8 +11,11 @@ export type ThemedTextProps = TextProps & {
 
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
+  const { escala } = usePreferencias(); // tamaño de letra elegido en Mi Perfil
+  const base = StyleSheet.flatten(styles[type]) as TextStyle;
+  const tamano = { fontSize: (base.fontSize ?? 16) * escala, lineHeight: (base.lineHeight ?? 24) * escala };
 
-  return <Text style={[{ color: theme[themeColor ?? 'text'] }, styles[type], style]} {...rest} />;
+  return <Text style={[{ color: theme[themeColor ?? 'text'] }, styles[type], tamano, style]} {...rest} />;
 }
 
 const styles = StyleSheet.create({

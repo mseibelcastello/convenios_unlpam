@@ -3,6 +3,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/atoms/Button';
 import { Radius, Spacing } from '@/constants/theme';
+import { usePreferencias } from '@/context/preferencias';
 import { useTheme } from '@/hooks/use-theme';
 
 //es un campo de texto con un boton al lado, combina un textinput con el atomo butto.tsx
@@ -15,6 +16,7 @@ type SearchBarProps = {
 
 export function SearchBar({ onBuscar, placeholder = 'Buscar convenio', valorInicial = '' }: SearchBarProps) {
   const theme = useTheme();
+  const { escala } = usePreferencias();
   const [texto, setTexto] = useState(valorInicial);                                                //guarda lo que la persona escribe
 
   return (
@@ -29,7 +31,7 @@ export function SearchBar({ onBuscar, placeholder = 'Buscar convenio', valorInic
         returnKeyType="search"
         style={[
           styles.input,
-          { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border },
+          { color: theme.text, backgroundColor: theme.backgroundElement, borderColor: theme.border, fontSize: 16 * escala },
         ]}
       />
       {/* avisa a onBuscar qué texto se buscó al presionar el botón */}
