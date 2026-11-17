@@ -40,7 +40,7 @@ export default function Buscar() {
   const { escala } = usePreferencias();
   const sinConexion = useSinConexion();
   // Si se buscó desde el header de otra pantalla, el texto llega como parámetro
-  const { q: qParam } = useLocalSearchParams<{ q?: string }>();
+  const { q: qParam, unidad: unidadParam } = useLocalSearchParams<{ q?: string; unidad?: string }>();
 
   const [q, setQ] = useState(qParam ?? '');
   const [anio, setAnio] = useState('');
@@ -70,6 +70,11 @@ export default function Buscar() {
   useEffect(() => {
     setQ(qParam ?? '');
   }, [qParam]);
+
+  // Acceso rápido desde Inicio: llega la unidad de la sede
+  useEffect(() => {
+    if (unidadParam) setUnidadId(unidadParam);
+  }, [unidadParam]);
 
   // Las unidades para el filtro (si falla, simplemente no se muestran)
   useEffect(() => {
