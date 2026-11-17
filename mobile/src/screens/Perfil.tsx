@@ -152,6 +152,7 @@ export default function Perfil() {
           )}
 
           <Button titulo="Probar notificaciones (prueba)" variante="secundario" onPress={async () => avisar(await probarNotificaciones(), false)} />
+          <Button titulo="Qué ahorra este sistema" variante="secundario" onPress={() => router.push('/valor')} />
           <Button titulo="Registrar mi identidad" variante="secundario" onPress={() => router.push('/identidad')} />
           <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
           <Button titulo="Cerrar sesión" variante="secundario" onPress={salir} />

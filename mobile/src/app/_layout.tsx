@@ -39,6 +39,7 @@ export default function RootLayout() {
             <Stack.Screen name="identidad" />
             <Stack.Screen name="alertas" />
             <Stack.Screen name="qr" />
+            <Stack.Screen name="valor" />
           </Stack>
         </BloqueoProvider>
       </ThemeProvider>
