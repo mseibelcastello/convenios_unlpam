@@ -11,14 +11,26 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Facades\Storage;
 
 //Esta lista son los campos que Laravel permite guardar cuando creás un usuario
-#[Fillable(['name', 'email', 'password','rol', 'unidad_id'])]
-#[Hidden(['password', 'remember_token', 'mfa_codigo_hash', 'mfa_secreto'])]
+#[Fillable(['name', 'email', 'password','rol', 'unidad_id', 'tamano_letra', 'modo'])]
+#[Hidden(['password', 'remember_token', 'mfa_codigo_hash', 'mfa_secreto', 'foto_ruta', 'miniatura_ruta'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
+
+    // Sale en /auth/me junto con tamano_letra y modo
+    protected $appends = ['miniatura_url'];
+
+    protected function miniaturaUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->miniatura_ruta
+            ? Storage::disk('public')->url($this->miniatura_ruta)
+            : null);
+    }
 
     /**
      * Get the attributes that should be cast.

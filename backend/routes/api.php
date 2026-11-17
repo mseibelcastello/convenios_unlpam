@@ -14,6 +14,11 @@ use App\Http\Controllers\AgreementDocumentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AgreementExportController;
+use App\Http\Controllers\ObservationController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\AgreementSignatureController;
+use App\Http\Controllers\IdentityController;
+use App\Http\Controllers\ProfileController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -42,6 +47,7 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::post('/agreements/{id}/documents', [AgreementDocumentController::class, 'store'])
         ->whereNumber('id')
         ->middleware('role:administracion,gestion,revision');
+        
 
     Route::get('/agreements/{id}/links', [AgreementLinkController::class, 'index'])->whereNumber('id');
 
@@ -54,6 +60,11 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
 
     Route::get('/dashboard', DashboardController::class);
 
+    Route::middleware('role:administracion')->group(function () {
+        Route::get('/agreements/to-sign', [AgreementSignatureController::class, 'pending']);
+        Route::post('/agreements/{id}/sign', [AgreementSignatureController::class, 'store'])->whereNumber('id');
+    });
+
     // Unidades: todos leen
     Route::get('/unidades', [UnidadController::class, 'index']);
 
@@ -65,7 +76,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::middleware('role:administracion,gestion,revision')->group(function () {
         Route::get('/people', [PersonController::class, 'index']);
         Route::get('/agreements/{id}/people', [AgreementPersonController::class, 'index'])->whereNumber('id');
-    });
+        Route::get('/agreements/{id}/observations', [ObservationController::class, 'index'])->whereNumber('id');
+        Route::get('/agreements/{id}/comments', [CommentController::class, 'index'])->whereNumber('id');
+        });
 
     // Escritura: solo administración y gestión
     Route::middleware('role:gestion,administracion')->group(function () {
@@ -87,4 +100,21 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
         Route::delete('/agreements/{id}/links/{linkId}', [AgreementLinkController::class, 'destroy'])
         ->whereNumber(['id', 'linkId']);
         });
+
+        Route::post('/agreements/{id}/observations', [ObservationController::class, 'store'])
+            ->whereNumber('id')->middleware('role:revision');
+        Route::post('/observations/{id}/reply', [ObservationController::class, 'reply'])
+            ->whereNumber('id')->middleware('role:gestion,administracion');
+        Route::post('/observations/{id}/resolve', [ObservationController::class, 'resolve'])
+            ->whereNumber('id')->middleware('role:revision');
+
+
+        Route::post('/agreements/{id}/comments', [CommentController::class, 'store'])
+        ->whereNumber('id')->middleware('role:administracion,gestion,revision');
+
+        Route::get('/me/identity', [IdentityController::class, 'show']);
+        Route::post('/me/identity', [IdentityController::class, 'store']);
+
+        Route::put('/me/preferences', [ProfileController::class, 'preferences']);
+        Route::post('/me/photo', [ProfileController::class, 'photo']);
 });
