@@ -40,6 +40,7 @@ if [ ! -f .env ]; then
 fi
 composer install --no-interaction
 php artisan migrate --force
+[ -e public/storage ] || php artisan storage:link # enlace para las fotos de perfil (solo si no existe)
 php artisan db:seed --class=UnidadesSeeder --force
 # Convenios reales y un usuario por facultad (no repite lo que ya existe)
 php artisan db:seed --class=ConveniosRealesSeeder --force

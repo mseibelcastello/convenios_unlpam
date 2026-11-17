@@ -27,6 +27,8 @@ if not exist .env (
 )
 call composer install --no-interaction
 call php artisan migrate --force
+REM Enlace public/storage para las fotos de perfil (solo si todavia no existe)
+if not exist public\storage call php artisan storage:link
 call php artisan db:seed --class=UnidadesSeeder --force
 REM Convenios reales y un usuario por facultad (no repite lo que ya existe)
 call php artisan db:seed --class=ConveniosRealesSeeder --force

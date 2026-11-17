@@ -6,6 +6,15 @@ REM      iniciar-movil.bat 192.168.1.6   (si queres indicar la IP a mano)
 
 cd /d "%~dp0"
 
+REM Dependencias y migraciones pendientes del backend, igual que en iniciar-web.bat
+REM (si MySQL no esta andando, la migracion avisa el error y el script sigue igual)
+cd backend
+call composer install --no-interaction
+call php artisan migrate --force
+REM Enlace public/storage para las fotos de perfil (solo si todavia no existe)
+if not exist public\storage call php artisan storage:link
+cd ..
+
 set IP=%1
 if "%IP%"=="" (
   for /f %%i in ('powershell -NoProfile -Command "(Get-NetIPConfiguration | Where-Object { $_.IPv4DefaultGateway -ne $null }).IPv4Address.IPAddress | Select-Object -First 1"') do set IP=%%i
