@@ -36,13 +36,13 @@ export default function LectorQr() {
 
   async function alLeer(texto: string) {
     if (consultando) return;
-    const token = texto.trim();
-
-    // Un token válido es una cadena corta de letras, números, guiones y guiones bajos
-    if (!/^[A-Za-z0-9_-]{8,128}$/.test(token)) {
+    // El QR de la web trae un enlace (https://…/qr/<token>); también se acepta el token solo
+    const coincide = texto.trim().match(/(?:^|\/qr\/)([A-Za-z0-9_-]{8,128})\/?$/);
+    if (!coincide) {
       setMensaje('Ese código QR no es de Convenios UNLPam.');
       return;
     }
+    const token = coincide[1];
 
     setConsultando(true);
     setMensaje('');

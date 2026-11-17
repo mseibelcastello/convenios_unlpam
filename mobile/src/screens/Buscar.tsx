@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
+import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
 import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
@@ -164,7 +165,7 @@ export default function Buscar() {
     <ThemedView style={styles.contenedor}>
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
-          <ThemedText type="subtitle">Buscar</ThemedText>
+          <TituloConAyuda titulo="Buscar" seccion="buscar" />
           {sinConexion ? (
             <AvisoSinConexion completo />
           ) : (

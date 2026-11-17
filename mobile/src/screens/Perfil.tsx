@@ -6,10 +6,13 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cerrarSesion } from '@/api/auth';
+import { borrarPin } from '@/api/bloqueo';
 import { borrarPorFirmar } from '@/api/porFirmarLocal';
 import { cancelarRecordatorios, probarNotificaciones } from '@/api/recordatorios';
 import { Button } from '@/components/atoms/Button';
+import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
 import { Opciones } from '@/components/molecules/Opciones';
+import { BloqueoPerfil } from '@/components/organisms/BloqueoPerfil';
 import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -88,6 +91,7 @@ export default function Perfil() {
   }
 
   async function salir() {
+    await borrarPin().catch(() => {}); // el PIN es de esta sesión: otra persona no lo hereda
     await cancelarRecordatorios().catch(() => {});
     await borrarPorFirmar().catch(() => {}); // no queda nada de la persona en el teléfono
     await cerrarSesion();
@@ -99,7 +103,7 @@ export default function Perfil() {
       <SafeAreaView style={styles.area}>
         <HeaderBuscador />
         <ScrollView contentContainerStyle={styles.contenido}>
-          <ThemedText type="subtitle">Perfil</ThemedText>
+          <TituloConAyuda titulo="Perfil" seccion="perfil" />
 
           <Caja titulo="Tamaño de letra">
             <Opciones
@@ -140,6 +144,8 @@ export default function Perfil() {
             </View>
           </Caja>
 
+          <BloqueoPerfil />
+
           {mensaje !== '' && (
             <ThemedText type="small" themeColor={mensajeEsError ? 'error' : 'success'}>
               {mensaje}
@@ -147,6 +153,8 @@ export default function Perfil() {
           )}
 
           <Button titulo="Probar notificaciones (prueba)" variante="secundario" onPress={async () => avisar(await probarNotificaciones(), false)} />
+          <Button titulo="Ayuda: manual de usuario" variante="secundario" onPress={() => router.push('/ayuda')} />
+          <Button titulo="Qué ahorra este sistema" variante="secundario" onPress={() => router.push('/valor')} />
           <Button titulo="Registrar mi identidad" variante="secundario" onPress={() => router.push('/identidad')} />
           <Button titulo="Ver pantallas de estado (prueba)" variante="secundario" onPress={() => router.push('/estados')} />
           <Button titulo="Cerrar sesión" variante="secundario" onPress={salir} />
