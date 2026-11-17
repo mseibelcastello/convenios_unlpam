@@ -23,6 +23,7 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\QrController;
+use App\Http\Controllers\LifelineController;
 
 
 Route::get('/health', fn () => ['ok' => true]);
@@ -43,6 +44,9 @@ Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     // Avisos: cada usuario ve y marca solo los suyos (todos los roles)
     Route::get('/alerts', [AlertController::class, 'index']);
     Route::post('/alerts/{id}/read', [AlertController::class, 'read'])->whereNumber('id');
+
+    // Línea de vida: toda la cadena de antecedentes y derivados (todos los roles, según su alcance)
+    Route::get('/agreements/{id}/lifeline', LifelineController::class)->whereNumber('id');
 
     // QR de la ficha: todos los roles, pero solo abre convenios de su alcance (si no, 404)
     Route::get('/qr/{token}', [QrController::class, 'abrir'])->middleware('throttle:60,1');
