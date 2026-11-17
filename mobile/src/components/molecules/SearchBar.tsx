@@ -10,11 +10,12 @@ import { useTheme } from '@/hooks/use-theme';
 type SearchBarProps = {
   onBuscar: (texto: string) => void;
   placeholder?: string;
+  valorInicial?: string;
 };
 
-export function SearchBar({ onBuscar, placeholder = 'Buscar convenio' }: SearchBarProps) {
+export function SearchBar({ onBuscar, placeholder = 'Buscar convenio', valorInicial = '' }: SearchBarProps) {
   const theme = useTheme();
-  const [texto, setTexto] = useState('');                                                   //guarda lo que la persona escribe
+  const [texto, setTexto] = useState(valorInicial);                                                //guarda lo que la persona escribe
 
   return (
     <View style={styles.fila}>
