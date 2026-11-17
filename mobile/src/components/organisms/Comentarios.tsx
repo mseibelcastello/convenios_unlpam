@@ -4,9 +4,11 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
+import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { usePreferencias } from '@/context/preferencias';
+import { useSinConexion } from '@/hooks/use-sin-conexion';
 import { useTheme } from '@/hooks/use-theme';
 
 // Comentarios de un convenio: la lista y un campo para escribir.
@@ -23,6 +25,7 @@ type Comentario = {
 export function Comentarios({ convenioId }: { convenioId: number }) {
   const theme = useTheme();
   const { escala } = usePreferencias();
+  const sinConexion = useSinConexion();
   const [lista, setLista] = useState<Comentario[]>([]);
   const [pagina, setPagina] = useState(1);
   const [ultimaPagina, setUltimaPagina] = useState(1);
@@ -68,6 +71,8 @@ export function Comentarios({ convenioId }: { convenioId: number }) {
     }
     setEnviando(false);
   }
+
+  if (sinConexion) return <AvisoSinConexion completo />;
 
   return (
     <View style={styles.contenedor}>

@@ -7,6 +7,7 @@ import { cliente } from '@/api/cliente';
 import { LoadingView } from '@/components/atoms/LoadingView';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
+import { MiSede } from '@/components/organisms/MiSede';
 import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -78,6 +79,8 @@ export default function Inicio() {
     return (
       <ScrollView contentContainerStyle={styles.contenido}>
         <ThemedText type="subtitle">Inicio</ThemedText>
+
+        <MiSede />
 
         <View style={styles.cajas}>
           {cajas.map((c) => (

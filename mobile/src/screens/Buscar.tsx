@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
+import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { Opciones } from '@/components/molecules/Opciones';
@@ -16,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Estados, Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
 import { TIPOS } from '@/constants/tipos';
 import { usePreferencias } from '@/context/preferencias';
+import { useSinConexion } from '@/hooks/use-sin-conexion';
 import { useTheme } from '@/hooks/use-theme';
 
 type Convenio = {
@@ -36,8 +38,9 @@ const ESTADOS = (Object.keys(Estados) as EstadoConvenio[]).map((e) => ({
 export default function Buscar() {
   const theme = useTheme();
   const { escala } = usePreferencias();
+  const sinConexion = useSinConexion();
   // Si se buscó desde el header de otra pantalla, el texto llega como parámetro
-  const { q: qParam } = useLocalSearchParams<{ q?: string }>();
+  const { q: qParam, unidad: unidadParam } = useLocalSearchParams<{ q?: string; unidad?: string }>();
 
   const [q, setQ] = useState(qParam ?? '');
   const [anio, setAnio] = useState('');
@@ -67,6 +70,11 @@ export default function Buscar() {
   useEffect(() => {
     setQ(qParam ?? '');
   }, [qParam]);
+
+  // Acceso rápido desde Inicio: llega la unidad de la sede
+  useEffect(() => {
+    if (unidadParam) setUnidadId(unidadParam);
+  }, [unidadParam]);
 
   // Las unidades para el filtro (si falla, simplemente no se muestran)
   useEffect(() => {
@@ -157,16 +165,24 @@ export default function Buscar() {
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
           <ThemedText type="subtitle">Buscar</ThemedText>
-          {/* key: si llega un texto nuevo desde el header, la barra se arma de nuevo con ese texto */}
-          <SearchBar key={qParam} valorInicial={qParam ?? ''} onBuscar={setQ} />
+          {sinConexion ? (
+            <AvisoSinConexion completo />
+          ) : (
+            <>
+              {/* key: si llega un texto nuevo desde el header, la barra se arma de nuevo con ese texto */}
+              <SearchBar key={qParam} valorInicial={qParam ?? ''} onBuscar={setQ} />
 
-          <Button
-            titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
-            variante="secundario"
-            onPress={abrirFiltros}
-          />
+              <Button titulo="Escanear código QR" variante="secundario" onPress={() => router.push('/qr')} />
 
-          {resultados()}
+              <Button
+                titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
+                variante="secundario"
+                onPress={abrirFiltros}
+              />
+
+              {resultados()}
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
 
