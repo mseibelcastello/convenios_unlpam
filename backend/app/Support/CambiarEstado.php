@@ -15,7 +15,8 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class CambiarEstado
 {
-    private const DIAS_PREAVISO = 60;
+    // Público: el comando deadlines:check usa la misma regla
+    public const DIAS_PREAVISO = 60;
 
     /**
      * Aplica un cambio de estado con todas las reglas del circuito.

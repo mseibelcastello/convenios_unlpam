@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  */
 class Avisos
 {
-    public const TIPOS = ['convenio_creado', 'comentario', 'datos_modificados', 'rescindido', 'revision_asignada', 'cambio_estado', 'preaviso'];
+    public const TIPOS = ['convenio_creado', 'comentario', 'datos_modificados', 'rescindido', 'revision_asignada', 'cambio_estado', 'preaviso', 'vencido'];
 
     private const INTERNOS = ['administracion', 'gestion', 'revision'];
 
@@ -131,7 +131,8 @@ class Avisos
         );
     }
 
-    /** Lo dispara el comando diario avisos:preaviso; no hay autor */
+    // ---- Los dos siguientes los dispara el comando diario deadlines:check; no hay autor ----
+
     public static function preaviso(Agreement $convenio): int
     {
         return self::notify(
@@ -140,6 +141,17 @@ class Avisos
             $convenio,
             "{$convenio->codigo} «{$convenio->titulo}» entró en período de preaviso: vence el "
                 .$convenio->fecha_vencimiento->format('d/m/Y').'.'
+        );
+    }
+
+    public static function vencido(Agreement $convenio): int
+    {
+        return self::notify(
+            self::destinatarios($convenio, ['administracion', 'gestion']),
+            'vencido',
+            $convenio,
+            "{$convenio->codigo} «{$convenio->titulo}» venció el "
+                .$convenio->fecha_vencimiento->format('d/m/Y').' y sigue figurando como firmado.'
         );
     }
 
