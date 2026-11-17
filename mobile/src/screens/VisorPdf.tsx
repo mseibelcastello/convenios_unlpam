@@ -13,11 +13,13 @@ import { actualizarRecordatorioFirma } from '@/api/recordatorios';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
+import { MENSAJE_SIN_CONEXION } from '@/components/molecules/AvisoSinConexion';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { FirmaManuscrita } from '@/components/organisms/FirmaManuscrita';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
+import { useSinConexion } from '@/hooks/use-sin-conexion';
 import { useTheme } from '@/hooks/use-theme';
 import { armarHtml } from '@/screens/visorPdfHtml';
 
@@ -49,6 +51,7 @@ function Fila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 
 export default function VisorPdf() {
   const theme = useTheme();
+  const sinConexion = useSinConexion();
   // id: el documento. convenio: el convenio al que pertenece (lo manda la ficha)
   const { id, convenio: convenioId, nombre } = useLocalSearchParams<{ id: string; convenio?: string; nombre?: string }>();
 
@@ -111,6 +114,10 @@ export default function VisorPdf() {
   async function firmar() {
     if (firmando || !convenio) return;
     setMensaje('');
+
+    if (sinConexion) {
+      return setMensaje(MENSAJE_SIN_CONEXION);
+    }
 
     if (rol !== 'administracion') {
       return setMensaje('Solo administración puede firmar convenios.');

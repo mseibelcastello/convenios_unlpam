@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
+import { traerYGuardarPorFirmar } from '@/api/porFirmarLocal';
 import { actualizarRecordatorioFirma, reprogramarNovedades } from '@/api/recordatorios';
 import AppTabs from '@/components/app-tabs';
 import { usePreferencias } from '@/context/preferencias';
@@ -19,6 +20,7 @@ export default function TabsLayout() {
   useEffect(() => {
     function alAbrir() {
       reprogramarNovedades().catch((e) => console.warn('[recordatorios] novedades:', e));
+      traerYGuardarPorFirmar().catch(() => {}); // copia en el teléfono para el modo sin conexión (solo administración la recibe)
       actualizarRecordatorioFirma().catch((e) => console.warn('[recordatorios] firma:', e));
     }
     alAbrir();

@@ -10,10 +10,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
+import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
 import { FirmaManuscrita } from '@/components/organisms/FirmaManuscrita';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
+import { useSinConexion } from '@/hooks/use-sin-conexion';
 import { useTheme } from '@/hooks/use-theme';
 
 // Registrar mi identidad: firma dibujada, foto de rostro y huella.
@@ -66,6 +68,7 @@ async function identificadorDelCelular() {
 }
 
 export default function Identidad() {
+  const sinConexion = useSinConexion();
   const [estado, setEstado] = useState<Estado | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -122,6 +125,7 @@ export default function Identidad() {
   }
 
   async function abrirCamara() {
+    if (sinConexion) return; // el aviso de arriba ya lo explica
     setMensaje('');
     if (!permiso?.granted && !(await pedirPermiso()).granted) {
       return setMensaje('Hace falta el permiso de la cámara para sacar la foto.');
@@ -136,6 +140,7 @@ export default function Identidad() {
   }
 
   async function registrarHuella() {
+    if (sinConexion) return;
     setMensaje('');
     const hayHuella = (await LocalAuthentication.hasHardwareAsync()) && (await LocalAuthentication.isEnrolledAsync());
     if (!hayHuella) return setMensaje('Este dispositivo no tiene una huella registrada.');
@@ -159,13 +164,14 @@ export default function Identidad() {
 
         <ScrollView contentContainerStyle={styles.contenido}>
           <ThemedText type="subtitle">Registrar mi identidad</ThemedText>
+          {sinConexion && <AvisoSinConexion completo />}
           {estado?.completa && <ThemedText themeColor="success">✓ Tu identidad está completa.</ThemedText>}
 
           <Caja titulo="1. Firma" texto="Dibujá tu firma con el dedo." paso={estado?.firma}>
             <Button
               titulo={estado?.firma.registrada ? 'Registrar de nuevo' : 'Dibujar firma'}
               variante="secundario"
-              onPress={() => setPidiendoFirma(true)}
+              onPress={() => !sinConexion && setPidiendoFirma(true)}
             />
           </Caja>
 
