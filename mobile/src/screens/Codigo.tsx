@@ -24,6 +24,7 @@ export default function Codigo() {
     setError(null);
     setAviso(null);
     setEnviandoMail(true);
+    
     try {
       await enviarCodigoPorMail();
       setAviso('Te enviamos un código por mail. Ingresalo arriba.');
