@@ -13,6 +13,7 @@ import AgregarParte from "./AgregarParte";
 import AgregarPersona from "./AgregarPersona";
 import AgregarVinculo from "./AgregarVinculo";
 import Documentos from "./Documentos";
+import Observaciones from "./Observaciones";
 
 type Convenio = {
   codigo: string;
@@ -52,6 +53,8 @@ export default function Ficha() {
   const [derivados, setDerivados] = useState<Vinculo[]>([]);
   // Al sumar 1 se vuelven a cargar los datos (lo usan los formularios de agregar)
   const [recarga, setRecarga] = useState(0);
+  // Observaciones sin resolver; las informa la sección de observaciones
+  const [pendientes, setPendientes] = useState(0);
 
   //carga datos
   useEffect(() => {
@@ -74,6 +77,8 @@ export default function Ficha() {
 
   const puedeEditar = usuario?.rol === "administracion" || usuario?.rol === "gestion";
   const enBorrador = convenio.estado === "borrador";
+  // Consulta no tiene acceso a las observaciones
+  const veObservaciones = usuario !== null && usuario?.rol !== "consulta";
 
   // La vigencia, en el orden en que ocurre
   const dias = convenio.fecha_vencimiento ? diasHasta(convenio.fecha_vencimiento) : null;
@@ -109,6 +114,21 @@ export default function Ficha() {
         )}
       </header>
 
+      {veObservaciones && pendientes > 0 && (
+        <div className="aviso-observaciones" role="status">
+          <Icono nombre="alerta" />
+          <p>
+            <strong>
+              {pendientes === 1 ? "Hay 1 observación sin resolver" : `Hay ${pendientes} observaciones sin resolver`}
+            </strong>
+            <span>El trámite no avanza hasta que revisión las dé por resueltas.</span>
+          </p>
+          <a href="#observaciones" className="boton-secundario">
+            Ver observaciones
+          </a>
+        </div>
+      )}
+
       <div className="ficha-rejilla">
         <div className="ficha-columna">
           <section className="ficha-seccion">
@@ -132,6 +152,10 @@ export default function Ficha() {
               </div>
             </dl>
           </section>
+
+          {veObservaciones && (
+            <Observaciones convenioId={Number(id)} estadoConvenio={convenio.estado} alContarPendientes={setPendientes} />
+          )}
 
           <Documentos convenioId={Number(id)} />
 
