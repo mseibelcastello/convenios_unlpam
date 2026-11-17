@@ -64,7 +64,8 @@ export default function Observaciones({ convenioId, estadoConvenio, alContarPend
       setObservaciones(lista);
       alContarPendientes(lista.filter((o) => !o.resuelta).length);
     });
-  }, [convenioId, recarga, alContarPendientes]);
+    // Al cambiar el estado se vuelve a pedir: al devolver, la API crea una observación nueva
+  }, [convenioId, estadoConvenio, recarga, alContarPendientes]);
 
   // Corre una acción contra la API; "clave" identifica qué botón está trabajando y dónde va el error
   async function ejecutar(clave: string, accion: () => Promise<unknown>, alTerminar?: () => void) {

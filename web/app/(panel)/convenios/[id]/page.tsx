@@ -12,6 +12,7 @@ import { PARTES, ROLES_PARTE, ROLES_PERSONA, TIPOS, VINCULOS } from "@/lib/tipos
 import AgregarParte from "./AgregarParte";
 import AgregarPersona from "./AgregarPersona";
 import AgregarVinculo from "./AgregarVinculo";
+import Dictamen from "./Dictamen";
 import Documentos from "./Documentos";
 import Observaciones from "./Observaciones";
 
@@ -55,6 +56,8 @@ export default function Ficha() {
   const [recarga, setRecarga] = useState(0);
   // Observaciones sin resolver; las informa la sección de observaciones
   const [pendientes, setPendientes] = useState(0);
+  // Confirmación después de aprobar o devolver (la sección de revisión ya no se muestra)
+  const [avisoRevision, setAvisoRevision] = useState("");
 
   //carga datos
   useEffect(() => {
@@ -79,6 +82,8 @@ export default function Ficha() {
   const enBorrador = convenio.estado === "borrador";
   // Consulta no tiene acceso a las observaciones
   const veObservaciones = usuario !== null && usuario?.rol !== "consulta";
+  // Solo revisión aprueba o devuelve, y solo mientras el convenio está en revisión
+  const puedeDictaminar = usuario?.rol === "revision" && convenio.estado === "revision";
 
   // La vigencia, en el orden en que ocurre
   const dias = convenio.fecha_vencimiento ? diasHasta(convenio.fecha_vencimiento) : null;
@@ -127,6 +132,26 @@ export default function Ficha() {
             Ver observaciones
           </a>
         </div>
+      )}
+
+      {avisoRevision && (
+        <div className="ficha-seccion dictamen" role="status">
+          <p className="dictamen-hecho">{avisoRevision}</p>
+          <Link href="/revision" className="boton-secundario">
+            Volver al panel de revisión
+          </Link>
+        </div>
+      )}
+
+      {puedeDictaminar && (
+        <Dictamen
+          convenioId={Number(id)}
+          pendientes={pendientes}
+          alCambiar={(mensaje) => {
+            setAvisoRevision(mensaje);
+            setRecarga(recarga + 1);
+          }}
+        />
       )}
 
       <div className="ficha-rejilla">

@@ -24,11 +24,16 @@ class AgreementController extends Controller
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $pagina = Agreement::visiblesPara($request->user())
+        $consulta = Agreement::visiblesPara($request->user())
             ->filtrar($filtros)
-            ->with('unidad')
-            ->orderBy('codigo')
-            ->paginate(15);
+            ->with('unidad');
+
+        // Consulta no ve observaciones internas; los demás reciben cuántas quedan sin resolver
+        if ($request->user()->rol !== 'consulta') {
+            $consulta->withCount(['observaciones as observaciones_pendientes' => fn ($q) => $q->where('resuelta', false)]);
+        }
+
+        $pagina = $consulta->orderBy('codigo')->paginate(15);
 
         return $this->lista($pagina);
     }

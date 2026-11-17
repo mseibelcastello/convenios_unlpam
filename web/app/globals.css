@@ -664,3 +664,14 @@ html { scrollbar-gutter: stable; }
 .auditoria-transicion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
 .auditoria-transicion small { flex-basis: 100%; }
 .filtros select[name="convenio_id"] { max-width: 100%; min-width: 0; flex: 1 1 16rem; }
+
+/* ---- Panel de revisión ---- */
+.dictamen { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; border-left: 5px solid #e86a04; }
+.panel .dictamen h2 { flex-basis: 100%; margin-bottom: 0; }
+.panel .dictamen .subtitulo { flex: 1 1 18rem; margin: 0; }
+.dictamen .login-error { flex-basis: 100%; }
+.dictamen-botones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.panel .panel-contenido button.boton-aprobar { padding: 0.55rem 1.3rem; border: 0; border-radius: 10px; background: var(--color-ok); color: #fff; font-weight: 600; cursor: pointer; }
+.panel .panel-contenido button.boton-aprobar:disabled { opacity: 0.5; cursor: default; }
+.dictamen-hecho { flex: 1 1 14rem; margin: 0; font-weight: 600; }
+p.aviso-observaciones { margin: 0 0 1rem; }

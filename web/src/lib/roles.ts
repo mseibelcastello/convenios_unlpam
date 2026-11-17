@@ -26,6 +26,7 @@ const MENU: ItemMenu[] = [
   { href: "/convenios", texto: "Convenios", icono: "convenios", grupo: "Principal", roles: "todos" },
   { href: "/vencimientos", texto: "Vencimientos", icono: "vencimientos", grupo: "Principal", roles: "todos" },
   { href: "/convenios/nuevo", texto: "Nuevo convenio", icono: "nuevo", grupo: "Gestión", roles: ["administracion", "gestion"] },
+  { href: "/revision", texto: "Panel de revisión", icono: "revision", grupo: "Revisión", roles: ["revision"] },
   { href: "/usuarios", texto: "Usuarios", icono: "usuarios", grupo: "Administración", roles: ["administracion"] },
   { href: "/auditoria", texto: "Auditoría", icono: "auditoria", grupo: "Administración", roles: ["administracion"] },
 ];

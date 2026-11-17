@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 
@@ -38,6 +39,11 @@ class Agreement extends Model
     public function unidad(): BelongsTo
     {
         return $this->belongsTo(Unidad::class, 'unidad_id');
+    }
+
+    public function observaciones(): HasMany
+    {
+        return $this->hasMany(Observation::class, 'convenio_id');
     }
 
     public function partes(): BelongsToMany
