@@ -9,6 +9,7 @@ import { WebView } from 'react-native-webview';
 
 import { cliente } from '@/api/cliente';
 import { compartirDocumento } from '@/api/compartir';
+import { actualizarRecordatorioFirma } from '@/api/recordatorios';
 import { Badge } from '@/components/atoms/Badge';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
@@ -156,6 +157,7 @@ export default function VisorPdf() {
       });
       setImagenFirma(imagen);
       setFirmado(data);
+      actualizarRecordatorioFirma().catch(() => {}); // si ya no quedan convenios por firmar, se cancela el aviso
     } catch (e) {
       const delServidor = axios.isAxiosError(e) ? e.response?.data?.message : null;
       setMensaje(delServidor ?? 'No se pudo firmar. Probá de nuevo.');
