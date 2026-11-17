@@ -30,7 +30,8 @@ export default function AgregarParte({ convenioId, alGuardar }: Props) {
   // Al elegir "una parte que ya existe" se carga la lista de partes
   useEffect(() => {
     if (modo === "existente") {
-      api.get("/parties").then((r) => setResultados(r.data.data));
+      // Sin conexión la lista queda vacía (no se rompe la ficha que muestra la copia guardada)
+      api.get("/parties").then((r) => setResultados(r.data.data)).catch(() => setResultados([]));
     }
   }, [modo]);
 

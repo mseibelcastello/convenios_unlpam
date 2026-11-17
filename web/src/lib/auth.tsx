@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "./api";
+import { borrarDatosLocales, esSinConexion } from "./local";
 import type { Usuario } from "./roles";
 
 type Estado = "cargando" | "anonimo" | "autenticado";
@@ -37,10 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .get("/auth/me")
       .then((r) => {
         setUsuario(r.data.user);
+        localStorage.setItem("usuario", JSON.stringify(r.data.user));
         setEstado("autenticado");
       })
-      .catch(() => {
+      .catch((err) => {
+        // Sin conexión no se cierra la sesión: se sigue con el último usuario conocido (para ver lo guardado)
+        const guardado = localStorage.getItem("usuario");
+        if (esSinConexion(err) && localStorage.getItem("token") && guardado) {
+          setUsuario(JSON.parse(guardado));
+          setEstado("autenticado");
+          return;
+        }
         localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
         setEstado("anonimo");
       });
   }, []);
@@ -65,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       { headers: { Authorization: `Bearer ${tokenMfa}` } },
     );
     localStorage.setItem("token", r.data.token);
+    localStorage.setItem("usuario", JSON.stringify(r.data.user));
     setUsuario(r.data.user);
     setEstado("autenticado");
   }
@@ -72,6 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function cerrarSesion() {
     await api.post("/auth/logout").catch(() => {});
     localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    // Lo guardado para ver sin conexión es de este usuario: no queda para el próximo
+    await borrarDatosLocales();
     setUsuario(null);
     setEstado("anonimo");
   }

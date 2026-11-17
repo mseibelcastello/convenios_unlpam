@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { useConCopiaLocal } from "@/lib/local";
 import { useAuth } from "@/lib/auth";
 import { descargarArchivo } from "@/lib/descargas";
 import { TIPOS_DOCUMENTO } from "@/lib/tipos";
@@ -27,16 +27,15 @@ function fecha(texto: string) {
 
 export default function Documentos({ convenioId }: { convenioId: number }) {
   const { usuario } = useAuth();
-  const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [recarga, setRecarga] = useState(0);
+  // La lista se guarda en IndexedDB para verla sin conexión (el PDF en sí no se guarda)
+  const lectura = useConCopiaLocal<{ data: Documento[] }>(`/agreements/${convenioId}/documents`, convenioId, "documentos", recarga);
+  const documentos = lectura.datos?.data ?? [];
   const [error, setError] = useState("");
 
   // Consulta solo mira la lista; los demás roles pueden subir
   const puedeSubir = usuario?.rol !== "consulta";
 
-  useEffect(() => {
-    api.get(`/agreements/${convenioId}/documents`).then((r) => setDocumentos(r.data.data));
-  }, [convenioId, recarga]);
 
   async function descargar(d: Documento) {
     setError("");
@@ -77,7 +76,7 @@ export default function Documentos({ convenioId }: { convenioId: number }) {
         </ul>
       )}
 
-      {puedeSubir && <SubirDocumento convenioId={convenioId} alGuardar={() => setRecarga(recarga + 1)} />}
+      {puedeSubir && !lectura.sinConexion && <SubirDocumento convenioId={convenioId} alGuardar={() => setRecarga(recarga + 1)} />}
     </section>
   );
 }

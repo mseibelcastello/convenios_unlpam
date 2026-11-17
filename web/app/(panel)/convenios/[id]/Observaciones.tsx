@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useConCopiaLocal } from "@/lib/local";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { leerError } from "@/lib/errores";
@@ -44,8 +45,15 @@ function estadoDe(o: Observacion) {
 
 export default function Observaciones({ convenioId, estadoConvenio, alContarPendientes }: Props) {
   const { usuario } = useAuth();
-  const [observaciones, setObservaciones] = useState<Observacion[]>([]);
   const [recarga, setRecarga] = useState(0);
+  // Al cambiar el estado se vuelve a pedir: al devolver, la API crea una observación nueva
+  const lectura = useConCopiaLocal<{ data: Observacion[] }>(
+    `/agreements/${convenioId}/observations`,
+    convenioId,
+    "observaciones",
+    `${recarga}-${estadoConvenio}`,
+  );
+  const observaciones = useMemo(() => lectura.datos?.data ?? [], [lectura.datos]);
   const [nueva, setNueva] = useState("");
   const [respuestas, setRespuestas] = useState<Record<number, string>>({});
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -54,18 +62,16 @@ export default function Observaciones({ convenioId, estadoConvenio, alContarPend
   const rol = usuario?.rol;
   const enRevision = estadoConvenio === "revision";
   // Mismas reglas que la API: gestión responde en borrador o revisión; revisión anota y resuelve en revisión
-  const puedeResponder = (rol === "gestion" || rol === "administracion") && ["borrador", "revision"].includes(estadoConvenio);
-  const puedeResolver = rol === "revision" && enRevision;
-  const puedeAnotar = rol === "revision" && enRevision;
+  // Sin conexión solo se lee: responder, resolver y anotar necesitan la API
+  const enLinea = !lectura.sinConexion;
+  const puedeResponder =
+    enLinea && (rol === "gestion" || rol === "administracion") && ["borrador", "revision"].includes(estadoConvenio);
+  const puedeResolver = enLinea && rol === "revision" && enRevision;
+  const puedeAnotar = enLinea && rol === "revision" && enRevision;
 
   useEffect(() => {
-    api.get(`/agreements/${convenioId}/observations`).then((r) => {
-      const lista: Observacion[] = r.data.data;
-      setObservaciones(lista);
-      alContarPendientes(lista.filter((o) => !o.resuelta).length);
-    });
-    // Al cambiar el estado se vuelve a pedir: al devolver, la API crea una observación nueva
-  }, [convenioId, estadoConvenio, recarga, alContarPendientes]);
+    alContarPendientes(observaciones.filter((o) => !o.resuelta).length);
+  }, [observaciones, alContarPendientes]);
 
   // Corre una acción contra la API; "clave" identifica qué botón está trabajando y dónde va el error
   async function ejecutar(clave: string, accion: () => Promise<unknown>, alTerminar?: () => void) {

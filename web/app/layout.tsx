@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat, Open_Sans } from "next/font/google";
 import "./globals.css";
 import "@/styles/tokens.css";
+import { Suspense } from "react";
 import { AuthProvider } from "@/lib/auth";
 
 const geistSans = Geist({
@@ -38,7 +39,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${openSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col"><AuthProvider>{children}</AuthProvider></body>
+      <body className="min-h-full flex flex-col">
+        {/* El panel lee la URL (usePathname): con Cache Components eso tiene que ir dentro de un Suspense,
+            si no "next build" falla. La estructura que queda fuera es la que se pre-carga para navegar sin red. */}
+        <Suspense fallback={<p className="estado-carga">Cargando…</p>}>
+          <AuthProvider>{children}</AuthProvider>
+        </Suspense>
+      </body>
     </html>
   );
 }

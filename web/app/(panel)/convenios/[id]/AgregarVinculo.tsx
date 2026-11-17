@@ -29,7 +29,7 @@ export default function AgregarVinculo({ convenioId, alGuardar }: Props) {
       // Un convenio no se vincula con sí mismo
       setResultados(r.data.data.filter((c: Resultado) => c.id !== convenioId));
       setDestino("");
-    });
+    }).catch(() => setResultados([]));
   }
 
   async function guardar(e: React.FormEvent<HTMLFormElement>) {

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icono } from "@/components/Iconos";
-import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { cambiosPendientesDe, useConCopiaLocal } from "@/lib/local";
 import { ESTADOS } from "@/lib/estados";
 import { diasHasta, fechaLarga } from "@/lib/fechas";
 import { PARTES, ROLES_PARTE, ROLES_PERSONA, TIPOS, VINCULOS } from "@/lib/tipos";
@@ -46,27 +46,56 @@ type Convenio = {
 //lista de elementos ed antecedentes y derivados
 type Vinculo = { id: number; codigo: string; titulo: string; tipo_vinculo: string };
 
+function fechaHoraCorta(iso: string) {
+  return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short", hour12: false });
+}
+
 export default function Ficha() {
   const { id } = useParams();
   const { usuario } = useAuth();
-  const [convenio, setConvenio] = useState<Convenio | null>(null);
-  const [antecedentes, setAntecedentes] = useState<Vinculo[]>([]);
-  const [derivados, setDerivados] = useState<Vinculo[]>([]);
+  const convenioId = Number(id);
   // Al sumar 1 se vuelven a cargar los datos (lo usan los formularios de agregar)
   const [recarga, setRecarga] = useState(0);
+  // Cada vez que se abre, se guarda en IndexedDB; sin conexión se muestra lo guardado
+  const lectura = useConCopiaLocal<Convenio>(`/agreements/${id}`, convenioId, "datos", recarga);
+  const vinculos = useConCopiaLocal<{ antecedentes: Vinculo[]; derivados: Vinculo[] }>(
+    `/agreements/${id}/links`,
+    convenioId,
+    "vinculos",
+    recarga,
+  );
+  const convenio = lectura.datos;
+  const antecedentes = vinculos.datos?.antecedentes ?? [];
+  const derivados = vinculos.datos?.derivados ?? [];
+  // Ediciones hechas sin conexión que todavía no se mandaron
+  const [cambiosPendientes, setCambiosPendientes] = useState(0);
   // Observaciones sin resolver; las informa la sección de observaciones
   const [pendientes, setPendientes] = useState(0);
   // Confirmación después de aprobar o devolver (la sección de revisión ya no se muestra)
   const [avisoRevision, setAvisoRevision] = useState("");
 
-  //carga datos
   useEffect(() => {
-    api.get(`/agreements/${id}`).then((r) => setConvenio(r.data));
-    api.get(`/agreements/${id}/links`).then((r) => {
-      setAntecedentes(r.data.antecedentes);
-      setDerivados(r.data.derivados);
-    });
-  }, [id, recarga]);
+    cambiosPendientesDe(convenioId).then((lista) => setCambiosPendientes(lista.length));
+  }, [convenioId, recarga]);
+
+  if (lectura.error === 404) {
+    return (
+      <div className="vacio-grande">
+        <strong>Convenio no encontrado</strong>
+        <span>No existe o no tenés acceso.</span>
+      </div>
+    );
+  }
+
+  // Sin conexión y nunca abierto en este navegador: no hay copia que mostrar
+  if (lectura.sinConexion && !convenio) {
+    return (
+      <div className="vacio-grande" role="status">
+        <strong>Sin conexión</strong>
+        <span>Este convenio todavía no se abrió en este navegador, así que no hay una copia guardada para mostrar.</span>
+      </div>
+    );
+  }
 
   if (!convenio) {
     return (
@@ -79,11 +108,14 @@ export default function Ficha() {
   }
 
   const puedeEditar = usuario?.rol === "administracion" || usuario?.rol === "gestion";
+  // Agregar partes, personas o vínculos necesita la API; sin conexión solo queda editar (va a la cola)
+  const puedeAgregar = puedeEditar && !lectura.sinConexion;
   const enBorrador = convenio.estado === "borrador";
   // Consulta no tiene acceso a las observaciones
   const veObservaciones = usuario !== null && usuario?.rol !== "consulta";
   // Solo revisión aprueba o devuelve, y solo mientras el convenio está en revisión
-  const puedeDictaminar = usuario?.rol === "revision" && convenio.estado === "revision";
+  // (sin conexión no se puede aprobar ni devolver, así que no se ofrece)
+  const puedeDictaminar = usuario?.rol === "revision" && convenio.estado === "revision" && !lectura.sinConexion;
 
   // La vigencia, en el orden en que ocurre
   const dias = convenio.fecha_vencimiento ? diasHasta(convenio.fecha_vencimiento) : null;
@@ -100,6 +132,28 @@ export default function Ficha() {
         <Icono nombre="volver" />
         <span>Volver al listado</span>
       </Link>
+
+      {lectura.sinConexion && (
+        <div className="aviso-sin-conexion" role="status">
+          <Icono nombre="sin-conexion" />
+          <p>
+            <strong>Sin conexión</strong>
+            <span>
+              Estás viendo la copia guardada en este navegador
+              {lectura.guardadoEn && ` (${fechaHoraCorta(lectura.guardadoEn)})`}. Puede no estar actualizada, y los
+              cambios no se pueden enviar hasta que vuelva la red.
+            </span>
+          </p>
+        </div>
+      )}
+
+      {cambiosPendientes > 0 && (
+        <p className="aviso-pendientes" role="status">
+          {cambiosPendientes === 1
+            ? "Tenés 1 cambio hecho sin conexión que todavía no se envió."
+            : `Tenés ${cambiosPendientes} cambios hechos sin conexión que todavía no se enviaron.`}
+        </p>
+      )}
 
       <header className="ficha-cabecera">
         <div>
@@ -206,7 +260,7 @@ export default function Ficha() {
               ))}
             </ul>
 
-            {puedeEditar && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+            {puedeAgregar && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
           </section>
 
           {convenio.personas && (
@@ -233,7 +287,7 @@ export default function Ficha() {
                 ))}
               </ul>
 
-              {puedeEditar && <AgregarPersona convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+              {puedeAgregar && <AgregarPersona convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
             </section>
           )}
         </div>
@@ -278,7 +332,7 @@ export default function Ficha() {
             </ul>
 
             {/* Los vínculos solo se cambian en borrador */}
-            {enBorrador && puedeEditar && <AgregarVinculo convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+            {enBorrador && puedeAgregar && <AgregarVinculo convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
           </section>
 
           <section className="ficha-seccion">

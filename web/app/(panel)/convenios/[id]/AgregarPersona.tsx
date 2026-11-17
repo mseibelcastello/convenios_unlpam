@@ -41,7 +41,7 @@ export default function AgregarPersona({ convenioId, alGuardar }: Props) {
 
   useEffect(() => {
     if (modo === "existente") {
-      api.get("/people").then((r) => setPersonas(r.data.data));
+      api.get("/people").then((r) => setPersonas(r.data.data)).catch(() => setPersonas([]));
     }
   }, [modo]);
 
