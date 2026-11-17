@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icono } from "@/components/Iconos";
+import Campana from "@/components/Campana";
 import LogoUnidad from "@/components/LogoUnidad";
 import { useAuth } from "@/lib/auth";
 import { menuPara, ROLES } from "@/lib/roles";
@@ -163,6 +164,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
             <span aria-hidden="true">/</span>
             <strong>{tituloActual}</strong>
           </p>
+          <Campana />
           {puedeCrear && (
             <Link className="boton-principal" href="/convenios/nuevo">
               <Icono nombre="nuevo" />

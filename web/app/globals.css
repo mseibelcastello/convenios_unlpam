@@ -701,3 +701,25 @@ p.aviso-observaciones { margin: 0 0 1rem; }
 .tabla-conflicto tr.distinto td { background: rgba(232, 106, 4, 0.08); }
 .conflicto-botones { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .panel .conflicto .boton-texto { align-self: flex-start; }
+
+/* ---- Campana de avisos (encabezado del panel) ---- */
+.campana { position: relative; flex: none; }
+.campana-boton { position: relative; }
+.campana-contador { position: absolute; top: -0.2rem; right: -0.25rem; min-width: 1.15rem; height: 1.15rem; padding: 0 0.3rem; box-sizing: border-box; border-radius: 999px; background: #b3141a; color: #fff; font-size: 0.68rem; font-weight: 700; line-height: 1.15rem; text-align: center; box-shadow: 0 0 0 2px rgba(255, 250, 247, 0.95); }
+.campana-lista { position: absolute; top: calc(100% + 0.6rem); right: 0; z-index: 40; width: min(25rem, calc(100vw - 2rem)); max-height: min(28rem, calc(100vh - 6rem)); overflow-y: auto; padding: 0.5rem; border-radius: 14px; background: rgba(255, 255, 255, 0.97); border: 1px solid var(--vidrio-borde); box-shadow: var(--sombra-vidrio); backdrop-filter: blur(14px); }
+.campana-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 0; padding: 0.4rem 0.6rem 0.6rem; border-bottom: 1px solid var(--linea); }
+.campana-titulo strong { font-family: var(--fuente-titulo); }
+.campana-titulo span { font-size: var(--texto-chico); color: var(--color-texto-suave); }
+.campana-vacia { margin: 0; padding: 1rem 0.6rem; color: var(--color-texto-suave); }
+.campana-lista ul { list-style: none; margin: 0.3rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.campana-lista li { margin: 0; }
+.panel .campana-aviso { display: flex; align-items: flex-start; gap: 0.65rem; width: 100%; padding: 0.6rem; border: 0; border-radius: 10px; background: transparent; color: var(--color-texto); font: inherit; text-align: left; cursor: pointer; transition: background-color 150ms ease; }
+.panel .campana-aviso:hover, .panel .campana-aviso:focus-visible { background: rgba(232, 106, 4, 0.08); }
+.campana-aviso.no-leido { background: rgba(232, 106, 4, 0.05); }
+.campana-aviso.no-leido .campana-texto > span { font-weight: 600; }
+.campana-punto { flex: none; width: 0.55rem; height: 0.55rem; margin-top: 0.4rem; border-radius: 50%; background: rgba(46, 21, 25, 0.25); }
+.campana-punto.aviso-atencion { background: #e86a04; }
+.campana-punto.aviso-urgente { background: #b3141a; }
+.campana-texto { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; overflow-wrap: anywhere; font-size: var(--texto-chico); line-height: 1.4; }
+.campana-texto small { color: var(--color-texto-suave); }
+@media (max-width: 40rem) { .campana-lista { position: fixed; top: calc(4.2rem + env(safe-area-inset-top, 0px)); left: 1rem; right: 1rem; width: auto; } }

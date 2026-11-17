@@ -34,6 +34,12 @@ const DIBUJOS: Record<string, React.ReactNode> = {
   volver: <path d="M19 12H5m6-6-6 6 6 6" />,
   cerrar: <path d="M6 6l12 12M18 6 6 18" />,
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+  campana: (
+    <>
+      <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9" />
+      <path d="M10.3 19a1.9 1.9 0 0 0 3.4 0" />
+    </>
+  ),
   "sin-conexion": (
     <>
       <path d="M2 8.8a15 15 0 0 1 4.2-2.6M9.6 5.2A15 15 0 0 1 22 8.8M5 12.5a10 10 0 0 1 4.1-2.2M14.7 10.4A10 10 0 0 1 19 12.5M8.5 16a5 5 0 0 1 7 0" />
