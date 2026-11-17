@@ -12,6 +12,7 @@ import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { Opciones } from '@/components/molecules/Opciones';
+import { Comentarios } from '@/components/organisms/Comentarios';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
@@ -323,6 +324,13 @@ export default function FichaConvenio() {
             </ThemedText>
           )}
         </Seccion>
+
+        {/* Consulta no ve comentarios (la API tampoco se los da) */}
+        {['administracion', 'gestion', 'revision'].includes(rol) && (
+          <Seccion titulo="Comentarios">
+            <Comentarios convenioId={convenio.id} />
+          </Seccion>
+        )}
       </ScrollView>
     );
   }
