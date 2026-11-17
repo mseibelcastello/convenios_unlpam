@@ -177,12 +177,17 @@ export default function FichaConvenio() {
         <Seccion titulo="Documentos">
           {documentos.length === 0 && <ThemedText themeColor="textSecondary">Sin documentos.</ThemedText>}
           {documentos.map((d) => (
-            <View key={d.id} style={styles.dato}>
-              <ThemedText>📄 {d.nombre_original}</ThemedText>
+            <Pressable
+              key={d.id}
+              onPress={() => router.push(`/documento/${d.id}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Abrir ${d.nombre_original}`}
+              style={styles.dato}>
+              <ThemedText type="link">📄 {d.nombre_original}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {d.tipo} · versión {d.version}
+                {d.tipo} · versión {d.version} · tocá para leerlo
               </ThemedText>
-            </View>
+            </Pressable>
           ))}
         </Seccion>
       </ScrollView>
