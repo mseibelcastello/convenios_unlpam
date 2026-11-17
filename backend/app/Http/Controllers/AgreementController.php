@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use App\Models\AuditLog;
 use App\Models\Observation;
 use App\Models\Signature;
+use App\Support\Avisos;
 
 class AgreementController extends Controller
 {
@@ -82,7 +83,12 @@ class AgreementController extends Controller
             return response()->json(['message' => 'Sin permiso'], 403);
         }
 
-        $convenio = Agreement::create($datos + ['estado' => 'borrador', 'version' => 1]);
+        $convenio = DB::transaction(function () use ($datos, $request) {
+            $convenio = Agreement::create($datos + ['estado' => 'borrador', 'version' => 1]);
+            Avisos::convenioCreado($convenio, $request->user());
+
+            return $convenio;
+        });
 
         return response()->json($convenio->load('unidad'), 201);
     }
@@ -132,7 +138,10 @@ class AgreementController extends Controller
             ], 409);
         }
 
-        return response()->json(Agreement::with('unidad')->findOrFail($id));
+        $actualizado = Agreement::with('unidad')->findOrFail($id);
+        Avisos::datosModificados($actualizado, $usuario);
+
+        return response()->json($actualizado);
     }
 
     private function noEsBorrador(): JsonResponse

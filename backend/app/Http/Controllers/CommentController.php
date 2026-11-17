@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Agreement;
 use App\Models\AuditLog;
 use App\Models\Comment;
+use App\Support\Avisos;
 use App\Support\FiltroOfensivo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -58,6 +59,8 @@ class CommentController extends Controller
                 'entidad_id' => $comentario->id,
                 'fundamento' => $ofensivo ? 'Comentario filtrado por palabras ofensivas' : null,
             ]);
+
+            Avisos::comentario($convenio, $usuario);
 
             return $comentario;
         });

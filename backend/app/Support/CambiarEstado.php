@@ -75,6 +75,9 @@ class CambiarEstado
                 'fundamento' => $fundamento !== '' ? $fundamento : null,
             ]);
 
+            // Con los datos ya actualizados (al firmar, el aviso lleva la fecha de vencimiento nueva)
+            Avisos::cambioEstado((clone $convenio)->forceFill($cambios), $usuario, $desde, $hasta, $fundamento !== '' ? $fundamento : null);
+
             // Al firmar una renovación, el convenio anterior se archiva en la misma operación
             if ($hasta === 'firmado' && $convenio->tipo === 'renovacion') {
                 self::archivarAnteriores($convenio, $usuario);
@@ -170,6 +173,8 @@ class CambiarEstado
                 ->update(['estado' => 'archivado']);
 
             if ($filas > 0) {
+                $fundamento = "Archivado automáticamente al firmarse la renovación {$renovacion->codigo}";
+
                 AuditLog::create([
                     'usuario_id' => $usuario->id,
                     'accion' => 'cambiar estado',
@@ -177,8 +182,10 @@ class CambiarEstado
                     'entidad_id' => $anteriorId,
                     'estado_anterior' => 'firmado',
                     'estado_nuevo' => 'archivado',
-                    'fundamento' => "Archivado automáticamente al firmarse la renovación {$renovacion->codigo}",
+                    'fundamento' => $fundamento,
                 ]);
+
+                Avisos::cambioEstado(Agreement::findOrFail($anteriorId), $usuario, 'firmado', 'archivado', $fundamento);
             }
         }
     }
