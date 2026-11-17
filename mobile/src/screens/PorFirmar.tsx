@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { leerPorFirmar, traerYGuardarPorFirmar, type PorFirmar as Pendiente } from '@/api/porFirmarLocal';
 import { LoadingView } from '@/components/atoms/LoadingView';
+import { TituloConAyuda } from '@/components/molecules/TituloConAyuda';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { HeaderBuscador } from '@/components/organisms/HeaderBuscador';
@@ -80,7 +81,7 @@ export default function PorFirmar() {
       <SafeAreaView style={styles.area}>
         <HeaderBuscador />
         <ScrollView contentContainerStyle={styles.contenido}>
-          <ThemedText type="subtitle">Por firmar</ThemedText>
+          <TituloConAyuda titulo="Por firmar" seccion="porFirmar" />
           {contenido()}
         </ScrollView>
       </SafeAreaView>
