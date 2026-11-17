@@ -6,6 +6,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cerrarSesion } from '@/api/auth';
+import { borrarPorFirmar } from '@/api/porFirmarLocal';
 import { cancelarRecordatorios, probarNotificaciones } from '@/api/recordatorios';
 import { Button } from '@/components/atoms/Button';
 import { Opciones } from '@/components/molecules/Opciones';
@@ -88,6 +89,7 @@ export default function Perfil() {
 
   async function salir() {
     await cancelarRecordatorios().catch(() => {});
+    await borrarPorFirmar().catch(() => {}); // no queda nada de la persona en el teléfono
     await cerrarSesion();
     router.replace('/login');
   }

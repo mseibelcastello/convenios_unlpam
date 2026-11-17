@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cliente } from '@/api/cliente';
 import { Button } from '@/components/atoms/Button';
 import { LoadingView } from '@/components/atoms/LoadingView';
+import { AvisoSinConexion } from '@/components/molecules/AvisoSinConexion';
 import { EmptyView } from '@/components/molecules/EmptyView';
 import { ErrorView } from '@/components/molecules/ErrorView';
 import { Opciones } from '@/components/molecules/Opciones';
@@ -16,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, Estados, Radius, Spacing, type EstadoConvenio } from '@/constants/theme';
 import { TIPOS } from '@/constants/tipos';
 import { usePreferencias } from '@/context/preferencias';
+import { useSinConexion } from '@/hooks/use-sin-conexion';
 import { useTheme } from '@/hooks/use-theme';
 
 type Convenio = {
@@ -36,6 +38,7 @@ const ESTADOS = (Object.keys(Estados) as EstadoConvenio[]).map((e) => ({
 export default function Buscar() {
   const theme = useTheme();
   const { escala } = usePreferencias();
+  const sinConexion = useSinConexion();
   // Si se buscó desde el header de otra pantalla, el texto llega como parámetro
   const { q: qParam } = useLocalSearchParams<{ q?: string }>();
 
@@ -157,16 +160,22 @@ export default function Buscar() {
       <SafeAreaView style={styles.area}>
         <ScrollView contentContainerStyle={styles.contenido} keyboardShouldPersistTaps="handled">
           <ThemedText type="subtitle">Buscar</ThemedText>
-          {/* key: si llega un texto nuevo desde el header, la barra se arma de nuevo con ese texto */}
-          <SearchBar key={qParam} valorInicial={qParam ?? ''} onBuscar={setQ} />
+          {sinConexion ? (
+            <AvisoSinConexion completo />
+          ) : (
+            <>
+              {/* key: si llega un texto nuevo desde el header, la barra se arma de nuevo con ese texto */}
+              <SearchBar key={qParam} valorInicial={qParam ?? ''} onBuscar={setQ} />
 
-          <Button
-            titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
-            variante="secundario"
-            onPress={abrirFiltros}
-          />
+              <Button
+                titulo={activos > 0 ? `Filtros (${activos})` : 'Filtros'}
+                variante="secundario"
+                onPress={abrirFiltros}
+              />
 
-          {resultados()}
+              {resultados()}
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
 
