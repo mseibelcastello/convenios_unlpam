@@ -1,7 +1,7 @@
 CAMPOS PARA CARGAR UN CONVENIO (copiar y pegar en el formulario)
 =================================================================
 Datos ficticios para pruebas, pensados para la Facultad de Ingeniería.
-Entrá con gestion.FI@demo.test (contraseña: password) para que la unidad ya sea Ingeniería.
+Entrá con gestion@demo.test (contraseña: password) para que la unidad ya sea Ingeniería.
 Los códigos usan la serie 9xx para no chocar con los convenios cargados por los seeders.
 
 Cómo cargarlos:
@@ -10,7 +10,7 @@ Cómo cargarlos:
     Código, Tipo, Título, Unidad, fechas y los campos "otros" (los de contenido quedan en el PDF).
   - Después, en el convenio ya creado, podés subir como documentos:
       anexo-de-prueba.pdf     -> tipo "Anexo"
-      dictamen-de-prueba.pdf  -> tipo "Dictamen" (lo puede subir revision.FI@demo.test)
+      dictamen-de-prueba.pdf  -> tipo "Dictamen" (lo puede subir revision@demo.test)
   - Las partes (UNLPam y la contraparte) se agregan desde la ficha del convenio.
 
 

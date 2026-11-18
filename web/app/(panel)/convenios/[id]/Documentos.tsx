@@ -13,6 +13,7 @@ type Documento = {
   version: number;
   nombre_original: string;
   tamano_bytes: number;
+  sha256: string;
   subido_en: string;
   subido_por_nombre: string | null;
 };
@@ -32,6 +33,7 @@ export default function Documentos({ convenioId }: { convenioId: number }) {
   const lectura = useConCopiaLocal<{ data: Documento[] }>(`/agreements/${convenioId}/documents`, convenioId, "documentos", recarga);
   const documentos = lectura.datos?.data ?? [];
   const [error, setError] = useState("");
+  const [copiado, setCopiado] = useState<number | null>(null);
 
   // Consulta solo mira la lista; los demás roles pueden subir
   const puedeSubir = usuario?.rol !== "consulta";
@@ -44,6 +46,14 @@ export default function Documentos({ convenioId }: { convenioId: number }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo descargar el documento.");
     }
+  }
+
+  // Copia el código de control para poder compararlo con el del archivo (sha256sum)
+  async function copiar(d: Documento) {
+    try {
+      await navigator.clipboard.writeText(d.sha256);
+      setCopiado(d.id);
+    } catch {}
   }
 
   return (
@@ -67,6 +77,14 @@ export default function Documentos({ convenioId }: { convenioId: number }) {
                   {TIPOS_DOCUMENTO[d.tipo]} · versión {d.version} · {tamano(d.tamano_bytes)} · {fecha(d.subido_en)}
                   {d.subido_por_nombre && ` · ${d.subido_por_nombre}`}
                 </small>
+                {d.sha256 && (
+                <small className="documento-hash">
+                  Código de control (SHA-256): <code title={d.sha256}>{d.sha256.slice(0, 8)}…{d.sha256.slice(-8)}</code>{" "}
+                  <button type="button" className="boton-enlace" onClick={() => copiar(d)}>
+                    {copiado === d.id ? "Copiado" : "Copiar"}
+                  </button>
+                </small>
+                )}
               </span>
               <button type="button" className="boton-secundario" onClick={() => descargar(d)} aria-label={`Descargar ${d.nombre_original}`}>
                 Descargar

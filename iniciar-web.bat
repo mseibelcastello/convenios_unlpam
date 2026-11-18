@@ -30,8 +30,8 @@ call php artisan migrate --force
 REM Enlace public/storage para las fotos de perfil (solo si todavia no existe)
 if not exist public\storage call php artisan storage:link
 call php artisan db:seed --class=UnidadesSeeder --force
-REM Convenios reales y un usuario por facultad (no repite lo que ya existe)
-call php artisan db:seed --class=ConveniosRealesSeeder --force
+REM Datos de demostracion: solo si todavia no hay usuarios (para no duplicar)
+php artisan tinker --execute="echo App\Models\User::count();" | findstr /x "0" >nul && call php artisan db:seed --class=DemoSeeder --force
 if not exist storage\logs\laravel.log type nul > storage\logs\laravel.log
 cd ..
 
@@ -51,9 +51,8 @@ echo.
 echo Todo listo:
 echo   Web:     http://localhost:3000
 echo   Backend: http://localhost:8000/api/health
-echo   Usuarios de prueba: admin@demo.test, gestion@demo.test, revision@demo.test, consulta@demo.test ^(clave: password^)
-echo   Por facultad: gestion.FI@demo.test ^(Ingenieria^), revision.FI@demo.test, consulta.FI@demo.test,
-echo                 gestion.FA / FCEyJ / FCEyN / FCH / FCS / FCV @demo.test ^(misma clave^)
+echo   Usuarios de prueba ^(clave: password^): admin@demo.test, consulta@demo.test,
+echo                 gestion@demo.test y revision@demo.test ^(de la Facultad de Ingenieria^)
 echo   El codigo del login aparece en la ventana "Codigos de login" cuando inicies sesion.
 echo   Para frenar todo, cerrar las tres ventanas que se abrieron.
 echo   Para la app movil: iniciar-movil.bat
