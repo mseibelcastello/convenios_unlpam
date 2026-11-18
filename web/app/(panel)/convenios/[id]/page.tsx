@@ -290,7 +290,8 @@ export default function Ficha() {
               ))}
             </ul>
 
-            {puedeAgregar && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
+            {/* Las partes solo se cambian hasta la revisión (después de aprobar, la API lo rechaza) */}
+            {puedeAgregar && (enBorrador || convenio.estado === "revision") && <AgregarParte convenioId={Number(id)} alGuardar={() => setRecarga(recarga + 1)} />}
           </section>
 
           {convenio.personas && (

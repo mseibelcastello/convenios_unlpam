@@ -19,6 +19,14 @@ class AgreementPartyController extends Controller
             'rol_parte' => ['required', Rule::in(['UNLPam', 'contraparte', 'otro'])],
         ]);
 
+        // Igual que al quitar: pasado el estado de revisión, las partes ya no se tocan
+        if (! in_array($convenio->estado, ['borrador', 'revision'], true)) {
+            return response()->json([
+                'message' => 'El convenio ya fue aprobado',
+                'errors' => ['estado' => ['No se pueden agregar partes a un convenio aprobado']],
+            ], 422);
+        }
+
         if ($convenio->partes()->where('partes.id', $datos['parte_id'])->exists()) {
             return response()->json(['message' => 'La parte ya está asociada al convenio'], 409);
         }
