@@ -42,8 +42,10 @@ composer install --no-interaction
 php artisan migrate --force
 [ -e public/storage ] || php artisan storage:link # enlace para las fotos de perfil (solo si no existe)
 php artisan db:seed --class=UnidadesSeeder --force
-# Convenios reales y un usuario por facultad (no repite lo que ya existe)
-php artisan db:seed --class=ConveniosRealesSeeder --force
+# Datos de demostración (usuarios y convenios): solo si todavía no hay usuarios, para no duplicar
+if [ "$(php artisan tinker --execute='echo App\Models\User::count();' 2>/dev/null | tail -n 1)" = "0" ]; then
+  php artisan db:seed --class=DemoSeeder --force
+fi
 
 # 3. Web: dependencias
 paso "Web: dependencias"
@@ -79,9 +81,8 @@ echo
 echo "Todo listo:"
 echo "  Web:     http://localhost:3000"
 echo "  Backend: http://localhost:8000/api/health"
-echo "  Usuarios de prueba: admin@demo.test, gestion@demo.test, revision@demo.test, consulta@demo.test (contraseña: password)"
-echo "  Por facultad: gestion.FI@demo.test (Ingeniería), revision.FI@demo.test, consulta.FI@demo.test,"
-echo "                gestion.FA / FCEyJ / FCEyN / FCH / FCS / FCV @demo.test (misma contraseña)"
+echo "  Usuarios de prueba (contraseña: password): admin@demo.test, consulta@demo.test,"
+echo "                gestion@demo.test y revision@demo.test (estos dos son de la Facultad de Ingeniería)"
 echo "  El código del login va a aparecer acá abajo cuando inicies sesión."
 echo "  Para la app móvil, en otra terminal: ./iniciar-movil.sh"
 echo "  Ctrl+C para frenar todo."

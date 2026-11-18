@@ -576,6 +576,8 @@ button, input, select, textarea { font-family: inherit; }
 .documento-datos { min-width: 0; display: flex; flex-direction: column; }
 .documento-datos strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .documento-datos small { color: var(--color-texto-suave); }
+.documento-hash code { font-size: 0.85em; }
+.boton-enlace { background: none; border: 0; padding: 0; color: var(--color-primario, #b3141a); text-decoration: underline; cursor: pointer; font: inherit; }
 @media (max-width: 40rem) { .documentos-lista li { flex-direction: column; align-items: stretch; } }
 
 /* Botón que abre la ventana de "Agregar ..." */
