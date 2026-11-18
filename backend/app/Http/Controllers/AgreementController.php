@@ -111,6 +111,10 @@ class AgreementController extends Controller
                     'convenio_destino_id' => $antecedente->id,
                     'tipo_vinculo' => $tipoVinculo,
                 ]);
+                // Adenda, renovación y sustitución arrancan con las partes del convenio al que se refieren
+                if (in_array($tipoVinculo, ['adenda', 'renovacion', 'sustitucion'], true)) {
+                    $convenio->copiarPartesDe($antecedente);
+                }
             }
             Avisos::convenioCreado($convenio, $request->user());
 
