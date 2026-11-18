@@ -17,6 +17,7 @@ import Documentos from "./Documentos";
 import Observaciones from "./Observaciones";
 import LineaDeVida from "./LineaDeVida";
 import QrFicha from "./QrFicha";
+import Tramite from "./Tramite";
 
 type Convenio = {
   codigo: string;
@@ -124,6 +125,9 @@ export default function Ficha() {
   // Solo revisión aprueba o devuelve, y solo mientras el convenio está en revisión
   // (sin conexión no se puede aprobar ni devolver, así que no se ofrece)
   const puedeDictaminar = usuario?.rol === "revision" && convenio.estado === "revision" && !lectura.sinConexion;
+  // Los otros pasos del circuito (los mismos permisos que la API): gestión envía a revisión, administración firma
+  const puedeEnviar = usuario?.rol === "gestion" && enBorrador && !lectura.sinConexion;
+  const puedeFirmar = usuario?.rol === "administracion" && convenio.estado === "aprobado" && !lectura.sinConexion;
 
   // La vigencia, en el orden en que ocurre
   const dias = convenio.fecha_vencimiento ? diasHasta(convenio.fecha_vencimiento) : null;
@@ -199,9 +203,11 @@ export default function Ficha() {
       {avisoRevision && (
         <div className="ficha-seccion dictamen" role="status">
           <p className="dictamen-hecho">{avisoRevision}</p>
-          <Link href="/revision" className="boton-secundario">
-            Volver al panel de revisión
-          </Link>
+          {usuario?.rol === "revision" && (
+            <Link href="/revision" className="boton-secundario">
+              Volver al panel de revisión
+            </Link>
+          )}
         </div>
       )}
 
@@ -209,6 +215,19 @@ export default function Ficha() {
         <Dictamen
           convenioId={Number(id)}
           pendientes={pendientes}
+          alCambiar={(mensaje) => {
+            setAvisoRevision(mensaje);
+            setRecarga(recarga + 1);
+          }}
+        />
+      )}
+
+      {(puedeEnviar || puedeFirmar) && (
+        <Tramite
+          key={convenio.estado}
+          convenioId={convenioId}
+          paso={puedeEnviar ? "enviar" : "firmar"}
+          fechas={convenio}
           alCambiar={(mensaje) => {
             setAvisoRevision(mensaje);
             setRecarga(recarga + 1);

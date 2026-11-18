@@ -40,6 +40,8 @@ const ENTIDADES: Record<string, string> = {
   comentarios: "Comentario",
   personas: "Personas",
   identidades: "Identidad",
+  usuarios: "Usuario",
+  unidades: "Unidad",
 };
 
 const SIN_FILTROS = { convenio_id: "", accion: "" };
