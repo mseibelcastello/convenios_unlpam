@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AgreementRequest;
 use App\Models\Agreement;
+use App\Models\AgreementLink;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -13,6 +14,8 @@ use App\Models\AuditLog;
 use App\Models\Observation;
 use App\Models\Signature;
 use App\Support\Avisos;
+use App\Support\ReglasVinculos;
+use Illuminate\Validation\ValidationException;
 
 class AgreementController extends Controller
 {
@@ -85,8 +88,30 @@ class AgreementController extends Controller
             return response()->json(['message' => 'Sin permiso'], 403);
         }
 
-        $convenio = DB::transaction(function () use ($datos, $request) {
+        // El convenio del que depende (marco, o el que modifica la adenda) se vincula al crear
+        $antecedenteId = Arr::pull($datos, 'antecedente_id');
+        $antecedente = null;
+        $tipoVinculo = ['especifico' => 'se_apoya_en', 'pasantia' => 'se_apoya_en', 'adenda' => 'adenda'][$datos['tipo']] ?? null;
+        if ($tipoVinculo) {
+            $antecedente = Agreement::visiblesPara($request->user())->find($antecedenteId);
+            if (! $antecedente) {
+                throw ValidationException::withMessages(['antecedente_id' => ['El convenio no existe o no tenés acceso']]);
+            }
+            $motivo = ReglasVinculos::incompatibilidad($tipoVinculo, $datos['tipo'], $antecedente->tipo);
+            if ($motivo) {
+                throw ValidationException::withMessages(['antecedente_id' => [$motivo]]);
+            }
+        }
+
+        $convenio = DB::transaction(function () use ($datos, $request, $antecedente, $tipoVinculo) {
             $convenio = Agreement::create($datos + ['estado' => 'borrador', 'version' => 1]);
+            if ($antecedente) {
+                AgreementLink::create([
+                    'convenio_origen_id' => $convenio->id,
+                    'convenio_destino_id' => $antecedente->id,
+                    'tipo_vinculo' => $tipoVinculo,
+                ]);
+            }
             Avisos::convenioCreado($convenio, $request->user());
 
             return $convenio;

@@ -18,6 +18,8 @@ type RespuestaLogin = {
 
 type Auth = {
   estado: Estado;
+  // Cambia en cada cierre de sesión: el login lo usa como key para empezar de cero
+  sesion: number;
   usuario: Usuario | null;
   iniciarSesion: (email: string, password: string) => Promise<RespuestaLogin>;
   enviarCodigoPorMail: () => Promise<void>;
@@ -31,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [estado, setEstado] = useState<Estado>("cargando");
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [tokenMfa, setTokenMfa] = useState("");
+  const [sesion, setSesion] = useState(0);
 
   // Al abrir la página: si hay token guardado, /auth/me confirma que sigue valendo
   useEffect(() => {
@@ -89,11 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Lo guardado para ver sin conexión es de este usuario: no queda para el próximo
     await borrarDatosLocales();
     setUsuario(null);
+    setSesion((n) => n + 1);
     setEstado("anonimo");
   }
 
   return (
-    <Contexto.Provider value={{ estado, usuario, iniciarSesion, enviarCodigoPorMail, verificarCodigo, cerrarSesion }}>
+    <Contexto.Provider value={{ estado, sesion, usuario, iniciarSesion, enviarCodigoPorMail, verificarCodigo, cerrarSesion }}>
       {children}
     </Contexto.Provider>
   );

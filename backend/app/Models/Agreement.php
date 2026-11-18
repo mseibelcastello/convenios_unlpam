@@ -139,6 +139,8 @@ class Agreement extends Model
             'estado' => ['nullable', Rule::in(['borrador', 'revision', 'aprobado', 'firmado', 'rescindido', 'archivado'])],
             'unidad_id' => ['nullable', 'integer'],
             'anio' => ['nullable', 'digits:4'],
+            // Solo sobre firmados: los que siguen vigentes (o sin vencimiento) y los que ya vencieron
+            'vigencia' => ['nullable', Rule::in(['vigente', 'vencido'])],
         ];
     }
 
@@ -157,6 +159,16 @@ class Agreement extends Model
 
         if (filled($filtros['anio'] ?? null)) {
             $query->where('codigo', 'like', "CONV-{$filtros['anio']}-%");
+        }
+
+        if (filled($filtros['vigencia'] ?? null)) {
+            $hoy = now('America/Argentina/Buenos_Aires')->toDateString();
+            $query->where('estado', 'firmado');
+            if ($filtros['vigencia'] === 'vencido') {
+                $query->whereNotNull('fecha_vencimiento')->where('fecha_vencimiento', '<', $hoy);
+            } else {
+                $query->where(fn ($q) => $q->whereNull('fecha_vencimiento')->orWhere('fecha_vencimiento', '>=', $hoy));
+            }
         }
 
         return $query;
