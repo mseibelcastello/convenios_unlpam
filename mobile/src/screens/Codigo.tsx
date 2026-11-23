@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { enviarCodigoPorMail, verificarMfa } from '@/api/auth';
+import { enviarCodigoPorMail, enviarCodigoPorSms, verificarMfa } from '@/api/auth';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -17,6 +17,7 @@ export default function Codigo() {
   const [cargando, setCargando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [enviandoMail, setEnviandoMail] = useState(false);
+  const [enviandoSms, setEnviandoSms] = useState(false);
 
   // Pide que el servidor mande el código al correo
   async function mandarPorMail() {
@@ -32,6 +33,23 @@ export default function Codigo() {
       setError(e instanceof Error ? e.message : 'Ocurrió un error inesperado');
     } finally {
       setEnviandoMail(false);
+    }
+  }
+
+  // Pide que el servidor mande el código por SMS
+  async function mandarPorSms() {
+    if (enviandoSms) return;
+    setError(null);
+    setAviso(null);
+    setEnviandoSms(true);
+
+    try {
+      await enviarCodigoPorSms();
+      setAviso('Te enviamos un código por SMS. Ingresalo arriba.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Ocurrió un error inesperado');
+    } finally {
+      setEnviandoSms(false);
     }
   }
 
@@ -102,6 +120,11 @@ export default function Codigo() {
             titulo={enviandoMail ? 'Enviando…' : 'Enviarme el código a mi mail'}
             variante="secundario"
             onPress={mandarPorMail}
+          />
+          <Button
+            titulo={enviandoSms ? 'Enviando…' : 'Enviarme el código por SMS'}
+            variante="secundario"
+            onPress={mandarPorSms}
           />
           <Button titulo="Volver" variante="secundario" onPress={() => router.back()} />
         </ScrollView>

@@ -70,6 +70,15 @@ export async function enviarCodigoPorMail() {
   }
 }
 
+/** Otra alternativa: el servidor manda el código por SMS al teléfono del usuario. */
+export async function enviarCodigoPorSms() {
+  try {
+    await cliente.post('/auth/mfa/send-sms');
+  } catch (error) {
+    throw new Error(mensajeDeError(error, 'Volvé a iniciar sesión'));
+  }
+}
+
 export async function cerrarSesion() {
   await borrarToken();
 }

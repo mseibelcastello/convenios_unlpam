@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FA\Google2FA;
@@ -80,6 +81,44 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Te enviamos un código por mail']);
+    }
+
+    /** Manda al teléfono del usuario un código de 6 dígitos por SMS (Twilio) */
+    public function enviarCodigoPorSms(Request $request): JsonResponse
+    {
+        $usuario = $request->user();
+
+        if (! $usuario->telefono) {
+            return response()->json(['message' => 'Tu usuario no tiene un teléfono registrado.'], 422);
+        }
+
+        $codigo = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $usuario->mfa_codigo_hash = Hash::make($codigo);
+        $usuario->mfa_expira_en = now()->addMinutes(self::MINUTOS_VIGENCIA);
+        $usuario->save();
+
+        $twilio = config('services.twilio');
+        try {
+            $respuesta = Http::withBasicAuth($twilio['sid'], $twilio['token'])
+                ->asForm()
+                ->post("https://api.twilio.com/2010-04-01/Accounts/{$twilio['sid']}/Messages.json", [
+                    'To' => $usuario->telefono,
+                    'From' => $twilio['from'],
+                    'Body' => "Convenios UNLPam: tu código es {$codigo}. Vale ".self::MINUTOS_VIGENCIA.' minutos.',
+                ]);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo conectar con Twilio: '.$e->getMessage());
+
+            return response()->json(['message' => 'No se pudo enviar el SMS. Probá con el código de la app.'], 502);
+        }
+
+        if ($respuesta->failed()) {
+            Log::warning('Twilio rechazó el SMS: '.$respuesta->body());
+
+            return response()->json(['message' => 'No se pudo enviar el SMS. Probá con el código de la app.'], 502);
+        }
+
+        return response()->json(['message' => 'Te enviamos un código por SMS']);
     }
 
     public function verificarMfa(Request $request): JsonResponse

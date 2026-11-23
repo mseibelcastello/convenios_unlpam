@@ -15,8 +15,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 
 //Esta lista son los campos que Laravel permite guardar cuando creás un usuario
-#[Fillable(['name', 'email', 'password','rol', 'unidad_id', 'tamano_letra', 'modo'])]
-#[Hidden(['password', 'remember_token', 'mfa_codigo_hash', 'mfa_secreto', 'foto_ruta', 'miniatura_ruta'])]
+#[Fillable(['name', 'email', 'password','rol', 'unidad_id', 'tamano_letra', 'modo', 'telefono'])]
+#[Hidden(['password', 'telefono', 'remember_token', 'mfa_codigo_hash', 'mfa_secreto', 'foto_ruta', 'miniatura_ruta'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
