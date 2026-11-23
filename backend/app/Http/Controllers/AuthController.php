@@ -83,7 +83,11 @@ class AuthController extends Controller
         return response()->json(['message' => 'Te enviamos un código por mail']);
     }
 
-    /** Manda al teléfono del usuario un código de 6 dígitos por SMS (Twilio) */
+    /**
+     * Manda un código de 6 dígitos por SMS al teléfono del usuario.
+     * Con SMS_SIMULADO=true no se manda nada: el código vuelve en la respuesta y la app lo muestra
+     * como si fuera un SMS (solo para la demostración). Si no, se manda de verdad con Twilio.
+     */
     public function enviarCodigoPorSms(Request $request): JsonResponse
     {
         $usuario = $request->user();
@@ -96,6 +100,12 @@ class AuthController extends Controller
         $usuario->mfa_codigo_hash = Hash::make($codigo);
         $usuario->mfa_expira_en = now()->addMinutes(self::MINUTOS_VIGENCIA);
         $usuario->save();
+
+        if (config('services.sms.simulado')) {
+            Log::info("SMS simulado. Codigo para {$usuario->telefono} = {$codigo}");
+
+            return response()->json(['message' => 'SMS simulado', 'codigo' => $codigo]);
+        }
 
         $twilio = config('services.twilio');
         try {
@@ -170,7 +180,7 @@ class AuthController extends Controller
             && (new Google2FA())->verifyKey($usuario->mfa_secreto, $codigo, 1);
     }
 
-    /** Código que se mandó por mail: vale 5 minutos */
+    /** Código que se mandó por mail o por SMS (se guarda igual): vale 5 minutos */
     private function codigoDelMail(User $usuario, string $codigo): bool
     {
         return $usuario->mfa_codigo_hash

@@ -70,10 +70,14 @@ export async function enviarCodigoPorMail() {
   }
 }
 
-/** Otra alternativa: el servidor manda el código por SMS al teléfono del usuario. */
-export async function enviarCodigoPorSms() {
+/**
+ * Otra alternativa: el servidor manda el código por SMS al teléfono del usuario.
+ * En modo simulado (demo) el servidor no manda nada y devuelve el código; lo devolvemos para mostrarlo.
+ */
+export async function enviarCodigoPorSms(): Promise<string | null> {
   try {
-    await cliente.post('/auth/mfa/send-sms');
+    const { data } = await cliente.post<{ codigo?: string }>('/auth/mfa/send-sms');
+    return data.codigo ?? null;
   } catch (error) {
     throw new Error(mensajeDeError(error, 'Volvé a iniciar sesión'));
   }

@@ -95,6 +95,17 @@ export async function cancelarRecordatorios() {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
+// SMS simulado (demo): el servidor no manda ningún SMS, así que el celular muestra el código como notificación.
+// Devuelve false si no hay permiso para notificar.
+export async function mostrarSmsSimulado(codigo: string) {
+  if (!(await permitido())) return false;
+  await Notifications.scheduleNotificationAsync({
+    content: { title: 'SMS', body: `Convenios UNLPam: tu código es ${codigo}. Vale 5 minutos.` },
+    trigger: null, // null = se muestra ahora
+  });
+  return true;
+}
+
 // Prueba para la demo: pide el permiso, programa un aviso a los 5 segundos y cuenta qué pasó
 export async function probarNotificaciones() {
   try {

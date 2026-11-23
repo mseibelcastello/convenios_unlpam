@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { mostrarSmsSimulado } from '@/api/recordatorios';
 import { enviarCodigoPorMail, enviarCodigoPorSms, verificarMfa } from '@/api/auth';
 import { Button } from '@/components/atoms/Button';
 import { ThemedText } from '@/components/themed-text';
@@ -44,8 +45,13 @@ export default function Codigo() {
     setEnviandoSms(true);
 
     try {
-      await enviarCodigoPorSms();
-      setAviso('Te enviamos un código por SMS. Ingresalo arriba.');
+      const codigoSimulado = await enviarCodigoPorSms();
+      // Modo demo: el servidor no manda SMS y la app muestra el código como una notificación
+      if (codigoSimulado && !(await mostrarSmsSimulado(codigoSimulado))) {
+        setAviso(`Sin permiso para notificaciones. Tu código es ${codigoSimulado}.`);
+      } else {
+        setAviso('Te enviamos un código por SMS. Ingresalo arriba.');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Ocurrió un error inesperado');
     } finally {
