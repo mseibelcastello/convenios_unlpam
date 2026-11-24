@@ -117,6 +117,25 @@ class Agreement extends Model
             ->withPivot('rol_parte');
     }
 
+    /**
+     * Adenda, renovación y sustitución se refieren a un convenio con las mismas partes: copia las de ese convenio que
+     * todavía no tiene, con el mismo rol. Después se pueden quitar o sumar otras. Devuelve cuántas copió.
+     */
+    public function copiarPartesDe(Agreement $otro): int
+    {
+        $existentes = $this->partes()->pluck('partes.id')->all();
+        $copiadas = 0;
+
+        foreach ($otro->partes()->get() as $parte) {
+            if (! in_array($parte->id, $existentes, true)) {
+                $this->partes()->attach($parte->id, ['rol_parte' => $parte->pivot->rol_parte]);
+                $copiadas++;
+            }
+        }
+
+        return $copiadas;
+    }
+
     public function personas(): BelongsToMany
     {
         return $this->belongsToMany(Person::class, 'convenio_persona', 'convenio_id', 'persona_id')
@@ -139,6 +158,8 @@ class Agreement extends Model
             'estado' => ['nullable', Rule::in(['borrador', 'revision', 'aprobado', 'firmado', 'rescindido', 'archivado'])],
             'unidad_id' => ['nullable', 'integer'],
             'anio' => ['nullable', 'digits:4'],
+            // Solo sobre firmados: los que siguen vigentes (o sin vencimiento) y los que ya vencieron
+            'vigencia' => ['nullable', Rule::in(['vigente', 'vencido'])],
         ];
     }
 
@@ -157,6 +178,16 @@ class Agreement extends Model
 
         if (filled($filtros['anio'] ?? null)) {
             $query->where('codigo', 'like', "CONV-{$filtros['anio']}-%");
+        }
+
+        if (filled($filtros['vigencia'] ?? null)) {
+            $hoy = now('America/Argentina/Buenos_Aires')->toDateString();
+            $query->where('estado', 'firmado');
+            if ($filtros['vigencia'] === 'vencido') {
+                $query->whereNotNull('fecha_vencimiento')->where('fecha_vencimiento', '<', $hoy);
+            } else {
+                $query->where(fn ($q) => $q->whereNull('fecha_vencimiento')->orWhere('fecha_vencimiento', '>=', $hoy));
+            }
         }
 
         return $query;

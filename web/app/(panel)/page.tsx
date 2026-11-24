@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth";
 import { ESTADOS } from "@/lib/estados";
 import { diasHasta } from "@/lib/fechas";
 import { ROLES } from "@/lib/roles";
+import ListaConvenios from "@/components/ListaConvenios";
+import ListaPersonas from "@/components/ListaPersonas";
 
 type ItemLista = { id: number; codigo: string; titulo: string; vencimiento: string };
 
@@ -25,6 +27,17 @@ type Dashboard = {
 };
 
 type Dato = { nombre: string; etiqueta: string; total: number };
+
+// Tarjeta del resumen: un botón que abre la lista de convenios que cuenta
+function Tarjeta({ clase, cantidad, texto, alAbrir, verTexto = "Ver convenios →" }: { clase: string; cantidad: number; texto: string; alAbrir: () => void; verTexto?: string }) {
+  return (
+    <button type="button" className={`tarjeta ${clase}`} onClick={alAbrir} aria-label={`${texto}: ${cantidad}. ${verTexto.replace(" →", "")}`}>
+      <strong>{cantidad}</strong>
+      <span>{texto}</span>
+      <span className="tarjeta-ver" aria-hidden="true">{verTexto}</span>
+    </button>
+  );
+}
 
 function saludoSegunHora() {
   const hora = new Date().getHours();
@@ -130,6 +143,9 @@ function Lista({ titulo, total, convenios }: { titulo: string; total: number; co
 export default function Inicio() {
   const { usuario } = useAuth();
   const [datos, setDatos] = useState<Dashboard | null>(null);
+  // Tarjeta tocada: su lista de convenios se muestra en una ventana
+  const [verPersonas, setVerPersonas] = useState(false);
+  const [abierta, setAbierta] = useState<{ titulo: string; filtros: Record<string, string> } | null>(null);
 
   useEffect(() => {
     api.get("/dashboard").then((r) => setDatos(r.data));
@@ -163,29 +179,30 @@ export default function Inicio() {
         <>
           <h2>Resumen</h2>
           <div className="tarjetas">
-            <div className="tarjeta tarjeta-total">
-              <strong>{datos.total}</strong>
-              <span>Convenios en total</span>
-            </div>
+            <Tarjeta clase="tarjeta-total" cantidad={datos.total} texto="Convenios en total" alAbrir={() => setAbierta({ titulo: "Todos los convenios", filtros: {} })} />
             {Object.entries(datos.por_estado).map(([estado, cantidad]) => (
-              <div className={`tarjeta estado-${estado}`} key={estado}>
-                <strong>{cantidad}</strong>
-                <span>{ESTADOS[estado]}</span>
-              </div>
+              <Tarjeta
+                key={estado}
+                clase={`estado-${estado}`}
+                cantidad={cantidad}
+                texto={ESTADOS[estado]}
+                alAbrir={() => setAbierta({ titulo: ESTADOS[estado], filtros: { estado } })}
+              />
             ))}
-            <div className="tarjeta estado-firmado">
-              <strong>{datos.firmados.vigentes}</strong>
-              <span>Firmados vigentes</span>
-            </div>
-            <div className="tarjeta estado-rescindido">
-              <strong>{datos.firmados.vencidos}</strong>
-              <span>Firmados vencidos</span>
-            </div>
+            <Tarjeta
+              clase="estado-firmado"
+              cantidad={datos.firmados.vigentes}
+              texto="Firmados vigentes"
+              alAbrir={() => setAbierta({ titulo: "Firmados vigentes", filtros: { vigencia: "vigente" } })}
+            />
+            <Tarjeta
+              clase="estado-rescindido"
+              cantidad={datos.firmados.vencidos}
+              texto="Firmados vencidos"
+              alAbrir={() => setAbierta({ titulo: "Firmados vencidos", filtros: { vigencia: "vencido" } })}
+            />
             {datos.personas_unicas !== null && (
-              <div className="tarjeta">
-                <strong>{datos.personas_unicas}</strong>
-                <span>Personas únicas</span>
-              </div>
+              <Tarjeta clase="" cantidad={datos.personas_unicas} texto="Personas únicas" alAbrir={() => setVerPersonas(true)} verTexto="Ver personas →" />
             )}
           </div>
 
@@ -212,6 +229,14 @@ export default function Inicio() {
           </div>
         </>
       )}
+
+      <ListaPersonas abierta={verPersonas} alCerrar={() => setVerPersonas(false)} />
+      <ListaConvenios
+        abierta={abierta !== null}
+        titulo={abierta?.titulo ?? ""}
+        filtros={abierta?.filtros ?? {}}
+        alCerrar={() => setAbierta(null)}
+      />
     </>
   );
 }

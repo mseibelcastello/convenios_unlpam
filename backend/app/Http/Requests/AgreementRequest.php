@@ -62,6 +62,10 @@ class AgreementRequest extends FormRequest
         // Al editar, el cliente manda la versión que leyó
         if ($esEdicion) {
             $reglas['version'] = ['required', 'integer', 'min:1'];
+        } else {
+            // Al crear, el específico, la pasantía y la adenda traen el convenio del que dependen
+            $necesita = in_array($datos['tipo'] ?? null, ['especifico', 'pasantia', 'adenda'], true);
+            $reglas['antecedente_id'] = [$necesita ? 'required' : 'nullable', 'integer'];
         }
 
         return $reglas;

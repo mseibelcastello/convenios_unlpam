@@ -38,6 +38,9 @@ Route::middleware(['auth:sanctum', 'abilities:mfa'])
 Route::middleware(['auth:sanctum', 'abilities:mfa', 'throttle:5,1'])
     ->post('/auth/mfa/send-code', [AuthController::class, 'enviarCodigoPorMail']);
 
+Route::middleware(['auth:sanctum', 'abilities:mfa', 'throttle:5,1'])
+    ->post('/auth/mfa/send-sms', [AuthController::class, 'enviarCodigoPorSms']);
+
 Route::middleware(['auth:sanctum', 'abilities:acceso'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);

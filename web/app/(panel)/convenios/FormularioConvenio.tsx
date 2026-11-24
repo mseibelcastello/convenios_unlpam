@@ -99,6 +99,11 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
   // Al crear se elige cómo cargar el convenio: con su PDF o completando todos los campos
   const [modo, setModo] = useState<"pdf" | "formulario">("pdf");
   const conPdf = esAlta && modo === "pdf";
+  // El específico, la pasantía y la adenda se crean ya ligados al convenio del que dependen
+  const pideAntecedente = esAlta && ["especifico", "pasantia", "adenda"].includes(valores.tipo);
+  const esAdenda = valores.tipo === "adenda";
+  const [busqueda, setBusqueda] = useState("");
+  const [opciones, setOpciones] = useState<{ id: number; codigo: string; titulo: string; tipo: string }[]>([]);
 
   // La lista se guarda para poder editar sin conexión (sin ella, "Unidad" quedaría vacía y no deja guardar)
   useEffect(() => {
@@ -127,6 +132,15 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
     setValores({ ...valores, [e.target.name]: e.target.value });
   }
 
+  function buscarAntecedente() {
+    // Específico y pasantía se apoyan en un marco; la adenda puede modificar cualquier convenio
+    const params = esAdenda ? { q: busqueda } : { q: busqueda, tipo: "marco" };
+    api
+      .get("/agreements", { params })
+      .then((r) => setOpciones(r.data.data))
+      .catch(() => setOpciones([]));
+  }
+
   async function guardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrores({});
@@ -144,6 +158,7 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
 
     // Con el PDF no se mandan los campos de contenido
     const datos = { ...valores };
+    if (!pideAntecedente) delete datos.antecedente_id;
     if (conPdf) {
       for (const c of CAMPOS) if (c.contenido) delete datos[c.nombre];
     }
@@ -314,7 +329,54 @@ export default function FormularioConvenio({ inicial, enviar }: Props) {
         return (
           <section className="ficha-seccion" key={g.id}>
             <h2>{g.titulo}</h2>
-            <div className="campos-rejilla">{lista.map(campo)}</div>
+            <div className="campos-rejilla">
+              {lista.map(campo)}
+              {g.id === "principal" && pideAntecedente && (
+                <div className="campo campo-ancho">
+                  <div className="campo-etiqueta">
+                    <label htmlFor="busqueda-antecedente">{esAdenda ? "Convenio que modifica *" : "Marco al que pertenece *"}</label>
+                  </div>
+                  <div className="filtros">
+                    <input
+                      id="busqueda-antecedente"
+                      placeholder="Buscar por código o título"
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          buscarAntecedente();
+                        }
+                      }}
+                    />
+                    <button type="button" onClick={buscarAntecedente}>
+                      Buscar
+                    </button>
+                  </div>
+                  <select
+                    name="antecedente_id"
+                    value={valores.antecedente_id ?? ""}
+                    onChange={cambiar}
+                    required
+                    aria-label={esAdenda ? "Convenio que modifica" : "Marco"}
+                    aria-invalid={errores.antecedente_id ? true : undefined}
+                    aria-describedby={errores.antecedente_id ? "error-antecedente_id" : undefined}
+                  >
+                    <option value="">{opciones.length ? "Elegí un convenio" : "Primero buscá un convenio"}</option>
+                    {opciones.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.codigo} · {c.titulo} ({TIPOS[c.tipo]})
+                      </option>
+                    ))}
+                  </select>
+                  {errores.antecedente_id && (
+                    <p className="campo-error" id="error-antecedente_id">
+                      {errores.antecedente_id}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
         );
       })}

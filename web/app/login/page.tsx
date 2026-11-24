@@ -7,7 +7,15 @@ import { useEffect, useState } from "react";
 import LogoUnidad from "@/components/LogoUnidad";
 import { useAuth } from "@/lib/auth";
 
+// Next conserva en memoria las páginas ya visitadas (Activity). Sin esto, al cerrar sesión volvía el login
+// tal como se dejó al entrar (tarjeta ya desvanecida, "saliendo"), y se veía solo el fondo negro.
+// Con la key, cada cierre de sesión monta un login nuevo.
 export default function Login() {
+  const { sesion } = useAuth();
+  return <FormularioLogin key={sesion} />;
+}
+
+function FormularioLogin() {
   const { estado, iniciarSesion, enviarCodigoPorMail, verificarCodigo } = useAuth();
   const router = useRouter();
   const [paso, setPaso] = useState<"clave" | "codigo">("clave");
