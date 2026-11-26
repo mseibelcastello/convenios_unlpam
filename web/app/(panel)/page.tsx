@@ -9,6 +9,7 @@ import { ESTADOS } from "@/lib/estados";
 import { diasHasta } from "@/lib/fechas";
 import { ROLES } from "@/lib/roles";
 import ListaConvenios from "@/components/ListaConvenios";
+import ListaPersonas from "@/components/ListaPersonas";
 
 type ItemLista = { id: number; codigo: string; titulo: string; vencimiento: string };
 
@@ -28,12 +29,12 @@ type Dashboard = {
 type Dato = { nombre: string; etiqueta: string; total: number };
 
 // Tarjeta del resumen: un botón que abre la lista de convenios que cuenta
-function Tarjeta({ clase, cantidad, texto, alAbrir }: { clase: string; cantidad: number; texto: string; alAbrir: () => void }) {
+function Tarjeta({ clase, cantidad, texto, alAbrir, verTexto = "Ver convenios →" }: { clase: string; cantidad: number; texto: string; alAbrir: () => void; verTexto?: string }) {
   return (
-    <button type="button" className={`tarjeta ${clase}`} onClick={alAbrir} aria-label={`${texto}: ${cantidad}. Ver convenios`}>
+    <button type="button" className={`tarjeta ${clase}`} onClick={alAbrir} aria-label={`${texto}: ${cantidad}. ${verTexto.replace(" →", "")}`}>
       <strong>{cantidad}</strong>
       <span>{texto}</span>
-      <span className="tarjeta-ver" aria-hidden="true">Ver convenios →</span>
+      <span className="tarjeta-ver" aria-hidden="true">{verTexto}</span>
     </button>
   );
 }
@@ -143,6 +144,7 @@ export default function Inicio() {
   const { usuario } = useAuth();
   const [datos, setDatos] = useState<Dashboard | null>(null);
   // Tarjeta tocada: su lista de convenios se muestra en una ventana
+  const [verPersonas, setVerPersonas] = useState(false);
   const [abierta, setAbierta] = useState<{ titulo: string; filtros: Record<string, string> } | null>(null);
 
   useEffect(() => {
@@ -200,10 +202,7 @@ export default function Inicio() {
               alAbrir={() => setAbierta({ titulo: "Firmados vencidos", filtros: { vigencia: "vencido" } })}
             />
             {datos.personas_unicas !== null && (
-              <div className="tarjeta">
-                <strong>{datos.personas_unicas}</strong>
-                <span>Personas únicas</span>
-              </div>
+              <Tarjeta clase="" cantidad={datos.personas_unicas} texto="Personas únicas" alAbrir={() => setVerPersonas(true)} verTexto="Ver personas →" />
             )}
           </div>
 
@@ -231,6 +230,7 @@ export default function Inicio() {
         </>
       )}
 
+      <ListaPersonas abierta={verPersonas} alCerrar={() => setVerPersonas(false)} />
       <ListaConvenios
         abierta={abierta !== null}
         titulo={abierta?.titulo ?? ""}

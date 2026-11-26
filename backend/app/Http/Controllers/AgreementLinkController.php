@@ -7,6 +7,7 @@ use App\Models\AgreementLink;
 use App\Support\ReglasVinculos;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -86,14 +87,23 @@ class AgreementLinkController extends Controller
             return response()->json(['message' => 'El vínculo ya existe'], 409);
         }
 
-        // Solo se inserta el vínculo: ninguno de los dos convenios se modifica
-        $vinculo = AgreementLink::create([
-            'convenio_origen_id' => $origen->id,
-            'convenio_destino_id' => $destino->id,
-            'tipo_vinculo' => $datos['tipo_vinculo'],
-        ]);
+        // El vínculo se inserta y el convenio al que apunta no se modifica
+        $copiadas = 0;
+        $vinculo = DB::transaction(function () use ($origen, $destino, $datos, &$copiadas) {
+            $vinculo = AgreementLink::create([
+                'convenio_origen_id' => $origen->id,
+                'convenio_destino_id' => $destino->id,
+                'tipo_vinculo' => $datos['tipo_vinculo'],
+            ]);
 
-        return response()->json($vinculo, 201);
+            if (in_array($datos['tipo_vinculo'], ['adenda', 'renovacion', 'sustitucion'], true)) {
+                $copiadas = $origen->copiarPartesDe($destino);
+            }
+
+            return $vinculo;
+        });
+
+        return response()->json($vinculo->toArray() + ['partes_copiadas' => $copiadas], 201);
     }
 
     public function destroy(Request $request, int $id, int $linkId): JsonResponse

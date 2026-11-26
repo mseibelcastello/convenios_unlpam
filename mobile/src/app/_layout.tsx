@@ -8,7 +8,7 @@ import { useColorScheme } from 'react-native';
 
 import { sesionVigente } from '@/api/auth';
 import { leerToken } from '@/api/sesion';
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AnimatedSplashOverlay } from '@/components/splash-unlpam';
 import { BloqueoProvider } from '@/context/bloqueo';
 import { PreferenciasProvider } from '@/context/preferencias';
 

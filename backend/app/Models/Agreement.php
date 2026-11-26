@@ -117,6 +117,25 @@ class Agreement extends Model
             ->withPivot('rol_parte');
     }
 
+    /**
+     * Adenda, renovación y sustitución se refieren a un convenio con las mismas partes: copia las de ese convenio que
+     * todavía no tiene, con el mismo rol. Después se pueden quitar o sumar otras. Devuelve cuántas copió.
+     */
+    public function copiarPartesDe(Agreement $otro): int
+    {
+        $existentes = $this->partes()->pluck('partes.id')->all();
+        $copiadas = 0;
+
+        foreach ($otro->partes()->get() as $parte) {
+            if (! in_array($parte->id, $existentes, true)) {
+                $this->partes()->attach($parte->id, ['rol_parte' => $parte->pivot->rol_parte]);
+                $copiadas++;
+            }
+        }
+
+        return $copiadas;
+    }
+
     public function personas(): BelongsToMany
     {
         return $this->belongsToMany(Person::class, 'convenio_persona', 'convenio_id', 'persona_id')

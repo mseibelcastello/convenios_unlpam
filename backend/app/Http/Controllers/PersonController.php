@@ -16,13 +16,20 @@ class PersonController extends Controller
         $filtros = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
+            // Solo las vinculadas a convenios del alcance del usuario, con esos convenios (es lo que cuenta el panel)
+            'vinculadas' => ['nullable', 'boolean'],
         ]);
 
         $consulta = Person::query();
+        $vinculadas = $request->boolean('vinculadas');
 
         // Con unidad asignada, solo las personas vinculadas a convenios de su unidad
-        if ($usuario->unidadesAccesibles() !== null) {
+        if ($vinculadas || $usuario->unidadesAccesibles() !== null) {
             $consulta->whereHas('convenios', fn ($q) => $q->visiblesPara($usuario));
+        }
+
+        if ($vinculadas) {
+            $consulta->with(['convenios' => fn ($q) => $q->visiblesPara($usuario)->select('convenios.id', 'convenios.codigo', 'convenios.titulo')]);
         }
 
         if (filled($filtros['q'] ?? null)) {

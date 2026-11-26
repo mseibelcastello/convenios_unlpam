@@ -34,8 +34,13 @@ class DemoSeeder extends Seeder
             ['name' => 'Revisión Demo', 'email' => 'revision@demo.test', 'rol' => 'revision',       'unidad_id' => $fi->id],
             ['name' => 'Consulta Demo', 'email' => 'consulta@demo.test', 'rol' => 'consulta',       'unidad_id' => null],
         ];
+        // Teléfonos para el código por SMS: salen del .env, para no subir números personales a git
+        $telefonos = [
+            'admin@demo.test' => env('DEMO_TELEFONO_ADMIN'),
+            'gestion@demo.test' => env('DEMO_TELEFONO_GESTION'),
+        ];
         foreach ($usuarios as $usuario) {
-            User::create($usuario + ['password' => 'password']);
+            User::create($usuario + ['password' => 'password', 'telefono' => $telefonos[$usuario['email']] ?? null]);
         }
         $admin = User::where('email', 'admin@demo.test')->first();
         $gestion = User::where('email', 'gestion@demo.test')->first();
