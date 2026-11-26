@@ -6,10 +6,15 @@ Los códigos usan la serie 9xx para no chocar con los convenios cargados por los
 
 Cómo cargarlos:
   - "Completar el formulario": llená todos los campos de cada ejemplo.
-  - "Subir el PDF": subí archivos-de-prueba/convenio-de-prueba.pdf y completá solo
+  - "Subir el PDF": subí el PDF del ejemplo y completá solo
     Código, Tipo, Título, Unidad, fechas y los campos "otros" (los de contenido quedan en el PDF).
+      Ejemplo 1 (Marco)       -> convenio-de-prueba.pdf
+      Ejemplo 2 (Específico)  -> convenio-especifico-de-prueba.pdf
+      Ejemplo 3 (Pasantía)    -> convenio-pasantia-de-prueba.pdf
+      Ejemplo 4 (Adenda)      -> adenda-de-prueba.pdf
   - Después, en el convenio ya creado, podés subir como documentos:
-      anexo-de-prueba.pdf     -> tipo "Anexo"
+      anexo-de-prueba.pdf     -> tipo "Anexo" (va con el Ejemplo 1)
+      anexo-de-prueba-2.pdf   -> tipo "Anexo" (va con el Ejemplo 2)
       dictamen-de-prueba.pdf  -> tipo "Dictamen" (lo puede subir revision@demo.test)
   - Las partes (UNLPam y la contraparte) se agregan desde la ficha del convenio.
 
@@ -103,6 +108,41 @@ Notas:                     Ejemplo ficticio para pruebas de alertas.
 
 Partes a agregar:          Universidad Nacional de La Pampa (rol UNLPam)
                            Metalúrgica Ejemplo S.R.L. (tipo Empresa, rol Contraparte)
+
+El PDF (convenio-pasantia-de-prueba.pdf) dice firma 08/12/2024 y vencimiento 08/12/2026,
+que coincide con "hoy + 20 días" si se carga el 18/11/2026.
+
+
+-----------------------------------------------------------------
+EJEMPLO 4 - Adenda al convenio marco del Ejemplo 1
+-----------------------------------------------------------------
+Cargar primero el Ejemplo 1 (CONV-2026-901), porque esta adenda lo modifica.
+
+Código:                    CONV-2026-904
+Tipo:                      Adenda
+Título:                    Adenda N.º 1 al convenio marco de prácticas profesionales con Empresa de Telecomunicaciones Ejemplo S.A.
+Unidad:                    Facultad de Ingeniería
+
+Fecha de firma:            18/11/2026
+Fecha de inicio:           18/11/2026
+Fecha de vencimiento:      10/11/2028
+Fecha de preaviso:         11/09/2028
+
+Objeto:                    Ampliar el alcance del convenio marco para incluir a estudiantes de Ingeniería Biomédica y modificar el cupo de estudiantes por período.
+Alcance:                   Se agrega la carrera de Ingeniería Biomédica, con un máximo de seis estudiantes por cuatrimestre.
+Obligaciones:              Para los estudiantes de Ingeniería Biomédica, la empresa designa un tutor profesional con formación en equipamiento médico. Las demás obligaciones no cambian.
+Condiciones de rescisión:  Las mismas del convenio marco.
+Marco legal:               Las mismas normas del convenio marco CONV-2026-901.
+
+Resolución:                (vacío)
+Expediente:                EXP 1234/2026
+Condiciones de renovación: Sigue las condiciones de renovación del convenio marco.
+Confidencialidad:          (vacío)
+Notas:                     Ejemplo ficticio para pruebas de adendas.
+
+Partes a agregar:          Universidad Nacional de La Pampa (rol UNLPam)
+                           Empresa de Telecomunicaciones Ejemplo S.A. (tipo Empresa, rol Contraparte)
+Vínculo:                   En la ficha, vincularlo como "Adenda de" CONV-2026-901.
 
 
 -----------------------------------------------------------------
